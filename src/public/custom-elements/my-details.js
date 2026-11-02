@@ -36,7 +36,7 @@ class KleMyDetails extends PortalElement {
       f('emergencyContactName', 'Name') + f('emergencyContactPhone', 'Phone', { type: 'tel' }) +
       '<h2>Reminders</h2>' +
       this.checkbox({ id: 'reminderEmail', label: 'Email me the day before each lesson', checked: d.reminderEmail }) +
-      this.checkbox({ id: 'reminderWhatsApp', label: 'WhatsApp me the day before each lesson', checked: d.reminderWhatsApp, consent: d.consentWording }) +
+      this.checkbox({ id: 'reminderWhatsApp', label: 'WhatsApp me the day before each lesson', checked: d.reminderWhatsApp }) +
       '<h2>Licence</h2>' +
       this.field({ id: 'licenceNumber', label: 'Licence number', value: d.licenceNumber, readOnly: true, hint: 'Ask me if this needs changing.' }) +
       this.field({ id: 'dateOfBirth', label: 'Date of birth', value: d.dateOfBirth, readOnly: true }) +

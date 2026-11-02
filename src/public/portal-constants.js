@@ -93,9 +93,6 @@ export const EMAIL_TEMPLATES = {
   lessonReminder: 'VZqtht5'
 };
 
-export const WHATSAPP_CONSENT_WORDING =
-  'Send me lesson reminders on WhatsApp from the school’s number. I can turn this off here at any time.';
-
 export const ROLES = {
   INSTRUCTOR: 'instructor',
   PUPIL: 'pupil',

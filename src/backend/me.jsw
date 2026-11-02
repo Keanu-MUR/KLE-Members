@@ -5,7 +5,7 @@ import { authentication } from 'wix-members-backend';
 import { requireOwnPupil, run, PortalError } from 'backend/access';
 import { lookupMemberByEmail, pupilByEmail } from 'backend/pupil-store';
 import { pickMyDetails } from 'public/portal-utils';
-import { MY_DETAILS_FIELDS, WHATSAPP_CONSENT_WORDING } from 'public/portal-constants';
+import { MY_DETAILS_FIELDS } from 'public/portal-constants';
 
 function shape(pupil, role) {
   const out = {
@@ -14,8 +14,7 @@ function shape(pupil, role) {
     lastName: pupil.lastName || '',
     licenceNumber: pupil.licenceNumber || '',
     dateOfBirth: pupil.dateOfBirth || '',
-    whatsAppConsentAt: pupil.whatsAppConsentAt || '',
-    consentWording: WHATSAPP_CONSENT_WORDING
+    whatsAppConsentAt: pupil.whatsAppConsentAt || ''
   };
   MY_DETAILS_FIELDS.forEach((key) => {
     out[key] = key.startsWith('reminder') ? Boolean(pupil[key]) : pupil[key] || '';

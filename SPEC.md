@@ -96,7 +96,7 @@ Portal pages are top-level pages on the existing site (Wix Editor page slugs can
 | My progress | The skills grid: every skill with its level 1–5 as a filled track, the instructor's note per skill, and date last updated. Manual-only skills hidden for automatic pupils. Theory status and practical test date at the top |
 | Mock tests | Each mock test: date, result, minors/serious/dangerous counts, fault list, feedback |
 | Payments | Deferred (2 Nov 2026): not built. The earlier design was a running balance (hours taught × rate, minus payments received) with bank details and an optional card link |
-| My details | Edit contact details, address, emergency contact, reminder preferences (email on/off, WhatsApp on/off with consent wording). Licence number and date of birth shown read-only |
+| My details | Edit contact details, address, emergency contact, reminder preferences (email on/off, WhatsApp on/off; the consent sentence under the box was dropped on 2 Nov 2026 at the owner's request, the timestamp is still recorded). Licence number and date of birth shown read-only |
 
 ### Guardian
 
@@ -280,7 +280,7 @@ Phase 1. Build:
 1. The public Enquire page (custom element + backend insert with validation, honeypot and rate limit), the postcode soft check, the on-screen confirmation and the confirmation email to the enquirer via Wix Triggered Emails. Instructor alert by email only for now; WhatsApp comes in Phase 4 but leave a clearly marked hook.
 2. The instructor Enquiries page: list with status filter, reply-by-email with the standard template, Convert to pupil (creates the Pupils item and sends a signup link), Close.
 3. The instructor Pupils list and pupil record page with all fields from the data model, status changes, and Send login link.
-4. The pupil My details page with the field whitelist and the two reminder tick boxes (WhatsApp with consent wording and timestamp).
+4. The pupil My details page with the field whitelist and the two reminder tick boxes (WhatsApp with the consent timestamp; the wording under the box was removed 2 Nov 2026).
 
 Plan first. Include the test script from SPEC.md for this phase in your final report with pass/fail per step.
 ```
