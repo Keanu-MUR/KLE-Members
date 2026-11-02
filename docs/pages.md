@@ -50,3 +50,9 @@ $w.onReady(() => init($w));
 3. If that step fails on this plan, follow `docs/collections.md` to create them by hand, then press **Create settings**.
 4. Create a test pupil member in the dashboard, and in the Pupils collection add an item whose `memberId` is that member's ID and whose `firstName`, `lastName`, `transmission` and `status` are filled. (Phase 1 adds the instructor's own Pupils screen for this.)
 5. Log in as the pupil: `/pupil-home` shows their name and the four empty states. Opening `/instructor` sends them back to `/pupil-home`.
+
+## Deploying code
+
+Pushing to `main` updates what the Editor shows, but the live site only picks up new code when the site is published (Editor **Publish**, or `wix publish` from the CLI). After every push that should go live, publish.
+
+`src/backend/permissions.json` must keep its wildcard open (`siteOwner`, `siteMember` and `anonymous` all `true`). Wix applies that file to `.web.js` modules as well as legacy `.jsw`, and a tightened wildcard silently refuses every call from the browser. The real permission of each function is the one declared in code with `webMethod(Permissions.X, ...)`, backed by `requireInstructor()` and friends.
