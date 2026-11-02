@@ -120,6 +120,15 @@ function builtInActions(config, reroute) {
   return {
     getSession: () => config.getSession(),
 
+    // In-site navigation from a link inside an element (see onLinkClick in
+    // portal-base.js): Wix swaps the page without a full reload.
+    navigate: (payload) => {
+      const path = String(payload.path || '');
+      if (!path.startsWith('/') || path.startsWith('//')) return { ok: false, error: 'Not a page on this site.' };
+      wixLocation.to(path);
+      return { ok: true, data: null };
+    },
+
     login: async (payload) => {
       try {
         await authentication.login(String(payload.email || ''), String(payload.password || ''));

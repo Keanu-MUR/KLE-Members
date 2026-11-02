@@ -123,6 +123,8 @@ Every portal page is a full Wix page load, and the session and the page's data e
 
 Any other action (a save, send, create or delete) empties the data cache first, and `logout` empties everything, so a change is never followed by a stale list. Routing and security are unchanged: page code still verifies the session on every page and the backend checks every call. A visitor whose login has expired may see the cached nav for a moment before page code sends them to the login page.
 
+Links inside an element (the nav, lesson rows, "Send log") no longer reload the whole site. The base intercepts a plain left click on a same-site path and asks page code to call `wixLocation.to(path)` (the `navigate` built-in action), which swaps the Wix page in place and skips the two to three seconds the Wix framework takes to boot on a full load. The href is kept, so middle clicks, new tabs and the harness still work; if page code does not answer within 1.2 seconds the element falls back to a normal load.
+
 The element also re-sends an unanswered first request every half second (up to eight times) until page code has answered once, instead of once after 1.5 seconds, because Wix wires the event bridge a moment after the element appears.
 
 ## Creating a page

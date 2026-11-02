@@ -193,6 +193,7 @@ export class PortalElement extends HTMLElement {
       this.shadowRoot.innerHTML = '<style>' + STYLE + this.extraStyle() + '</style>' + this.shell();
       this.renderNav();
       this.afterShell();
+      this.shadowRoot.addEventListener('click', (event) => this.onLinkClick(event));
     }
     if (this.session) {
       this.onSession(this.session);
@@ -235,6 +236,23 @@ export class PortalElement extends HTMLElement {
         resolve(message);
       }
     }
+  }
+
+  // A click on a link within the site goes through page code's
+  // wixLocation.to(), which swaps the page without reloading the whole Wix
+  // framework (two to three seconds a time); the href stays for new tabs,
+  // middle clicks and the harness, where the page just loads normally.
+  onLinkClick(event) {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const link = event.composedPath().find((node) => node && node.tagName === 'A');
+    if (!link) return;
+    const href = link.getAttribute('href') || '';
+    if (!href.startsWith('/') || href.startsWith('//') || link.getAttribute('target') || link.hasAttribute('download')) return;
+    event.preventDefault();
+    let done = false;
+    this.request('navigate', { path: href }).then(() => { done = true; });
+    // No page code answered (the harness, or the bridge not wired yet).
+    setTimeout(() => { if (!done) location.assign(href); }, 1200);
   }
 
   // Resolves with { ok, data } or { ok: false, error } from page code.
