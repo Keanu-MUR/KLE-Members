@@ -64,6 +64,15 @@ Two lessons from creating these (2 Nov 2026): read the page ID from the Editor D
 
 The Pupil record page code (`pages/Pupil record.w7oqk.js`) now also imports `listLessons`, `getProgress`, `listPupilMessages` and `markMessageRead`; it is already pushed.
 
+## Phase 3 page (created 2 Nov 2026 by duplicating My progress)
+
+| Editor page name | URL slug | Custom element tag | Velo file | Page code file |
+|---|---|---|---|---|
+| My mock tests |  |  |  |  |
+
+Page code:
+
+\
 ## Creating a page
 
 1. Pages & Menu > Add Page > Blank page. Name it as in the table.
