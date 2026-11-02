@@ -7,8 +7,6 @@ import { requireInstructor, requireOwnPupil, run, publicPupil } from 'backend/ac
 import { checkSetup } from 'backend/setup';
 import { loadSettings } from 'backend/settings';
 import { shapeLesson, queryLessons, pupilNames, fullName } from 'backend/lesson-store';
-import { trimTo } from 'public/portal-utils';
-import { trimTo } from 'public/portal-utils';
 import { trimTo, londonDate, addDays, progressSummary } from 'public/portal-utils';
 import { LESSON_STATUS, ENQUIRY_STATUS } from 'public/portal-constants';
 
