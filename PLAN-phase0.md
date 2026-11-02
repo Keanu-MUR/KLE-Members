@@ -35,10 +35,10 @@ Anything else present (a `package.json` with UI dependencies, a bundler config) 
 | `src/public/portal-constants.js` | Skills (key, name, manualOnly), five level names, four slots with times, taught postcodes, status enums, message templates. One file; importable by backend and by custom elements. |
 | `src/public/portal-utils.js` | Pure helpers: postcode outward-code check, E.164 phones, slot parsing, London dates in words, age on a date, template filling. Backend, page code and tests share it. |
 | `src/backend/access.js` | `getCaller()`, `requireInstructor()`, `requirePupilAccess(pupilId, { write })`, `requireOwnPupil()`, `publicPupil()`, plus `guarded()` which turns any web method body into `{ ok, data }` / `{ ok: false, error }`. Reads the member from the session, never from the client. |
-| `src/backend/session.web.js` | `getSession()` for routing (Anyone) and `requestLoginLink(email)` which sends Wix's set-password email with the same reply whether or not the address is a member. |
-| `src/backend/portal.web.js` | `getPupilHome()` (own pupil or guardian) and `getInstructorDashboard()` with the setup status. Shapes fixed now, filled in Phase 2. |
+| `src/backend/session.jsw` | `getSession()` for routing (Anyone) and `requestLoginLink(email)` which sends Wix's set-password email with the same reply whether or not the address is a member. |
+| `src/backend/portal.jsw` | `getPupilHome()` (own pupil or guardian) and `getInstructorDashboard()` with the setup status. Shapes fixed now, filled in Phase 2. |
 | `src/backend/settings.js`, `src/backend/setup.js` | Helpers: Settings load with defaults merged, collection schemas, `checkSetup()` and `createMissingCollections()` via the Wix Data Collections API with `wix-auth` elevation. |
-| `src/backend/setup.web.js` | Instructor-only `getSetupStatus()`, `createCollections()` and `ensureSettings()`, driven from the dashboard's setup panel. |
+| `src/backend/setup-actions.jsw` | Instructor-only `getSetupStatus()`, `createCollections()` and `ensureSettings()`, driven from the dashboard's setup panel. |
 | `src/backend/jobs.config`, `src/backend/permissions.json` | Empty job list; legacy `.jsw` default permission tightened to owner-only. |
 | `src/public/custom-elements/portal-base.js` | Base class for every page element: design-brief styles as CSS custom properties, fonts referenced by name, focus rings, dashed dividers, button and form styles, empty-state helper, and the event bridge (below). |
 | `src/public/custom-elements/portal-login.js` | `<kle-login>`: own-styled email + password form, "Email me a login link", "Not a pupil yet? Enquire" link, inline validation, and the "not linked to a pupil yet" state. Headline "Your lessons, your progress". |
@@ -82,7 +82,7 @@ For each: add one Custom Element (Add > Embed Code > Custom Element), source "Ve
 
 ## 7. Decisions (all resolved 1 Nov 2026, written into SPEC.md and CLAUDE.md)
 
-Outcome: A, yes to all three additions, with RateLimit fields `ipHash, windowStart, count`, Settings fields `bankDetailsText, defaultHourlyRatePence, lastExportAt, lastExportStatus`, and `dateOfBirth` collected on the enquiry form and shown read-only on My details. B, quick option. C, brand colour is the site orange #FF5A25; no logo file exists, the wordmark is text. D, `.web.js`. E, retention windows made adjustable in Settings with defaults 120 (lessons), 30 (send log) and 400 (payments) days. The original reasoning is kept below for the record.
+Outcome: A, yes to all three additions, with RateLimit fields `ipHash, windowStart, count`, Settings fields `bankDetailsText, defaultHourlyRatePence, lastExportAt, lastExportStatus`, and `dateOfBirth` collected on the enquiry form and shown read-only on My details. B, quick option. C, brand colour is the site orange #FF5A25; no logo file exists, the wordmark is text. D, `.web.js`, later reverted to `.jsw` because `.web.js` imports resolve to undefined on this site (2 Nov 2026). E, retention windows made adjustable in Settings with defaults 120 (lessons), 30 (send log) and 400 (payments) days. The original reasoning is kept below for the record.
 
 **A. Data-model gaps in the spec.** Creating the collections is a Phase 0 step, and CLAUDE.md says ask before changing the model, so these need a yes or no now:
 

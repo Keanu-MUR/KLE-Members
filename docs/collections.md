@@ -1,6 +1,6 @@
 # Collections: manual fallback
 
-The dashboard setup panel (`createCollections` in `backend/setup.web.js`) creates everything below from code and is the normal path. Use this page only if that fails.
+The dashboard setup panel (`createCollections` in `backend/setup-actions.jsw`) creates everything below from code and is the normal path. Use this page only if that fails.
 
 Create each collection in the dashboard under **CMS > Create Collection**, with the exact name shown and **Permissions > Custom** set to Admin for read, insert, update and delete. Backend code reads and writes on behalf of pupils with elevated permissions after checking who is asking, so nothing more open is needed. (SPEC.md allows "insert = anyone" on Enquiries; admin-only is tighter and the enquiry web method inserts server-side after validation and rate limiting.)
 

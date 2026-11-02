@@ -227,8 +227,8 @@ These expand the ten rules in CLAUDE.md with the checks Claude Code must make be
 
 ### Code quality
 
-- Plain JavaScript, ES2015+, no TypeScript, no bundler, no npm UI packages. Backend may use wix-data, wix-members-backend, wix-secrets-backend, wix-crm-backend (triggered emails), wix-fetch and wix-web-module only.
-- Web modules are `.web.js` files exporting functions wrapped in `webMethod` from `wix-web-module`, with the permission set in code (Anyone, SiteMember or Admin). No new `.jsw` files: Wix marks that format as deprecated (decided 1 Nov 2026).
+- Plain JavaScript, ES2015+, no TypeScript, no bundler, no npm UI packages. Backend may use wix-data, wix-members-backend, wix-secrets-backend, wix-crm-backend (triggered emails), wix-fetch and wix-auth only.
+- Web modules are `.jsw` files, with per-function permissions in `backend/permissions.json` and the role check inside the function as the real guard. Decision D of 1 Nov 2026 chose `.web.js`, but on this site's Git Integration build a `.web.js` import resolves to undefined on the live site (checked 2 Nov 2026), so the build reverted to `.jsw`.
 - One constants file for the skills list, slot times, taught postcodes and message templates.
 - Every backend function validates its inputs and returns { ok, data } or { ok: false, error }; the UI shows error in plain English.
 - Custom elements: one file per page, a small shared portal-base.js for styles and the event bridge to page code, no global state.

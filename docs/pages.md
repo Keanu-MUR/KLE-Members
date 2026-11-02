@@ -28,7 +28,7 @@ Pupil login:
 
 ```js
 import { init } from 'public/portal-pages/login';
-import { getSession, requestLoginLink } from 'backend/session.web';
+import { getSession, requestLoginLink } from 'backend/session';
 
 $w.onReady(() => init($w, { getSession, requestLoginLink }));
 ```
@@ -37,8 +37,8 @@ Pupil home:
 
 ```js
 import { init } from 'public/portal-pages/home';
-import { getSession } from 'backend/session.web';
-import { getPupilHome } from 'backend/portal.web';
+import { getSession } from 'backend/session';
+import { getPupilHome } from 'backend/portal';
 
 $w.onReady(() => init($w, { getSession, getPupilHome }));
 ```
@@ -47,9 +47,9 @@ Instructor dashboard:
 
 ```js
 import { init } from 'public/portal-pages/instructor';
-import { getSession } from 'backend/session.web';
-import { getInstructorDashboard } from 'backend/portal.web';
-import { createCollections, ensureSettings } from 'backend/setup.web';
+import { getSession } from 'backend/session';
+import { getInstructorDashboard } from 'backend/portal';
+import { createCollections, ensureSettings } from 'backend/setup-actions';
 
 $w.onReady(() => init($w, { getSession, getInstructorDashboard, createCollections, ensureSettings }));
 ```
@@ -66,4 +66,4 @@ $w.onReady(() => init($w, { getSession, getInstructorDashboard, createCollection
 
 Pushing to `main` updates what the Editor shows, but the live site only picks up new code when the site is published (Editor **Publish**, or `wix publish` from the CLI). After every push that should go live, publish.
 
-`src/backend/permissions.json` must keep its wildcard open (`siteOwner`, `siteMember` and `anonymous` all `true`). Wix applies that file to `.web.js` modules as well as legacy `.jsw`, and a tightened wildcard silently refuses every call from the browser. The real permission of each function is the one declared in code with `webMethod(Permissions.X, ...)`, backed by `requireInstructor()` and friends.
+`src/backend/permissions.json` lists every web-module function: `getSession` and `requestLoginLink` are open to anyone, the rest to members. Web modules are `.jsw` files on this site: a `.web.js` module imports as undefined on this Git Integration build (confirmed on the live site 2 Nov 2026). Function permissions live in `permissions.json`, with the role check inside each function as the real guard.

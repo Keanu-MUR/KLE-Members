@@ -6,7 +6,7 @@ Read SPEC.md before any work. It holds the data model, pages, messaging rules, d
 A pupil portal for a single-instructor UK driving school, built INSIDE the school's existing Wix site (kledrivingschool.co.uk, classic Wix Editor, Velo dev mode, Git Integration + Wix CLI). Three roles: instructor, pupil, guardian (read-only, linked to one pupil). No self-booking: only the instructor creates or edits lessons. No multi-instructor features. No diary/calendar view.
 
 ## Stack — fixed, do not substitute
-- Platform: Wix (classic Editor) + Velo. Backend = Velo web modules (`backend/*.web.js` using `webMethod` from `wix-web-module`; no new `.jsw` files, that format is deprecated) and `backend/jobs.config` scheduled jobs. Data = Wix Data collections. Auth = Wix Members. Secrets = Wix Secrets Manager.
+- Platform: Wix (classic Editor) + Velo. Backend = Velo web modules (`backend/*.jsw`, permissions in `backend/permissions.json`; `.web.js` modules do not resolve on this site's Git Integration build, checked 2 Nov 2026) and `backend/jobs.config` scheduled jobs. Data = Wix Data collections. Auth = Wix Members. Secrets = Wix Secrets Manager.
 - UI: Wix custom elements (web components) hosted in Velo under `public/custom-elements/`. Plain ES2015+ JavaScript, HTML and CSS. No frameworks, no build step, no npm UI libraries.
 - Email: Wix Triggered Emails by default; Resend via backend `fetch` when `Settings.emailProvider = "resend"`.
 - WhatsApp: Meta WhatsApp Cloud API directly via backend `fetch` (no BSP).
