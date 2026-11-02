@@ -1,0 +1,54 @@
+// Pupil-to-instructor notes ("Request a change"). Pupils write their own;
+// the instructor reads and marks them read. Replies arrive in Phase 3.
+// Members may call (see permissions.json); the role checks are the guard.
+
+import wixData from 'wix-data';
+import { requireInstructor, requireOwnPupil, run, PortalError } from 'backend/access';
+import { trimTo } from 'public/portal-utils';
+
+function shape(item) {
+  return {
+    _id: item._id,
+    pupilId: item.pupilId || '',
+    body: item.body || '',
+    createdAt: item.createdAt || (item._createdDate ? new Date(item._createdDate).toISOString() : ''),
+    readAt: item.readAt || '',
+    reply: item.reply || ''
+  };
+}
+
+export async function createMessage(body) {
+  return run(async () => {
+    const { pupil } = await requireOwnPupil({ write: true });
+    const text = trimTo(body, 2000);
+    if (text.length < 2) throw new PortalError('Write a message first.');
+    const inserted = await wixData.insert('Messages', {
+      pupilId: pupil._id,
+      body: text,
+      createdAt: new Date().toISOString(),
+      readAt: '',
+      reply: ''
+    }, { suppressAuth: true });
+    return { sent: true, message: shape(inserted) };
+  });
+}
+
+export async function listPupilMessages(pupilId) {
+  return run(async () => {
+    await requireInstructor();
+    if (!pupilId || typeof pupilId !== 'string') throw new PortalError('Which pupil?');
+    const result = await wixData.query('Messages').eq('pupilId', pupilId).descending('createdAt').limit(50).find({ suppressAuth: true });
+    return { items: result.items.map(shape) };
+  });
+}
+
+export async function markMessageRead(id) {
+  return run(async () => {
+    await requireInstructor();
+    const item = await wixData.get('Messages', id, { suppressAuth: true });
+    if (!item) throw new PortalError('That message was not found.', 'not-found');
+    const readAt = new Date().toISOString();
+    await wixData.update('Messages', Object.assign({}, item, { readAt }), { suppressAuth: true });
+    return { readAt };
+  });
+}

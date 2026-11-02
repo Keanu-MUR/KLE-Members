@@ -1,0 +1,120 @@
+// Lessons: instructor-only writes, pupil and guardian read their own.
+// Members may call (see permissions.json); the role checks inside are the
+// real guard.
+
+import wixData from 'wix-data';
+import { requireInstructor, requireOwnPupil, run, PortalError, getPupilById } from 'backend/access';
+import { shapeLesson, queryLessons, getLessonById, findClash, pupilNames, fullName, activePupils } from 'backend/lesson-store';
+import { validateLesson, weekRanges, londonDate } from 'public/portal-utils';
+import { LESSON_STATUS } from 'public/portal-constants';
+
+async function withPupilNames(items) {
+  const names = await pupilNames(items.map((item) => item.pupilId));
+  return items.map((item) => Object.assign(shapeLesson(item), { pupilName: fullName(names[item.pupilId]) || 'Unknown pupil' }));
+}
+
+// filter: { from, to, pupilId, status }. With no range and no pupil, this
+// week and next.
+export async function listLessons(filter) {
+  return run(async () => {
+    await requireInstructor();
+    const f = filter || {};
+    const today = londonDate();
+    const ranges = weekRanges(today);
+    const query = {
+      pupilId: f.pupilId || '',
+      status: f.status || '',
+      from: f.from || '',
+      to: f.to || '',
+      limit: 300
+    };
+    if (!query.pupilId && !query.from && !query.to) {
+      query.from = ranges.thisWeek.from;
+      query.to = ranges.nextWeek.to;
+    }
+    if (query.pupilId && !query.from && !query.to) query.descending = true;
+    const items = await queryLessons(query);
+    return { items: await withPupilNames(items), ranges, today };
+  });
+}
+
+// One lesson for the form, with the pupils to choose from. id 'new' (or
+// empty) returns only the pupil list.
+export async function getLesson(id) {
+  return run(async () => {
+    await requireInstructor();
+    const pupils = await activePupils();
+    if (!id || id === 'new') return { lesson: null, pupils };
+    const item = await getLessonById(id);
+    if (!item) throw new PortalError('That lesson was not found.', 'not-found');
+    const names = await pupilNames([item.pupilId]);
+    return {
+      lesson: Object.assign(shapeLesson(item), { pupilName: fullName(names[item.pupilId]) }),
+      pupils
+    };
+  });
+}
+
+async function checkedLesson(fields, excludeId) {
+  const checked = validateLesson(fields);
+  if (!checked.ok) return { errors: checked.errors };
+  const pupil = await getPupilById(checked.data.pupilId);
+  if (!pupil) return { errors: { pupilId: 'That pupil record was not found.' } };
+  if (checked.data.status === LESSON_STATUS.PLANNED) {
+    const clash = await findClash(checked.data, excludeId);
+    if (clash) {
+      const names = await pupilNames([clash.pupilId]);
+      const who = clash.pupilId === pupil._id ? pupil.firstName : (names[clash.pupilId] || {}).firstName || 'another pupil';
+      return { errors: { slot: 'That clashes with ' + who + '’s lesson at ' + clash.startTime + '.' } };
+    }
+  }
+  return { data: checked.data, pupil };
+}
+
+export async function createLesson(fields) {
+  return run(async () => {
+    await requireInstructor();
+    const result = await checkedLesson(fields, null);
+    if (result.errors) return { saved: false, errors: result.errors };
+    const inserted = await wixData.insert('Lessons', result.data, { suppressAuth: true });
+    return { saved: true, errors: {}, lesson: Object.assign(shapeLesson(inserted), { pupilName: fullName(result.pupil) }) };
+  });
+}
+
+export async function updateLesson(id, fields) {
+  return run(async () => {
+    await requireInstructor();
+    const item = await getLessonById(id);
+    if (!item) throw new PortalError('That lesson was not found.', 'not-found');
+    const result = await checkedLesson(Object.assign({}, shapeLesson(item), fields || {}), item._id);
+    if (result.errors) return { saved: false, errors: result.errors };
+    const updated = await wixData.update('Lessons', Object.assign({}, item, result.data), { suppressAuth: true });
+    return { saved: true, errors: {}, lesson: Object.assign(shapeLesson(updated), { pupilName: fullName(result.pupil) }) };
+  });
+}
+
+// The pupil's (or guardian's) own lessons: upcoming ascending, past
+// descending, private notes stripped.
+export async function listMyLessons() {
+  return run(async () => {
+    const { caller, pupil } = await requireOwnPupil();
+    const today = londonDate();
+    const items = await queryLessons({ pupilId: pupil._id, limit: 300 });
+    const upcoming = [];
+    const past = [];
+    items.forEach((item) => {
+      const lesson = shapeLesson(item, { forPupil: true });
+      if (lesson.date >= today && lesson.status === LESSON_STATUS.PLANNED) upcoming.push(lesson);
+      else past.push(lesson);
+    });
+    past.reverse();
+    return {
+      viewerRole: caller.role,
+      pupil: { firstName: pupil.firstName || '', lastName: pupil.lastName || '' },
+      today,
+      upcoming,
+      past,
+      history: pupil.lessonHistory && typeof pupil.lessonHistory === 'object' ? pupil.lessonHistory : {}
+    };
+  });
+}

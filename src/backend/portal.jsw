@@ -1,22 +1,41 @@
-// Page data for the Pupil Home and Instructor Dashboard shells. Phase 2
-// fills the empty fields with lessons and progress; the shapes are fixed
-// now so the elements can be built against them. Members only (see
-// permissions.json); the role check inside is the real guard.
+// Page data for the Pupil Home and Instructor Dashboard. Members only (see
+// permissions.json); the role check inside is the real guard. Balance
+// arrives with Payments in Phase 3; reminders in Phase 4.
 
+import wixData from 'wix-data';
 import { requireInstructor, requireOwnPupil, run, publicPupil } from 'backend/access';
 import { checkSetup } from 'backend/setup';
 import { loadSettings } from 'backend/settings';
+import { shapeLesson, queryLessons, pupilNames, fullName } from 'backend/lesson-store';
+import { londonDate, addDays, progressSummary } from 'public/portal-utils';
+import { LESSON_STATUS, ENQUIRY_STATUS } from 'public/portal-constants';
+
+async function latestSummaryFor(pupilId) {
+  const items = await queryLessons({ pupilId, status: LESSON_STATUS.COMPLETED, descending: true, limit: 20 });
+  const withSummary = items.find((item) => item.pupilSummary);
+  return withSummary ? shapeLesson(withSummary, { forPupil: true }) : null;
+}
 
 export async function getPupilHome() {
   return run(async () => {
     const { caller, pupil } = await requireOwnPupil();
+    const today = londonDate();
+    const [upcoming, latest, progress] = await Promise.all([
+      queryLessons({ pupilId: pupil._id, from: today, status: LESSON_STATUS.PLANNED, limit: 1 }),
+      latestSummaryFor(pupil._id),
+      wixData.query('Progress').eq('pupilId', pupil._id).limit(1).find({ suppressAuth: true })
+    ]);
+    const progressItem = progress.items[0] || null;
+    const summary = progressSummary(progressItem ? progressItem.skills : null, pupil.transmission);
     return {
       viewerRole: caller.role,
       pupil: publicPupil(pupil),
-      nextLesson: null,
-      progressSummary: null,
+      today,
+      nextLesson: upcoming[0] ? shapeLesson(upcoming[0], { forPupil: true }) : null,
+      progressSummary: summary.words || null,
+      progressUpdatedAt: progressItem ? progressItem.updatedAt || '' : '',
       balance: null,
-      latestSummary: null
+      latestSummary: latest
     };
   });
 }
@@ -26,12 +45,29 @@ export async function getInstructorDashboard() {
     await requireInstructor();
     const setup = await checkSetup();
     const { item } = setup.missing.includes('Settings') ? { item: null } : await loadSettings();
+    const today = londonDate();
+    const tomorrow = addDays(today, 1);
+    const ready = setup.checked && setup.missing.length === 0;
+    if (!ready) {
+      return {
+        setup: Object.assign({}, setup, { settingsExists: Boolean(item) }),
+        today: [], tomorrow: [], unreadEnquiries: 0, unreadMessages: 0, reminders: { sent: 0, failed: 0 }, dates: { today, tomorrow }
+      };
+    }
+    const [lessons, newEnquiries, unreadMessages] = await Promise.all([
+      queryLessons({ from: today, to: tomorrow, limit: 100 }),
+      wixData.query('Enquiries').eq('status', ENQUIRY_STATUS.NEW).count({ suppressAuth: true }),
+      wixData.query('Messages').isEmpty('readAt').count({ suppressAuth: true })
+    ]);
+    const names = await pupilNames(lessons.map((l) => l.pupilId));
+    const shaped = lessons.map((l) => Object.assign(shapeLesson(l), { pupilName: fullName(names[l.pupilId]) || 'Unknown pupil' }));
     return {
       setup: Object.assign({}, setup, { settingsExists: Boolean(item) }),
-      today: [],
-      tomorrow: [],
-      unreadEnquiries: 0,
-      unreadMessages: 0,
+      dates: { today, tomorrow },
+      today: shaped.filter((l) => l.date === today),
+      tomorrow: shaped.filter((l) => l.date === tomorrow),
+      unreadEnquiries: newEnquiries,
+      unreadMessages,
       reminders: { sent: 0, failed: 0 }
     };
   });

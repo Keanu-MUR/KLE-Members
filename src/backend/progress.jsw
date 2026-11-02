@@ -1,0 +1,80 @@
+// The driver's record: one Progress item per pupil holding the whole grid
+// as JSON. Instructor writes; pupil and guardian read their own. Members
+// may call (see permissions.json); the role checks inside are the guard.
+
+import wixData from 'wix-data';
+import { requireInstructor, requireOwnPupil, run, PortalError, getPupilById } from 'backend/access';
+import { validateSkill, progressSummary } from 'public/portal-utils';
+import { SKILLS, SKILL_GROUPS, LEVELS } from 'public/portal-constants';
+
+async function loadProgress(pupilId) {
+  const result = await wixData.query('Progress').eq('pupilId', pupilId).limit(1).find({ suppressAuth: true });
+  return result.items[0] || null;
+}
+
+function payload(pupil, item, viewerRole) {
+  const data = item && item.skills && typeof item.skills === 'object' ? item.skills : {};
+  return {
+    viewerRole: viewerRole || 'instructor',
+    pupil: {
+      _id: pupil._id,
+      firstName: pupil.firstName || '',
+      lastName: pupil.lastName || '',
+      transmission: pupil.transmission || '',
+      theoryPassed: Boolean(pupil.theoryPassed),
+      theoryPassDate: pupil.theoryPassDate || '',
+      practicalTestDate: pupil.practicalTestDate || ''
+    },
+    skills: SKILLS,
+    groups: SKILL_GROUPS,
+    levels: LEVELS,
+    data,
+    updatedAt: item && item.updatedAt ? item.updatedAt : '',
+    summary: progressSummary(data, pupil.transmission).words
+  };
+}
+
+export async function getProgress(pupilId) {
+  return run(async () => {
+    await requireInstructor();
+    const pupil = await getPupilById(pupilId);
+    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    return payload(pupil, await loadProgress(pupil._id));
+  });
+}
+
+// One tap on the grid, or a note save: writes the single Progress item at
+// once and returns the new entry and summary line.
+export async function setSkill(pupilId, skillKey, level, note) {
+  return run(async () => {
+    await requireInstructor();
+    const pupil = await getPupilById(pupilId);
+    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    const checked = validateSkill(skillKey, level, note, pupil.transmission);
+    if (!checked.ok) throw new PortalError(checked.errors.skillKey || checked.errors.level);
+
+    const now = new Date().toISOString();
+    const item = await loadProgress(pupil._id);
+    const skills = Object.assign({}, item && item.skills && typeof item.skills === 'object' ? item.skills : {});
+    skills[checked.data.skillKey] = { level: checked.data.level, note: checked.data.note, updatedAt: now };
+
+    if (item) {
+      await wixData.update('Progress', Object.assign({}, item, { skills, updatedAt: now }), { suppressAuth: true });
+    } else {
+      await wixData.insert('Progress', { pupilId: pupil._id, skills, updatedAt: now }, { suppressAuth: true });
+    }
+    return {
+      skillKey: checked.data.skillKey,
+      entry: skills[checked.data.skillKey],
+      updatedAt: now,
+      summary: progressSummary(skills, pupil.transmission).words
+    };
+  });
+}
+
+export async function getMyProgress() {
+  return run(async () => {
+    const { caller, pupil } = await requireOwnPupil();
+    return payload(pupil, await loadProgress(pupil._id), caller.role);
+  });
+}
