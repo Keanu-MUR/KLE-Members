@@ -71,7 +71,7 @@ Pure helpers in `public/portal-utils.js`, with tests in `tests/phase3.test.mjs`:
 
 ## 6. Progress, 2 Nov 2026
 
-Code built, checked in the local harness at 375px (add, edit, two-tap delete and reply all work against stubs), committed and pushed; 41 tests pass. The page code file `pages/My mock tests.cduqk.js` is pushed for the Editor page created that evening.
+Code built, checked in the local harness at 375px (add, edit, two-tap delete and reply all work against stubs), committed and pushed; 41 tests pass. The page code file `pages/My mock tests.qwgun.js` is pushed for the Editor page created that evening.
 
 Blocked on the Editor: while the My mock tests page was being created, the Editor reported changes from another browser and, after the refresh it asked for, the new page was no longer in the site pages list (the ID cduqk was read before the refresh). Nothing is published for Phase 3 yet. Next: once the Editor is free, duplicate My progress again as My mock tests (slug my-mock-tests, element my-mock-tests.js, tag kle-my-mock-tests), read the new ID, rename the page code file to match, push, publish from the Editor, then run the test script in section 4.
 

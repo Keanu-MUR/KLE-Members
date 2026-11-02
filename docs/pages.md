@@ -68,7 +68,7 @@ The Pupil record page code (`pages/Pupil record.w7oqk.js`) now also imports `lis
 
 | Editor page name | URL slug | Custom element tag | Velo file | Page code file |
 |---|---|---|---|---|
-| My mock tests | `my-mock-tests` | `kle-my-mock-tests` | `public/custom-elements/my-mock-tests.js` | `pages/My mock tests.cduqk.js` |
+| My mock tests | `my-mock-tests` | `kle-my-mock-tests` | `public/custom-elements/my-mock-tests.js` | `pages/My mock tests.qwgun.js` |
 
 Page code:
 
