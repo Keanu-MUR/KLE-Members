@@ -29,6 +29,28 @@ const STYLE = `
 .brand .kle { font-size: 22px; }
 .brand .driving { font-size: 12px; }
 .brand-tag { margin: 4px 0 0; color: var(--kle-muted); }
+nav.portal-nav { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 14px 0 0; }
+nav.portal-nav a { text-decoration: none; padding: 6px 0; border-bottom: 2px solid transparent; }
+nav.portal-nav a[aria-current="page"] { border-bottom-color: var(--kle-primary); }
+.field { margin: 18px 0 0; }
+.field label, .field .legend { display: block; font-weight: 600; margin: 0 0 6px; }
+.field .hint { margin: 6px 0 0; color: var(--kle-muted); }
+.field input[readonly] { background: transparent; border-color: #bdbdbd; color: var(--kle-muted); }
+fieldset { border: 0; padding: 0; margin: 18px 0 0; min-width: 0; }
+.choices { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.choices label, .check { display: flex; align-items: flex-start; gap: 10px; font-weight: 400; margin: 0; cursor: pointer; }
+.choices input, .check input { width: 20px; height: 20px; min-height: 0; margin: 2px 0 0; flex: 0 0 auto; accent-color: var(--kle-primary); }
+.check { margin-top: 18px; }
+.check .consent { display: block; color: var(--kle-muted); margin-top: 4px; }
+.row { display: flex; justify-content: space-between; gap: 16px; align-items: baseline; padding: 12px 0; }
+.row + .row { border-top: 1px solid #e3ded6; }
+.row a { text-decoration: none; }
+.row .meta { color: var(--kle-muted); white-space: nowrap; }
+.filters { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 16px 0 8px; }
+.filters .btn-text[aria-pressed="true"] { text-decoration: none; border-bottom: 2px solid var(--kle-primary); }
+.status { display: inline-block; font-variant-caps: all-small-caps; letter-spacing: 0.08em; color: var(--kle-muted); }
+.hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+.sr-only-focusable:focus { position: static; width: auto; height: auto; }
 .dark { background: var(--kle-ink); color: #fff; }
 .dark .brand-tag { color: #d9d9d9; }
 .viewer { margin: 0; color: var(--kle-muted); }
@@ -57,6 +79,19 @@ a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 :focus-visible { outline: 3px solid var(--kle-primary); outline-offset: 2px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 `;
+
+const NAV_BY_ROLE = {
+  instructor: [
+    { label: 'Today', path: '/instructor' },
+    { label: 'Pupils', path: '/pupils' },
+    { label: 'Enquiries', path: '/enquiries' }
+  ],
+  pupil: [
+    { label: 'Home', path: '/pupil-home' },
+    { label: 'My details', path: '/my-details' }
+  ],
+  guardian: [{ label: 'Home', path: '/pupil-home' }]
+};
 
 function safeParse(value) {
   if (!value) return null;
@@ -87,13 +122,14 @@ export class PortalElement extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['session', 'response'];
+    return ['session', 'response', 'params'];
   }
 
   connectedCallback() {
     if (!this._rendered) {
       this._rendered = true;
       this.shadowRoot.innerHTML = '<style>' + STYLE + this.extraStyle() + '</style>' + this.shell();
+      this.renderNav();
       this.afterShell();
     }
     if (this.session) this.onSession(this.session);
@@ -102,7 +138,10 @@ export class PortalElement extends HTMLElement {
   attributeChangedCallback(name, oldValue, value) {
     if (name === 'session') {
       this.session = safeParse(value);
+      if (this._rendered) this.renderNav();
       if (this._rendered && this.session) this.onSession(this.session);
+    } else if (name === 'params') {
+      this.params = safeParse(value) || {};
     } else if (name === 'response') {
       const message = safeParse(value);
       if (message && message.id && this._pending.has(message.id)) {
@@ -135,7 +174,119 @@ export class PortalElement extends HTMLElement {
 
   // Subclasses override these.
   shell() {
-    return '<div class="portal"><header>' + WORDMARK + '</header><main id="main"></main></div>';
+    return '<div class="portal"><header>' + WORDMARK + '<nav class="portal-nav" id="nav" aria-label="Portal"></nav></header><main id="main"></main></div>';
+  }
+
+  // Text links for the current role, with the current page marked.
+  renderNav() {
+    const nav = this.shadowRoot.getElementById('nav');
+    if (!nav) return;
+    const role = this.session && this.session.loggedIn ? this.session.role : null;
+    const links = (role && NAV_BY_ROLE[role]) || [];
+    const here = typeof location !== 'undefined' ? location.pathname.replace(/\/$/, '') : '';
+    nav.innerHTML = links
+      .map((l) => '<a href="' + l.path + '"' + (here === l.path ? ' aria-current="page"' : '') + '>' + esc(l.label) + '</a>')
+      .join('');
+    nav.hidden = links.length === 0;
+  }
+
+  // Form building blocks, all with real labels and plain-English errors.
+  field(opts) {
+    const type = opts.type || 'text';
+    const attrs = [
+      'id="' + esc(opts.id) + '"',
+      'name="' + esc(opts.name || opts.id) + '"',
+      'type="' + esc(type) + '"',
+      'value="' + esc(opts.value == null ? '' : opts.value) + '"'
+    ];
+    if (opts.autocomplete) attrs.push('autocomplete="' + esc(opts.autocomplete) + '"');
+    if (opts.inputmode) attrs.push('inputmode="' + esc(opts.inputmode) + '"');
+    if (opts.readOnly) attrs.push('readonly aria-readonly="true"');
+    if (opts.required) attrs.push('required');
+    if (opts.maxlength) attrs.push('maxlength="' + opts.maxlength + '"');
+    if (opts.hint) attrs.push('aria-describedby="' + esc(opts.id) + '-hint"');
+    return (
+      '<div class="field" id="f-' + esc(opts.id) + '"><label for="' + esc(opts.id) + '">' + esc(opts.label) + '</label>' +
+      '<input ' + attrs.join(' ') + '>' +
+      (opts.hint ? '<p class="hint" id="' + esc(opts.id) + '-hint">' + esc(opts.hint) + '</p>' : '') +
+      '</div>'
+    );
+  }
+
+  textarea(opts) {
+    return (
+      '<div class="field" id="f-' + esc(opts.id) + '"><label for="' + esc(opts.id) + '">' + esc(opts.label) + '</label>' +
+      '<textarea id="' + esc(opts.id) + '" name="' + esc(opts.name || opts.id) + '"' +
+      (opts.maxlength ? ' maxlength="' + opts.maxlength + '"' : '') + (opts.rows ? ' rows="' + opts.rows + '"' : '') + '>' +
+      esc(opts.value == null ? '' : opts.value) + '</textarea>' +
+      (opts.hint ? '<p class="hint">' + esc(opts.hint) + '</p>' : '') + '</div>'
+    );
+  }
+
+  radios(opts) {
+    return (
+      '<fieldset class="field" id="f-' + esc(opts.name) + '"><legend class="legend">' + esc(opts.legend) + '</legend><div class="choices">' +
+      opts.options.map((o) =>
+        '<label><input type="radio" name="' + esc(opts.name) + '" value="' + esc(o.value) + '"' +
+        (opts.value === o.value ? ' checked' : '') + '><span>' + esc(o.label) + '</span></label>'
+      ).join('') + '</div></fieldset>'
+    );
+  }
+
+  checkbox(opts) {
+    return (
+      '<div class="field" id="f-' + esc(opts.id) + '"><label class="check"><input type="checkbox" id="' + esc(opts.id) + '" name="' + esc(opts.name || opts.id) + '"' +
+      (opts.checked ? ' checked' : '') + '><span>' + esc(opts.label) +
+      (opts.consent ? '<span class="consent">' + esc(opts.consent) + '</span>' : '') + '</span></label></div>'
+    );
+  }
+
+  // Values of every named control in a form, checkboxes as booleans.
+  readForm(form) {
+    const out = {};
+    const data = new FormData(form);
+    form.querySelectorAll('input[type=checkbox][name]').forEach((cb) => { out[cb.name] = cb.checked; });
+    data.forEach((value, key) => { if (!(key in out)) out[key] = typeof value === 'string' ? value.trim() : value; });
+    return out;
+  }
+
+  setErrors(form, errors) {
+    form.querySelectorAll('.error').forEach((p) => p.remove());
+    form.querySelectorAll('.field-error').forEach((w) => w.classList.remove('field-error'));
+    let first = null;
+    Object.keys(errors || {}).forEach((key) => {
+      const wrap = form.querySelector('#f-' + key);
+      if (!wrap) return;
+      wrap.classList.add('field-error');
+      const p = document.createElement('p');
+      p.className = 'error';
+      p.textContent = errors[key];
+      wrap.appendChild(p);
+      if (!first) first = wrap.querySelector('input, textarea, select');
+    });
+    if (first) first.focus();
+  }
+
+  setBusy(form, busy) {
+    form.querySelectorAll('button').forEach((b) => { b.disabled = busy; });
+  }
+
+  // "14 May 2008": a date without the weekday, for birthdays and the like.
+  longDate(iso) {
+    if (!iso) return '';
+    const d = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? new Date(iso + 'T12:00:00Z') : new Date(iso);
+    if (Number.isNaN(d.getTime())) return '';
+    return new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+  }
+
+  // "Tuesday 4 November 2026" for an ISO date or timestamp, London time.
+  dateWords(iso, withYear) {
+    if (!iso) return '';
+    const d = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? new Date(iso + 'T12:00:00Z') : new Date(iso);
+    if (Number.isNaN(d.getTime())) return '';
+    const o = { timeZone: 'Europe/London', weekday: 'long', day: 'numeric', month: 'long' };
+    if (withYear) o.year = 'numeric';
+    return new Intl.DateTimeFormat('en-GB', o).format(d);
   }
   extraStyle() {
     return '';

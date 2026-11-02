@@ -17,9 +17,17 @@ HOME_BY_ROLE[ROLES.GUARDIAN] = PORTAL_PATHS.pupilHome;
 // this is routing, not security.
 const PAGE_ROLES = {
   login: null,
+  enquire: null,
   home: [ROLES.PUPIL, ROLES.GUARDIAN],
-  instructor: [ROLES.INSTRUCTOR]
+  'my-details': [ROLES.PUPIL, ROLES.GUARDIAN],
+  instructor: [ROLES.INSTRUCTOR],
+  enquiries: [ROLES.INSTRUCTOR],
+  pupils: [ROLES.INSTRUCTOR],
+  'pupil-record': [ROLES.INSTRUCTOR]
 };
+
+// Pages anyone may open; they still receive the session for the nav.
+const PUBLIC_PAGES = ['login', 'enquire'];
 
 const LOGGED_OUT = { loggedIn: false, role: ROLES.NONE, pupilId: null, firstName: '', pupilName: null };
 
@@ -48,6 +56,7 @@ export async function mountPortal($w, selector, config) {
   // for the URL. A member-specific redirect made there would be served to
   // the next visitor, so routing only ever runs in the browser.
   if (wixWindow.rendering.env !== 'browser') return;
+  element.setAttribute('params', JSON.stringify(wixLocation.query || {}));
   await route(element, config);
 }
 
@@ -75,7 +84,7 @@ async function route(element, config) {
       wixLocation.to(home);
       return false;
     }
-  } else {
+  } else if (!PUBLIC_PAGES.includes(config.page)) {
     if (!session.loggedIn) {
       wixLocation.to(PORTAL_PATHS.login);
       return false;
