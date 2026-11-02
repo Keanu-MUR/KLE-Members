@@ -255,6 +255,19 @@
           "invoke": false
         }
       }
+    },
+    "backend/enquire.jsw": {
+      "notifyEnquiry": {
+        "siteOwner": {
+          "invoke": true
+        },
+        "siteMember": {
+          "invoke": true
+        },
+        "anonymous": {
+          "invoke": true
+        }
+      }
     }
   }
 }

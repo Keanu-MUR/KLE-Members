@@ -1,5 +1,6 @@
 // <kle-enquire>: the public enquiry form. Posts straight to the site's own
-// HTTP function, which validates, rate-limits, stores and sends the emails.
+// HTTP function, which validates, rate-limits and stores the enquiry, then
+// asks the page to send the emails for it (one-time token).
 
 import { PortalElement, esc } from './portal-base.js';
 
@@ -89,19 +90,25 @@ class KleEnquire extends PortalElement {
     } catch (error) {
       result = { ok: false, error: 'I couldn’t send that just now. Check your connection and try again.' };
     }
-    this.setBusy(form, false);
-
     if (!result.ok) {
+      this.setBusy(form, false);
       if (result.errors) this.setErrors(form, result.errors);
       this.$('#status').innerHTML = this.failure(result);
       return;
     }
+    // The enquiry is stored; the emails go out through the page.
+    let confirmationSent = false;
+    if (result.data.enquiryId) {
+      const sent = await this.call('notifyEnquiry', { enquiryId: result.data.enquiryId, token: result.data.token });
+      confirmationSent = Boolean(sent.ok && sent.data && sent.data.confirmationSent);
+    }
+    this.setBusy(form, false);
     const how = { phone: 'phone', email: 'email', whatsapp: 'WhatsApp' }[result.data.preferredContact] || 'email';
     this.setMain(
       '<h1>Thanks, ' + esc(result.data.firstName || 'and hello') + '.</h1>' +
       '<p>I have your enquiry and will be in touch by ' + esc(how) + ' within a day.</p>' +
       (result.data.outsideArea ? '<p class="muted">' + esc(AREA_NOTE) + '</p>' : '') +
-      '<p class="muted">A confirmation is on its way to your email.</p>'
+      (confirmationSent ? '<p class="muted">A confirmation is on its way to your email.</p>' : '')
     );
   }
 }

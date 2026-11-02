@@ -1,12 +1,18 @@
-// The public enquiry pipeline: validate, rate-limit, store, notify. Called
-// by the HTTP function in http-functions.js, which is the only place that
-// can see the caller's IP address.
+// The public enquiry pipeline: validate, rate-limit, store, notify.
+// handleEnquiry() runs in the HTTP function (http-functions.js), the only
+// place that can see the caller's IP address. The emails cannot be sent
+// from there: Wix answers a triggered-email call made with no visitor
+// identity with FORBIDDEN (found live, 2 Nov 2026). So the HTTP function
+// stores the enquiry with a one-time notify token, and the page then calls
+// sendEnquiryNotifications() through the web module in enquire.jsw, which
+// runs with the visitor's identity. The token is cleared on first use, so
+// the emails for an enquiry go out once at most.
 
 import wixData from 'wix-data';
 import { loadSettings } from 'backend/settings';
 import { sendEmail, sendWhatsApp } from 'backend/messaging';
 import { lookupMemberByEmail } from 'backend/pupil-store';
-import { validateEnquiry, hashKey, rateLimitDecision, fillTemplate } from 'public/portal-utils';
+import { validateEnquiry, hashKey, rateLimitDecision, fillTemplate, isTaughtPostcode } from 'public/portal-utils';
 import { ENQUIRY_STATUS, ENQUIRY_LIMIT, TEMPLATES, PORTAL_PATHS, SCHOOL } from 'public/portal-constants';
 
 // The salt only stops the hash being a bare lookup of the IP; it is not a
@@ -29,8 +35,16 @@ export async function recordAttempt(ipHash, now) {
   await wixData.insert('RateLimit', { ipHash, windowStart: now.toISOString(), count: 1 }, { suppressAuth: true });
 }
 
+function notifyToken() {
+  let token = '';
+  for (let i = 0; i < 32; i++) token += Math.floor(Math.random() * 16).toString(16);
+  return token;
+}
+
 export async function recordEnquiry(data) {
   return wixData.insert('Enquiries', {
+    notifyToken: notifyToken(),
+    notifiedAt: '',
     name: data.name,
     email: data.email,
     phone: data.phone,
@@ -111,17 +125,51 @@ export async function handleEnquiry(body, ip) {
   await recordAttempt(limit.ipHash, now);
 
   const enquiry = await recordEnquiry(checked.data);
-  try {
-    await notifyEnquiry(enquiry, checked.data);
-  } catch (error) {
-    console.error('[portal] notifyEnquiry', error && error.message ? error.message : error);
-  }
   return {
     ok: true,
     data: {
       firstName: checked.data.firstName,
       preferredContact: checked.data.preferredContact,
-      outsideArea: checked.data.outsideArea
+      outsideArea: checked.data.outsideArea,
+      enquiryId: enquiry._id,
+      token: enquiry.notifyToken
     }
   };
+}
+
+// Second half of the pipeline, called from the page once the HTTP function
+// has stored the enquiry. The token is single use; a wrong or spent token
+// is answered with a plain failure and sends nothing.
+export async function sendEnquiryNotifications(enquiryId, token) {
+  if (!enquiryId || !token || typeof enquiryId !== 'string' || typeof token !== 'string') {
+    return { ok: false, error: 'Nothing to send.' };
+  }
+  const item = await wixData.get('Enquiries', enquiryId, { suppressAuth: true });
+  if (!item || !item.notifyToken || item.notifyToken !== token) return { ok: false, error: 'Nothing to send.' };
+  await wixData.update('Enquiries', Object.assign({}, item, {
+    notifyToken: '',
+    notifiedAt: new Date().toISOString()
+  }), { suppressAuth: true });
+
+  const parts = String(item.name || '').split(/\s+/).filter(Boolean);
+  const data = {
+    name: item.name || '',
+    firstName: parts[0] || '',
+    lastName: parts.slice(1).join(' '),
+    email: item.email || '',
+    phone: item.phone || '',
+    dateOfBirth: item.dateOfBirth || '',
+    postcode: item.postcode || '',
+    outsideArea: !isTaughtPostcode(item.postcode || ''),
+    transmission: item.transmission || '',
+    preferredContact: item.preferredContact || '',
+    message: item.message || ''
+  };
+  try {
+    const sent = await notifyEnquiry(item, data);
+    return { ok: true, data: { confirmationSent: Boolean(sent.confirmation && sent.confirmation.ok) } };
+  } catch (error) {
+    console.error('[portal] notifyEnquiry', error && error.message ? error.message : error);
+    return { ok: true, data: { confirmationSent: false } };
+  }
 }
