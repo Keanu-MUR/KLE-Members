@@ -68,7 +68,8 @@ class KlePupilRecord extends PortalElement {
       '<h2>Emergency contact (optional)</h2>' +
       f('emergencyContactName', 'Name') + f('emergencyContactPhone', 'Phone', { type: 'tel' }) +
       '<h2>Guardian</h2>' +
-      f('guardianName', 'Guardian name') + f('guardianEmail', 'Guardian email', { type: 'email', hint: 'Gets the lesson reminder too while the pupil is under 18. Linking a guardian login comes later.' }) +
+      f('guardianName', 'Guardian name') + f('guardianEmail', 'Guardian email', { type: 'email', hint: 'Gets the lesson reminder too while the pupil is under 18.' }) +
+      '<div id="guardian-login">' + this.guardianWords(p) + '</div>' +
       '<h2>Reminders</h2>' +
       this.checkbox({ id: 'reminderEmail', label: 'Email reminders', checked: p.reminderEmail }) +
       this.checkbox({ id: 'reminderWhatsApp', label: 'WhatsApp reminders', checked: p.reminderWhatsApp, consent: p.whatsAppConsentAt ? 'Consent recorded ' + this.dateWords(p.whatsAppConsentAt, true) + '.' : 'No consent recorded yet.' }) +
@@ -94,6 +95,7 @@ class KlePupilRecord extends PortalElement {
       this.save(p, form);
     });
     this.$('#login-link').addEventListener('click', () => this.loginLink(p, form));
+    this.bindGuardian(p, form);
   }
 
   async loadLessons(p) {
@@ -368,6 +370,51 @@ class KlePupilRecord extends PortalElement {
     }
     p.status = status || p.status;
     this.$('#status').innerHTML = '<div class="notice" role="status">Saved. ' + esc(values.firstName || p.firstName) + ' will see any changes next time they log in.</div>';
+  }
+
+  guardianWords(p) {
+    const words = p.guardianLinked
+      ? '<p class="muted">Guardian login: ' + esc(p.guardianEmail) + ', read only.</p>' +
+        '<div class="actions"><button class="btn btn-text" type="button" id="guardian-resend">Send guardian login link</button><button class="btn btn-text" type="button" id="guardian-unlink">Remove guardian login</button></div>'
+      : '<p class="muted">No guardian login yet. Save the guardian email above, then link it: the guardian gets a set-password email and sees the pupil’s pages, read only.</p>' +
+        '<div class="actions"><button class="btn btn-text" type="button" id="guardian-link">Link guardian login</button></div>';
+    return words + '<div id="guardian-status" aria-live="polite"></div>';
+  }
+
+  bindGuardian(p, form) {
+    const box = this.$('#guardian-login');
+    const status = () => this.$('#guardian-status');
+    const link = this.$('#guardian-link');
+    const resend = this.$('#guardian-resend');
+    const unlink = this.$('#guardian-unlink');
+    if (link) link.addEventListener('click', async () => {
+      const email = (this.$('#guardianEmail') || {}).value || '';
+      link.disabled = true;
+      const result = await this.call('linkGuardian', { id: p._id, email: email.trim() });
+      link.disabled = false;
+      if (!result.ok) { status().innerHTML = this.failure(result); return; }
+      p.guardianLinked = true;
+      p.guardianEmail = result.data.email;
+      box.innerHTML = this.guardianWords(p);
+      this.bindGuardian(p, form);
+      this.$('#guardian-status').innerHTML = '<div class="notice" role="status">Linked. ' + (result.data.sent ? 'A set-password email went to ' + esc(result.data.email) + '.' : 'The set-password email did not send; use "Send guardian login link".') + '</div>';
+    });
+    if (resend) resend.addEventListener('click', async () => {
+      resend.disabled = true;
+      const result = await this.call('sendGuardianLoginLink', { id: p._id });
+      resend.disabled = false;
+      status().innerHTML = result.ok ? '<div class="notice" role="status">Login link sent to ' + esc(result.data.email) + '.</div>' : this.failure(result);
+    });
+    if (unlink) unlink.addEventListener('click', async () => {
+      unlink.disabled = true;
+      const result = await this.call('unlinkGuardian', { id: p._id });
+      unlink.disabled = false;
+      if (!result.ok) { status().innerHTML = this.failure(result); return; }
+      p.guardianLinked = false;
+      box.innerHTML = this.guardianWords(p);
+      this.bindGuardian(p, form);
+      this.$('#guardian-status').innerHTML = '<div class="notice" role="status">Guardian login removed.</div>';
+    });
   }
 
   async loginLink(p, form) {

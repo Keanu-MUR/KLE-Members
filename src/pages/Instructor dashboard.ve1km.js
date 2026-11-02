@@ -3,7 +3,7 @@ import { getSession } from 'backend/session';
 import { getInstructorDashboard } from 'backend/portal';
 import { createCollections, ensureSettings } from 'backend/setup-actions';
 import { listLessons, getLesson, createLesson, updateLesson } from 'backend/lessons';
-import { listPupils, getPupil, updatePupil, setPupilStatus, sendLoginLink, findMemberByEmail, createPupil } from 'backend/pupils';
+import { listPupils, getPupil, updatePupil, setPupilStatus, sendLoginLink, findMemberByEmail, createPupil, linkGuardian, unlinkGuardian, sendGuardianLoginLink } from 'backend/pupils';
 import { listPupilMessages, markMessageRead, replyToMessage } from 'backend/messages';
 import { listMockTests, saveMockTest, deleteMockTest } from 'backend/mock-tests';
 import { getProgress, setSkill } from 'backend/progress';
@@ -16,7 +16,7 @@ $w.onReady(() => init($w, {
   getSession,
   getInstructorDashboard, createCollections, ensureSettings, findMemberByEmail, createPupil,
   listLessons, getLesson, createLesson, updateLesson,
-  listPupils, getPupil, updatePupil, setPupilStatus, sendLoginLink,
+  listPupils, getPupil, updatePupil, setPupilStatus, sendLoginLink, linkGuardian, unlinkGuardian, sendGuardianLoginLink,
   listPupilMessages, markMessageRead, replyToMessage,
   listMockTests, saveMockTest, deleteMockTest,
   getProgress, setSkill,

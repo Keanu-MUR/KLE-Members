@@ -4,7 +4,7 @@
 import wixData from 'wix-data';
 import { authentication } from 'wix-members-backend';
 import { requireInstructor, run, PortalError, getPupilById } from 'backend/access';
-import { lookupMemberByEmail, pupilByEmail, insertPupil } from 'backend/pupil-store';
+import { lookupMemberByEmail, pupilByEmail, insertPupil, registerMember } from 'backend/pupil-store';
 import { isValidEmail, toE164, trimTo, isValidIsoDate, isValidPostcode } from 'public/portal-utils';
 import { TRANSMISSION, PUPIL_STATUS } from 'public/portal-constants';
 
@@ -105,6 +105,7 @@ export async function getPupil(id) {
     const out = { _id: pupil._id, memberId: pupil.memberId || '', transmission: pupil.transmission || TRANSMISSION.MANUAL, status: pupil.status || PUPIL_STATUS.ACTIVE, hourlyRatePence: pupil.hourlyRatePence || null };
     Object.keys(TEXT_FIELDS).forEach((key) => { out[key] = pupil[key] || ''; });
     BOOL_FIELDS.forEach((key) => { out[key] = Boolean(pupil[key]); });
+    out.guardianLinked = Boolean(pupil.guardianMemberId);
     return out;
   });
 }
@@ -198,5 +199,70 @@ export async function sendLoginLink(id) {
     if (!memberId) throw new PortalError('There is no member account for that email yet. Convert the enquiry, or create the member first.');
     await authentication.sendSetPasswordEmail(pupil.email);
     return { sent: true, memberId };
+  });
+}
+
+// ---- Guardian login ---------------------------------------------------
+
+async function guardianOfAnotherPupil(memberId, pupilId) {
+  const result = await wixData.query('Pupils').eq('guardianMemberId', memberId).ne('_id', pupilId).limit(1).find({ suppressAuth: true });
+  return result.items[0] || null;
+}
+
+// Gives a guardian a read-only login to this pupil's pages: an existing
+// member by email, or a new member sent Wix's set-password email. One
+// guardian login per pupil, and a login can only watch one pupil.
+export async function linkGuardian(id, email) {
+  return run(async () => {
+    await requireInstructor();
+    const pupil = await getPupilById(id);
+    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    const address = String(email || '').trim().toLowerCase();
+    if (!isValidEmail(address)) throw new PortalError("That email address doesn't look right.");
+    if (address === String(pupil.email || '').toLowerCase()) throw new PortalError("That is the pupil's own address; a guardian needs their own.");
+    const other = await pupilByEmail(address);
+    if (other) throw new PortalError('That address belongs to a pupil, so it cannot be a guardian login.');
+    let member = await lookupMemberByEmail(address);
+    let created = false;
+    if (member && (await guardianOfAnotherPupil(member.memberId, pupil._id))) {
+      throw new PortalError('That login already watches another pupil; a guardian login can only watch one.');
+    }
+    let memberId = member ? member.memberId : '';
+    if (!memberId) {
+      memberId = await registerMember(address, { firstName: pupil.guardianName || 'Guardian', lastName: '' });
+      if (!memberId) throw new PortalError('Could not create the guardian login. Try again in a moment.');
+      created = true;
+    }
+    await wixData.update('Pupils', Object.assign({}, pupil, { guardianMemberId: memberId, guardianEmail: address }), { suppressAuth: true });
+    let sent = false;
+    try {
+      await authentication.sendSetPasswordEmail(address);
+      sent = true;
+    } catch (error) {
+      console.warn('[portal] guardian set-password email did not send', error && error.message ? error.message : error);
+    }
+    return { linked: true, created, sent, email: address };
+  });
+}
+
+// Takes the login away; the guardian's member account stays.
+export async function unlinkGuardian(id) {
+  return run(async () => {
+    await requireInstructor();
+    const pupil = await getPupilById(id);
+    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    await wixData.update('Pupils', Object.assign({}, pupil, { guardianMemberId: '' }), { suppressAuth: true });
+    return { linked: false };
+  });
+}
+
+export async function sendGuardianLoginLink(id) {
+  return run(async () => {
+    await requireInstructor();
+    const pupil = await getPupilById(id);
+    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    if (!pupil.guardianMemberId || !isValidEmail(pupil.guardianEmail)) throw new PortalError('Link a guardian login first.');
+    await authentication.sendSetPasswordEmail(pupil.guardianEmail);
+    return { sent: true, email: pupil.guardianEmail };
   });
 }
