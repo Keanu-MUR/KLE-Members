@@ -68,11 +68,19 @@ The Pupil record page code (`pages/Pupil record.w7oqk.js`) now also imports `lis
 
 | Editor page name | URL slug | Custom element tag | Velo file | Page code file |
 |---|---|---|---|---|
-| My mock tests |  |  |  |  |
+| My mock tests | `my-mock-tests` | `kle-my-mock-tests` | `public/custom-elements/my-mock-tests.js` | `pages/My mock tests.cduqk.js` |
 
 Page code:
 
-\
+```js
+import { init } from 'public/portal-pages/my-mock-tests';
+import { getSession } from 'backend/session';
+import { listMyMockTests } from 'backend/mock-tests';
+$w.onReady(() => init($w, { getSession, listMyMockTests }));
+```
+
+The Pupil record and My lessons page code files also gained imports in Phase 3 (mock tests, replies, the pupil's own messages); both are pushed.
+
 ## Creating a page
 
 1. Pages & Menu > Add Page > Blank page. Name it as in the table.
