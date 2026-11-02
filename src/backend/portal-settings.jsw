@@ -1,0 +1,67 @@
+// The instructor's Settings page: read and update the single Settings item,
+// with the item counts that show the headroom under the plan limit. Members
+// may call (see permissions.json); requireInstructor() is the real guard.
+// (Named portal-settings because backend/settings.js already exists and a
+// .js and .jsw may not share a base name.)
+
+import wixData from 'wix-data';
+import { requireInstructor, run, PortalError } from 'backend/access';
+import { loadSettings, ensureSettingsItem } from 'backend/settings';
+import { PROBE_LESSON_ID } from 'backend/reminder-core';
+import { validateSettings } from 'public/portal-utils';
+import { COLLECTIONS, ITEM_LIMIT, SEND_STATUS } from 'public/portal-constants';
+
+const VISIBLE = [
+  'emailRemindersOn', 'whatsAppRemindersOn', 'emailProvider', 'instructorEmail', 'instructorWhatsApp',
+  'enquiryAlertEmailOn', 'enquiryAlertWhatsAppOn', 'reminderSendHour', 'defaultHourlyRatePence',
+  'lessonRetentionDays', 'sendLogRetentionDays', 'paymentRetentionDays', 'lastExportAt', 'lastExportStatus'
+];
+
+function visible(settings) {
+  const out = {};
+  VISIBLE.forEach((key) => { out[key] = settings[key]; });
+  return out;
+}
+
+async function itemCounts() {
+  const counts = {};
+  let total = 0;
+  for (const name of COLLECTIONS) {
+    try {
+      counts[name] = await wixData.query(name).count({ suppressAuth: true });
+    } catch (error) {
+      counts[name] = null;
+    }
+    total += counts[name] || 0;
+  }
+  return { counts, total, limit: ITEM_LIMIT, headroom: ITEM_LIMIT - total };
+}
+
+// The latest probe row: did a Wix triggered email send from the job?
+async function probe() {
+  const result = await wixData.query('SendLog').eq('lessonId', PROBE_LESSON_ID).descending('createdAt').limit(1).find({ suppressAuth: true });
+  const row = result.items[0];
+  if (!row) return { ran: false };
+  return { ran: true, ok: row.status === SEND_STATUS.SENT, at: row.createdAt || '', error: row.error || '' };
+}
+
+export async function getSettings() {
+  return run(async () => {
+    await requireInstructor();
+    const { settings } = await ensureSettingsItem();
+    const [items, probeResult] = await Promise.all([itemCounts(), probe()]);
+    return { settings: visible(settings), items, probe: probeResult };
+  });
+}
+
+export async function updateSettings(fields) {
+  return run(async () => {
+    await requireInstructor();
+    const checked = validateSettings(fields);
+    if (!checked.ok) return { saved: false, errors: checked.errors };
+    const { item } = await loadSettings();
+    if (!item) throw new PortalError('The Settings record is missing; open the dashboard once to create it.');
+    const updated = await wixData.update('Settings', Object.assign({}, item, checked.data), { suppressAuth: true });
+    return { saved: true, errors: {}, settings: visible(Object.assign({}, item, updated)) };
+  });
+}

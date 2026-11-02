@@ -1,0 +1,37 @@
+// The Send log page. Members may call (see permissions.json);
+// requireInstructor() is the real guard.
+
+import wixData from 'wix-data';
+import { requireInstructor, run } from 'backend/access';
+import { pupilNames, fullName } from 'backend/lesson-store';
+import { pruneCutoff } from 'public/portal-utils';
+import { CHANNEL, SEND_STATUS } from 'public/portal-constants';
+
+// filter: { channel, status, days, pupilId }; newest first, 200 rows.
+export async function listSendLog(filter) {
+  return run(async () => {
+    await requireInstructor();
+    const f = filter || {};
+    const days = [7, 30, 90].includes(Number(f.days)) ? Number(f.days) : 30;
+    let query = wixData.query('SendLog').ge('createdAt', pruneCutoff(new Date(), days));
+    if (Object.values(CHANNEL).includes(f.channel)) query = query.eq('channel', f.channel);
+    if (Object.values(SEND_STATUS).includes(f.status)) query = query.eq('status', f.status);
+    if (f.pupilId) query = query.eq('pupilId', f.pupilId);
+    const result = await query.descending('createdAt').limit(200).find({ suppressAuth: true });
+    const names = await pupilNames(result.items.map((r) => r.pupilId));
+    return {
+      days,
+      items: result.items.map((r) => ({
+        _id: r._id,
+        createdAt: r.createdAt || '',
+        pupilId: r.pupilId || '',
+        pupilName: r.pupilId ? fullName(names[r.pupilId]) || 'Unknown pupil' : (r.lessonId === 'probe:job-email' ? 'Probe' : 'Instructor'),
+        lessonId: r.lessonId || '',
+        channel: r.channel || '',
+        status: r.status || '',
+        error: r.error || '',
+        providerMessageId: r.providerMessageId || ''
+      }))
+    };
+  });
+}

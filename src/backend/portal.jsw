@@ -7,7 +7,8 @@ import { requireInstructor, requireOwnPupil, run, publicPupil } from 'backend/ac
 import { checkSetup } from 'backend/setup';
 import { loadSettings } from 'backend/settings';
 import { shapeLesson, queryLessons, pupilNames, fullName } from 'backend/lesson-store';
-import { trimTo, londonDate, addDays, progressSummary } from 'public/portal-utils';
+import { recentCounts } from 'backend/reminder-core';
+import { trimTo, londonDate, addDays, progressSummary, sendCounts } from 'public/portal-utils';
 import { LESSON_STATUS, ENQUIRY_STATUS } from 'public/portal-constants';
 
 async function latestSummaryFor(pupilId) {
@@ -53,10 +54,11 @@ export async function getInstructorDashboard() {
         today: [], tomorrow: [], unreadEnquiries: 0, unreadMessages: 0, unread: [], reminders: { sent: 0, failed: 0 }, dates: { today, tomorrow }
       };
     }
-    const [lessons, newEnquiries, unreadResult] = await Promise.all([
+    const [lessons, newEnquiries, unreadResult, sendRows] = await Promise.all([
       queryLessons({ from: today, to: tomorrow, limit: 100 }),
       wixData.query('Enquiries').eq('status', ENQUIRY_STATUS.NEW).count({ suppressAuth: true }),
-      wixData.query('Messages').isEmpty('readAt').descending('createdAt').limit(20).find({ suppressAuth: true })
+      wixData.query('Messages').isEmpty('readAt').descending('createdAt').limit(20).find({ suppressAuth: true }),
+      recentCounts()
     ]);
     const names = await pupilNames(lessons.map((l) => l.pupilId).concat(unreadResult.items.map((m) => m.pupilId)));
     const shaped = lessons.map((l) => Object.assign(shapeLesson(l), { pupilName: fullName(names[l.pupilId]) || 'Unknown pupil' }));
@@ -75,7 +77,12 @@ export async function getInstructorDashboard() {
       unreadEnquiries: newEnquiries,
       unreadMessages: unreadResult.totalCount != null ? unreadResult.totalCount : unread.length,
       unread,
-      reminders: { sent: 0, failed: 0 }
+      reminders: {
+        emailOn: Boolean(item && item.emailRemindersOn),
+        whatsAppOn: Boolean(item && item.whatsAppRemindersOn),
+        today: sendCounts(sendRows.today),
+        yesterday: sendCounts(sendRows.yesterday)
+      }
     };
   });
 }
