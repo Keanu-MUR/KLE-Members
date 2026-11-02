@@ -49,8 +49,13 @@ export async function mountPortal($w, selector, config) {
 async function readSession(config) {
   try {
     const result = await config.getSession();
-    return result && result.ok ? result.data : LOGGED_OUT;
+    if (result && result.ok) return result.data;
+    // Surfaced in the browser console so a backend failure is visible
+    // during testing instead of looking like a logged-out visitor.
+    console.warn('[portal] getSession returned', result && result.error);
+    return LOGGED_OUT;
   } catch (error) {
+    console.warn('[portal] getSession failed', error && error.message ? error.message : error);
     return LOGGED_OUT;
   }
 }
