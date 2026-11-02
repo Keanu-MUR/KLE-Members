@@ -1,0 +1,148 @@
+// Instructor-only enquiry management. Members may call (see
+// permissions.json); requireInstructor() is the real guard.
+
+import wixData from 'wix-data';
+import { authentication } from 'wix-members-backend';
+import { requireInstructor, run, PortalError } from 'backend/access';
+import { sendEmail } from 'backend/messaging';
+import { lookupMemberByEmail, pupilByEmail, insertPupil, throwawayPassword } from 'backend/pupil-store';
+import { ENQUIRY_STATUS, TEMPLATES } from 'public/portal-constants';
+import { trimTo, fillTemplate } from 'public/portal-utils';
+
+const STATUSES = Object.values(ENQUIRY_STATUS);
+
+function shape(item) {
+  return {
+    _id: item._id,
+    createdAt: item._createdDate ? new Date(item._createdDate).toISOString() : '',
+    name: item.name || '',
+    email: item.email || '',
+    phone: item.phone || '',
+    dateOfBirth: item.dateOfBirth || '',
+    addressLine1: item.addressLine1 || '',
+    postcode: item.postcode || '',
+    transmission: item.transmission || '',
+    message: item.message || '',
+    preferredContact: item.preferredContact || '',
+    status: item.status || ENQUIRY_STATUS.NEW,
+    repliedAt: item.repliedAt || '',
+    convertedPupilId: item.convertedPupilId || ''
+  };
+}
+
+async function loadEnquiry(id) {
+  if (!id || typeof id !== 'string') throw new PortalError('Which enquiry?');
+  const item = await wixData.get('Enquiries', id, { suppressAuth: true });
+  if (!item) throw new PortalError('That enquiry was not found.', 'not-found');
+  return item;
+}
+
+export async function listEnquiries(status) {
+  return run(async () => {
+    await requireInstructor();
+    let query = wixData.query('Enquiries').descending('_createdDate').limit(100);
+    if (status && STATUSES.includes(status)) query = query.eq('status', status);
+    const result = await query.find({ suppressAuth: true });
+    const counts = {};
+    for (const s of STATUSES) {
+      counts[s] = await wixData.query('Enquiries').eq('status', s).count({ suppressAuth: true });
+    }
+    return { items: result.items.map(shape), counts };
+  });
+}
+
+export async function getEnquiry(id) {
+  return run(async () => {
+    await requireInstructor();
+    const item = await loadEnquiry(id);
+    const firstName = (item.name || '').split(/\s+/)[0] || '';
+    return {
+      enquiry: shape(item),
+      replyDefault: fillTemplate(TEMPLATES.enquiryReplyDefault, { firstName, transmission: item.transmission || '' })
+    };
+  });
+}
+
+export async function replyToEnquiry(id, body) {
+  return run(async () => {
+    await requireInstructor();
+    const item = await loadEnquiry(id);
+    const text = trimTo(body, 4000);
+    if (text.length < 10) throw new PortalError('Write a reply first.');
+    const firstName = (item.name || '').split(/\s+/)[0] || '';
+    const sent = await sendEmail('enquiryReply', {
+      email: item.email,
+      firstName,
+      lastName: (item.name || '').split(/\s+/).slice(1).join(' '),
+      phone: item.phone
+    }, { firstName, body: text }, { pupilId: item.convertedPupilId || '', lessonId: '' });
+    if (!sent.ok) throw new PortalError('The email did not send. Try again in a moment; the attempt is in the send log.');
+    const updated = await wixData.update('Enquiries', Object.assign({}, item, {
+      status: item.status === ENQUIRY_STATUS.NEW ? ENQUIRY_STATUS.REPLIED : item.status,
+      repliedAt: new Date().toISOString()
+    }), { suppressAuth: true });
+    return { enquiry: shape(updated) };
+  });
+}
+
+// Creates the member (or links an existing one), emails the set-password
+// link, creates the Pupils item and marks the enquiry converted.
+export async function convertEnquiry(id, overrides) {
+  return run(async () => {
+    await requireInstructor();
+    const item = await loadEnquiry(id);
+    if (item.status === ENQUIRY_STATUS.CONVERTED && item.convertedPupilId) {
+      throw new PortalError('This enquiry has already been converted.');
+    }
+    const email = String(item.email || '').toLowerCase();
+    if (await pupilByEmail(email)) throw new PortalError('There is already a pupil with that email address.');
+
+    const parts = (item.name || '').split(/\s+/).filter(Boolean);
+    const fields = Object.assign({
+      firstName: parts[0] || 'Pupil',
+      lastName: parts.slice(1).join(' ') || '',
+      email,
+      phone: item.phone || '',
+      dateOfBirth: item.dateOfBirth || '',
+      addressLine1: item.addressLine1 || '',
+      postcode: item.postcode || '',
+      transmission: item.transmission
+    }, overrides || {});
+
+    let member = await lookupMemberByEmail(email);
+    let created = false;
+    if (!member) {
+      await authentication.register(email, throwawayPassword(), {
+        contactInfo: { firstName: fields.firstName, lastName: fields.lastName, phones: fields.phone ? [fields.phone] : [] }
+      });
+      member = await lookupMemberByEmail(email);
+      created = true;
+    }
+    if (!member) throw new PortalError('Wix did not create the member account. Try again in a moment.');
+
+    let loginEmailSent = true;
+    try {
+      await authentication.sendSetPasswordEmail(email);
+    } catch (error) {
+      loginEmailSent = false;
+      console.warn('[portal] set-password email did not send for a converted enquiry');
+    }
+
+    const pupil = await insertPupil(fields, member.memberId);
+    await wixData.update('Enquiries', Object.assign({}, item, {
+      status: ENQUIRY_STATUS.CONVERTED,
+      convertedPupilId: pupil._id
+    }), { suppressAuth: true });
+
+    return { pupilId: pupil._id, memberId: member.memberId, memberCreated: created, loginEmailSent };
+  });
+}
+
+export async function closeEnquiry(id) {
+  return run(async () => {
+    await requireInstructor();
+    const item = await loadEnquiry(id);
+    const updated = await wixData.update('Enquiries', Object.assign({}, item, { status: ENQUIRY_STATUS.CLOSED }), { suppressAuth: true });
+    return { enquiry: shape(updated) };
+  });
+}

@@ -1,28 +1,48 @@
-// Pupil records, instructor only. Phase 1 builds the Pupils screens on
-// these; Phase 0 uses them to link the test pupil.
+// Pupil records, instructor only. Members may call (see permissions.json);
+// requireInstructor() is the real guard.
 
 import wixData from 'wix-data';
-import { requireInstructor, run, PortalError } from 'backend/access';
-import { loadSettings } from 'backend/settings';
-import { isValidEmail, toE164, trimTo } from 'public/portal-utils';
+import { authentication } from 'wix-members-backend';
+import { requireInstructor, run, PortalError, getPupilById } from 'backend/access';
+import { lookupMemberByEmail, pupilByEmail, insertPupil } from 'backend/pupil-store';
+import { isValidEmail, toE164, trimTo, isValidIsoDate, isValidPostcode } from 'public/portal-utils';
 import { TRANSMISSION, PUPIL_STATUS } from 'public/portal-constants';
 
-// Members/PrivateMembersData is Wix's own members collection; its _id is
-// the member ID that currentMember.getMember() reports. Read with elevated
-// permissions after the instructor check.
-async function lookupMember(email) {
-  const result = await wixData
-    .query('Members/PrivateMembersData')
-    .eq('loginEmail', email)
-    .limit(1)
-    .find({ suppressAuth: true });
-  const member = result.items[0];
-  if (!member) return null;
+const STATUSES = Object.values(PUPIL_STATUS);
+
+// Fields the instructor may write on the record page. memberId and
+// lessonHistory are only ever set by code.
+const TEXT_FIELDS = {
+  firstName: 60,
+  lastName: 60,
+  dateOfBirth: 10,
+  email: 254,
+  phone: 30,
+  addressLine1: 120,
+  addressLine2: 120,
+  town: 60,
+  postcode: 10,
+  licenceNumber: 20,
+  emergencyContactName: 80,
+  emergencyContactPhone: 30,
+  theoryPassDate: 10,
+  practicalTestDate: 10,
+  guardianName: 80,
+  guardianEmail: 254,
+  instructorNotes: 4000,
+  whatsAppConsentAt: 30
+};
+const BOOL_FIELDS = ['theoryPassed', 'reminderEmail', 'reminderWhatsApp'];
+
+function listRow(item) {
   return {
-    memberId: member._id,
-    loginEmail: member.loginEmail || '',
-    firstName: member.firstName || '',
-    lastName: member.lastName || ''
+    _id: item._id,
+    firstName: item.firstName || '',
+    lastName: item.lastName || '',
+    transmission: item.transmission || '',
+    status: item.status || '',
+    postcode: item.postcode || '',
+    linked: Boolean(item.memberId)
   };
 }
 
@@ -31,7 +51,7 @@ export async function findMemberByEmail(email) {
     await requireInstructor();
     const address = String(email || '').trim().toLowerCase();
     if (!isValidEmail(address)) throw new PortalError("That email address doesn't look right.");
-    return lookupMember(address);
+    return lookupMemberByEmail(address);
   });
 }
 
@@ -44,44 +64,139 @@ export async function createPupil(input) {
     const firstName = trimTo(data.firstName, 60);
     const lastName = trimTo(data.lastName, 60);
     const email = trimTo(data.email, 254).toLowerCase();
-    const transmission = data.transmission === TRANSMISSION.AUTOMATIC ? TRANSMISSION.AUTOMATIC : TRANSMISSION.MANUAL;
-
     if (!firstName || !lastName) throw new PortalError('A pupil needs a first name and a last name.');
     if (!isValidEmail(email)) throw new PortalError("That email address doesn't look right.");
     const phone = data.phone ? toE164(data.phone) : '';
     if (data.phone && !phone) throw new PortalError("That phone number doesn't look right.");
-
-    const existing = await wixData.query('Pupils').eq('email', email).limit(1).find({ suppressAuth: true });
-    if (existing.items.length) throw new PortalError('There is already a pupil with that email address.');
+    if (await pupilByEmail(email)) throw new PortalError('There is already a pupil with that email address.');
 
     let memberId = trimTo(data.memberId, 64);
     if (!memberId) {
-      const member = await lookupMember(email);
+      const member = await lookupMemberByEmail(email);
       memberId = member ? member.memberId : '';
     }
-
-    const { settings } = await loadSettings();
-    const item = await wixData.insert('Pupils', {
-      memberId,
-      firstName,
-      lastName,
-      dateOfBirth: trimTo(data.dateOfBirth, 10),
-      email,
-      phone,
-      addressLine1: trimTo(data.addressLine1, 120),
-      addressLine2: trimTo(data.addressLine2, 120),
-      town: trimTo(data.town, 60),
-      postcode: trimTo(data.postcode, 10).toUpperCase(),
-      transmission,
-      status: PUPIL_STATUS.ACTIVE,
-      theoryPassed: false,
-      hourlyRatePence: settings.defaultHourlyRatePence,
-      reminderEmail: true,
-      reminderWhatsApp: false,
-      instructorNotes: '',
-      lessonHistory: {}
-    }, { suppressAuth: true });
-
+    const item = await insertPupil(Object.assign({}, data, { firstName, lastName, email, phone }), memberId);
     return { pupilId: item._id, memberId, linked: Boolean(memberId) };
+  });
+}
+
+export async function listPupils(filter) {
+  return run(async () => {
+    await requireInstructor();
+    const f = filter || {};
+    let query = wixData.query('Pupils').ascending('lastName').ascending('firstName').limit(200);
+    if (f.status && STATUSES.includes(f.status)) query = query.eq('status', f.status);
+    const search = trimTo(f.search, 60);
+    if (search) {
+      query = query.contains('firstName', search).or(wixData.query('Pupils').contains('lastName', search)).or(wixData.query('Pupils').contains('email', search));
+    }
+    const result = await query.find({ suppressAuth: true });
+    const counts = {};
+    for (const s of STATUSES) counts[s] = await wixData.query('Pupils').eq('status', s).count({ suppressAuth: true });
+    return { items: result.items.map(listRow), counts };
+  });
+}
+
+export async function getPupil(id) {
+  return run(async () => {
+    await requireInstructor();
+    const pupil = await getPupilById(id);
+    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    const out = { _id: pupil._id, memberId: pupil.memberId || '', transmission: pupil.transmission || TRANSMISSION.MANUAL, status: pupil.status || PUPIL_STATUS.ACTIVE, hourlyRatePence: pupil.hourlyRatePence || null };
+    Object.keys(TEXT_FIELDS).forEach((key) => { out[key] = pupil[key] || ''; });
+    BOOL_FIELDS.forEach((key) => { out[key] = Boolean(pupil[key]); });
+    return out;
+  });
+}
+
+export async function updatePupil(id, fields) {
+  return run(async () => {
+    await requireInstructor();
+    const pupil = await getPupilById(id);
+    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    const input = fields || {};
+    const errors = {};
+    const changes = {};
+
+    Object.keys(TEXT_FIELDS).forEach((key) => {
+      if (!Object.prototype.hasOwnProperty.call(input, key)) return;
+      changes[key] = trimTo(input[key], TEXT_FIELDS[key]);
+    });
+    BOOL_FIELDS.forEach((key) => {
+      if (Object.prototype.hasOwnProperty.call(input, key)) changes[key] = Boolean(input[key]);
+    });
+    if (Object.prototype.hasOwnProperty.call(input, 'transmission')) {
+      changes.transmission = input.transmission === TRANSMISSION.AUTOMATIC ? TRANSMISSION.AUTOMATIC : TRANSMISSION.MANUAL;
+    }
+    if (Object.prototype.hasOwnProperty.call(input, 'hourlyRatePence')) {
+      const rate = Number(input.hourlyRatePence);
+      if (!Number.isInteger(rate) || rate < 0 || rate > 50000) errors.hourlyRatePence = 'Enter the rate in pounds and pence.';
+      else changes.hourlyRatePence = rate;
+    }
+
+    if (changes.firstName === '') errors.firstName = 'A pupil needs a first name.';
+    if (changes.lastName === '') errors.lastName = 'A pupil needs a last name.';
+    if (changes.email !== undefined) {
+      changes.email = changes.email.toLowerCase();
+      if (!isValidEmail(changes.email)) errors.email = "That email address doesn't look right.";
+      else {
+        const other = await pupilByEmail(changes.email);
+        if (other && other._id !== pupil._id) errors.email = 'Another pupil already uses that email address.';
+      }
+    }
+    ['phone', 'emergencyContactPhone'].forEach((key) => {
+      if (changes[key]) {
+        const e164 = toE164(changes[key]);
+        if (!e164) errors[key] = "That phone number doesn't look right.";
+        else changes[key] = e164;
+      }
+    });
+    ['dateOfBirth', 'theoryPassDate', 'practicalTestDate'].forEach((key) => {
+      if (changes[key] && !isValidIsoDate(changes[key])) errors[key] = 'Use the date picker, or YYYY-MM-DD.';
+    });
+    if (changes.postcode) {
+      changes.postcode = changes.postcode.toUpperCase().replace(/\s+/g, ' ');
+      if (!isValidPostcode(changes.postcode)) errors.postcode = "That postcode doesn't look right.";
+    }
+    if (changes.guardianEmail && !isValidEmail(changes.guardianEmail)) errors.guardianEmail = "That email address doesn't look right.";
+    if (changes.reminderWhatsApp === true && !pupil.reminderWhatsApp) changes.whatsAppConsentAt = new Date().toISOString();
+    if (changes.reminderWhatsApp === false) changes.whatsAppConsentAt = '';
+
+    if (Object.keys(errors).length) return { saved: false, errors };
+    const updated = await wixData.update('Pupils', Object.assign({}, pupil, changes), { suppressAuth: true });
+    return { saved: true, errors: {}, updatedAt: updated._updatedDate ? new Date(updated._updatedDate).toISOString() : '' };
+  });
+}
+
+export async function setPupilStatus(id, status) {
+  return run(async () => {
+    await requireInstructor();
+    if (!STATUSES.includes(status)) throw new PortalError('Choose active, passed or inactive.');
+    const pupil = await getPupilById(id);
+    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    await wixData.update('Pupils', Object.assign({}, pupil, { status }), { suppressAuth: true });
+    return { status };
+  });
+}
+
+// Sends Wix's set-password email so the pupil can log in. Also links the
+// member if the record has none yet and one exists for the email.
+export async function sendLoginLink(id) {
+  return run(async () => {
+    await requireInstructor();
+    const pupil = await getPupilById(id);
+    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    if (!isValidEmail(pupil.email)) throw new PortalError('Add a valid email address to the record first.');
+    let memberId = pupil.memberId || '';
+    if (!memberId) {
+      const member = await lookupMemberByEmail(pupil.email);
+      if (member) {
+        memberId = member.memberId;
+        await wixData.update('Pupils', Object.assign({}, pupil, { memberId }), { suppressAuth: true });
+      }
+    }
+    if (!memberId) throw new PortalError('There is no member account for that email yet. Convert the enquiry, or create the member first.');
+    await authentication.sendSetPasswordEmail(pupil.email);
+    return { sent: true, memberId };
   });
 }

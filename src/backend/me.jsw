@@ -1,0 +1,65 @@
+// The pupil's own details. The guardian may read, only the pupil may write.
+
+import wixData from 'wix-data';
+import { authentication } from 'wix-members-backend';
+import { requireOwnPupil, run, PortalError } from 'backend/access';
+import { lookupMemberByEmail, pupilByEmail } from 'backend/pupil-store';
+import { pickMyDetails } from 'public/portal-utils';
+import { MY_DETAILS_FIELDS, WHATSAPP_CONSENT_WORDING } from 'public/portal-constants';
+
+function shape(pupil, role) {
+  const out = {
+    viewerRole: role,
+    firstName: pupil.firstName || '',
+    lastName: pupil.lastName || '',
+    licenceNumber: pupil.licenceNumber || '',
+    dateOfBirth: pupil.dateOfBirth || '',
+    whatsAppConsentAt: pupil.whatsAppConsentAt || '',
+    consentWording: WHATSAPP_CONSENT_WORDING
+  };
+  MY_DETAILS_FIELDS.forEach((key) => {
+    out[key] = key.startsWith('reminder') ? Boolean(pupil[key]) : pupil[key] || '';
+  });
+  return out;
+}
+
+export async function getMyDetails() {
+  return run(async () => {
+    const { caller, pupil } = await requireOwnPupil();
+    return shape(pupil, caller.role);
+  });
+}
+
+export async function updateMyDetails(fields) {
+  return run(async () => {
+    const { caller, pupil } = await requireOwnPupil({ write: true });
+    const picked = pickMyDetails(fields);
+    if (!picked.ok) return { saved: false, errors: picked.errors };
+    const changes = picked.data;
+
+    // A new email becomes the login email too, so the pupil keeps one
+    // address for everything.
+    if (changes.email && changes.email !== (pupil.email || '').toLowerCase()) {
+      const otherPupil = await pupilByEmail(changes.email);
+      if (otherPupil && otherPupil._id !== pupil._id) {
+        return { saved: false, errors: { email: 'That email address is already in use.' } };
+      }
+      const otherMember = await lookupMemberByEmail(changes.email);
+      if (otherMember && otherMember.memberId !== caller.memberId) {
+        return { saved: false, errors: { email: 'That email address is already in use.' } };
+      }
+      try {
+        await authentication.changeLoginEmail(caller.memberId, changes.email);
+      } catch (error) {
+        console.error('[portal] changeLoginEmail', error && error.message ? error.message : error);
+        throw new PortalError('I couldn’t change your login email just now. The rest was not saved; try again in a moment.');
+      }
+    }
+
+    if (changes.reminderWhatsApp === true && !pupil.reminderWhatsApp) changes.whatsAppConsentAt = new Date().toISOString();
+    if (changes.reminderWhatsApp === false) changes.whatsAppConsentAt = '';
+
+    const updated = await wixData.update('Pupils', Object.assign({}, pupil, changes), { suppressAuth: true });
+    return { saved: true, errors: {}, details: shape(updated, caller.role) };
+  });
+}

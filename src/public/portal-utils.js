@@ -1,7 +1,16 @@
 // Pure helpers shared by backend, page code and tests. Nothing here touches
 // Wix APIs, so every function runs under plain node.
 
-import { SLOTS, CUSTOM_SLOT, TAUGHT_POSTCODES, TIME_ZONE } from './portal-constants.js';
+import {
+  SLOTS,
+  CUSTOM_SLOT,
+  TAUGHT_POSTCODES,
+  TIME_ZONE,
+  TRANSMISSION,
+  PREFERRED_CONTACT,
+  MY_DETAILS_FIELDS,
+  ENQUIRY_LIMIT
+} from './portal-constants.js';
 
 const UK_POSTCODE = /^[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}$/;
 const OUTWARD_ONLY = /^[A-Z]{1,2}\d[A-Z\d]?$/;
@@ -164,4 +173,136 @@ export function poundsWords(pence) {
 
 export function trimTo(value, max) {
   return String(value == null ? '' : value).trim().slice(0, max);
+}
+
+// YYYY-MM-DD and a real calendar date.
+export function isValidIsoDate(value) {
+  const text = String(value || '');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return false;
+  const [y, m, d] = text.split('-').map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d;
+}
+
+function splitName(fullName) {
+  const parts = fullName.split(/\s+/).filter(Boolean);
+  return { firstName: parts[0] || '', lastName: parts.slice(1).join(' ') };
+}
+
+// Server-side validation of the public enquiry form. Returns cleaned data
+// or per-field errors in plain English. A filled honeypot is reported as
+// `bot: true` so the caller can pretend success without storing anything.
+export function validateEnquiry(input, today) {
+  const data = input || {};
+  const errors = {};
+  const name = trimTo(data.name, 80);
+  const email = trimTo(data.email, 254).toLowerCase();
+  const phoneRaw = trimTo(data.phone, 30);
+  const phone = phoneRaw ? toE164(phoneRaw) : null;
+  const dateOfBirth = trimTo(data.dateOfBirth, 10);
+  const addressLine1 = trimTo(data.addressLine1, 120);
+  const postcode = trimTo(data.postcode, 10).toUpperCase().replace(/\s+/g, ' ');
+  const transmission = trimTo(data.transmission, 20);
+  const preferredContact = trimTo(data.preferredContact, 20);
+  const message = trimTo(data.message, 1000);
+  const honeypot = trimTo(data.website, 200);
+
+  if (honeypot) return { ok: true, bot: true, data: null, errors: {} };
+
+  if (name.length < 2) errors.name = 'Tell me your name.';
+  if (!isValidEmail(email)) errors.email = "That email address doesn't look right.";
+  if (!phoneRaw) errors.phone = 'I need a phone number to arrange lessons.';
+  else if (!phone) errors.phone = "That phone number doesn't look right.";
+  if (dateOfBirth) {
+    const age = isValidIsoDate(dateOfBirth) ? ageOn(dateOfBirth, today || londonDate()) : null;
+    if (age === null || age < 14 || age > 100) errors.dateOfBirth = "That date of birth doesn't look right.";
+  }
+  if (addressLine1.length < 3) errors.addressLine1 = 'Add the first line of your address.';
+  if (!isValidPostcode(postcode)) errors.postcode = "That postcode doesn't look right.";
+  if (transmission !== TRANSMISSION.MANUAL && transmission !== TRANSMISSION.AUTOMATIC) {
+    errors.transmission = 'Choose manual or automatic.';
+  }
+  if (!Object.values(PREFERRED_CONTACT).includes(preferredContact)) {
+    errors.preferredContact = 'Choose how you would like me to get in touch.';
+  }
+
+  if (Object.keys(errors).length) return { ok: false, bot: false, data: null, errors };
+
+  return {
+    ok: true,
+    bot: false,
+    errors: {},
+    data: Object.assign(splitName(name), {
+      name,
+      email,
+      phone,
+      dateOfBirth,
+      addressLine1,
+      postcode,
+      transmission,
+      preferredContact,
+      message,
+      outsideArea: !isTaughtPostcode(postcode)
+    })
+  };
+}
+
+// FNV-1a, 32-bit, as hex. Not cryptographic: it only has to bucket IPs for
+// the rate limit without storing them.
+export function hashKey(text) {
+  let hash = 0x811c9dc5;
+  const s = String(text);
+  for (let i = 0; i < s.length; i += 1) {
+    hash ^= s.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return hash.toString(16).padStart(8, '0');
+}
+
+// Given the RateLimit rows already stored for a key (each with windowStart
+// ISO and count), decides whether one more request is allowed now.
+export function rateLimitDecision(rows, now, limits) {
+  const limit = (limits && limits.perWindow) || ENQUIRY_LIMIT.perWindow;
+  const windowMs = (limits && limits.windowMs) || ENQUIRY_LIMIT.windowMs;
+  const nowMs = (now || new Date()).getTime();
+  const recent = (rows || []).filter((row) => {
+    const start = new Date(row.windowStart).getTime();
+    return !Number.isNaN(start) && nowMs - start < windowMs;
+  });
+  const count = recent.reduce((sum, row) => sum + (Number(row.count) || 0), 0);
+  return { allowed: count < limit, count, limit };
+}
+
+// Keeps only the My details fields and validates them. Returns cleaned
+// values or per-field errors.
+export function pickMyDetails(input) {
+  const data = input || {};
+  const errors = {};
+  const out = {};
+  for (const key of MY_DETAILS_FIELDS) {
+    if (!Object.prototype.hasOwnProperty.call(data, key)) continue;
+    const value = data[key];
+    if (key === 'reminderEmail' || key === 'reminderWhatsApp') {
+      out[key] = Boolean(value);
+    } else if (key === 'email') {
+      const email = trimTo(value, 254).toLowerCase();
+      if (!isValidEmail(email)) errors.email = "That email address doesn't look right.";
+      else out.email = email;
+    } else if (key === 'phone' || key === 'emergencyContactPhone') {
+      const raw = trimTo(value, 30);
+      if (!raw) out[key] = '';
+      else {
+        const e164 = toE164(raw);
+        if (!e164) errors[key] = "That phone number doesn't look right.";
+        else out[key] = e164;
+      }
+    } else if (key === 'postcode') {
+      const pc = trimTo(value, 10).toUpperCase().replace(/\s+/g, ' ');
+      if (pc && !isValidPostcode(pc)) errors.postcode = "That postcode doesn't look right.";
+      else out.postcode = pc;
+    } else {
+      out[key] = trimTo(value, 120);
+    }
+  }
+  return { ok: Object.keys(errors).length === 0, data: out, errors };
 }

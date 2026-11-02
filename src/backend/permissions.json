@@ -2,62 +2,258 @@
   "web-methods": {
     "*": {
       "*": {
-        "siteOwner": { "invoke": true },
-        "siteMember": { "invoke": true },
-        "anonymous": { "invoke": false }
+        "siteOwner": {
+          "invoke": true
+        },
+        "siteMember": {
+          "invoke": true
+        },
+        "anonymous": {
+          "invoke": false
+        }
       }
     },
     "backend/session.jsw": {
       "getSession": {
-        "siteOwner": { "invoke": true },
-        "siteMember": { "invoke": true },
-        "anonymous": { "invoke": true }
+        "siteOwner": {
+          "invoke": true
+        },
+        "siteMember": {
+          "invoke": true
+        },
+        "anonymous": {
+          "invoke": true
+        }
       },
       "requestLoginLink": {
-        "siteOwner": { "invoke": true },
-        "siteMember": { "invoke": true },
-        "anonymous": { "invoke": true }
+        "siteOwner": {
+          "invoke": true
+        },
+        "siteMember": {
+          "invoke": true
+        },
+        "anonymous": {
+          "invoke": true
+        }
       }
     },
     "backend/portal.jsw": {
       "getPupilHome": {
-        "siteOwner": { "invoke": true },
-        "siteMember": { "invoke": true },
-        "anonymous": { "invoke": false }
+        "siteOwner": {
+          "invoke": true
+        },
+        "siteMember": {
+          "invoke": true
+        },
+        "anonymous": {
+          "invoke": false
+        }
       },
       "getInstructorDashboard": {
-        "siteOwner": { "invoke": true },
-        "siteMember": { "invoke": true },
-        "anonymous": { "invoke": false }
+        "siteOwner": {
+          "invoke": true
+        },
+        "siteMember": {
+          "invoke": true
+        },
+        "anonymous": {
+          "invoke": false
+        }
       }
     },
     "backend/setup-actions.jsw": {
       "getSetupStatus": {
-        "siteOwner": { "invoke": true },
-        "siteMember": { "invoke": true },
-        "anonymous": { "invoke": false }
+        "siteOwner": {
+          "invoke": true
+        },
+        "siteMember": {
+          "invoke": true
+        },
+        "anonymous": {
+          "invoke": false
+        }
       },
       "createCollections": {
-        "siteOwner": { "invoke": true },
-        "siteMember": { "invoke": true },
-        "anonymous": { "invoke": false }
+        "siteOwner": {
+          "invoke": true
+        },
+        "siteMember": {
+          "invoke": true
+        },
+        "anonymous": {
+          "invoke": false
+        }
       },
       "ensureSettings": {
-        "siteOwner": { "invoke": true },
-        "siteMember": { "invoke": true },
-        "anonymous": { "invoke": false }
+        "siteOwner": {
+          "invoke": true
+        },
+        "siteMember": {
+          "invoke": true
+        },
+        "anonymous": {
+          "invoke": false
+        }
       }
     },
     "backend/pupils.jsw": {
       "findMemberByEmail": {
-        "siteOwner": { "invoke": true },
-        "siteMember": { "invoke": true },
-        "anonymous": { "invoke": false }
+        "siteOwner": {
+          "invoke": true
+        },
+        "siteMember": {
+          "invoke": true
+        },
+        "anonymous": {
+          "invoke": false
+        }
       },
       "createPupil": {
-        "siteOwner": { "invoke": true },
-        "siteMember": { "invoke": true },
-        "anonymous": { "invoke": false }
+        "siteOwner": {
+          "invoke": true
+        },
+        "siteMember": {
+          "invoke": true
+        },
+        "anonymous": {
+          "invoke": false
+        }
+      },
+      "listPupils": {
+        "siteOwner": {
+          "invoke": true
+        },
+        "siteMember": {
+          "invoke": true
+        },
+        "anonymous": {
+          "invoke": false
+        }
+      },
+      "getPupil": {
+        "siteOwner": {
+          "invoke": true
+        },
+        "siteMember": {
+          "invoke": true
+        },
+        "anonymous": {
+          "invoke": false
+        }
+      },
+      "updatePupil": {
+        "siteOwner": {
+          "invoke": true
+        },
+        "siteMember": {
+          "invoke": true
+        },
+        "anonymous": {
+          "invoke": false
+        }
+      },
+      "setPupilStatus": {
+        "siteOwner": {
+          "invoke": true
+        },
+        "siteMember": {
+          "invoke": true
+        },
+        "anonymous": {
+          "invoke": false
+        }
+      },
+      "sendLoginLink": {
+        "siteOwner": {
+          "invoke": true
+        },
+        "siteMember": {
+          "invoke": true
+        },
+        "anonymous": {
+          "invoke": false
+        }
+      }
+    },
+    "backend/enquiries.jsw": {
+      "listEnquiries": {
+        "siteOwner": {
+          "invoke": true
+        },
+        "siteMember": {
+          "invoke": true
+        },
+        "anonymous": {
+          "invoke": false
+        }
+      },
+      "getEnquiry": {
+        "siteOwner": {
+          "invoke": true
+        },
+        "siteMember": {
+          "invoke": true
+        },
+        "anonymous": {
+          "invoke": false
+        }
+      },
+      "replyToEnquiry": {
+        "siteOwner": {
+          "invoke": true
+        },
+        "siteMember": {
+          "invoke": true
+        },
+        "anonymous": {
+          "invoke": false
+        }
+      },
+      "convertEnquiry": {
+        "siteOwner": {
+          "invoke": true
+        },
+        "siteMember": {
+          "invoke": true
+        },
+        "anonymous": {
+          "invoke": false
+        }
+      },
+      "closeEnquiry": {
+        "siteOwner": {
+          "invoke": true
+        },
+        "siteMember": {
+          "invoke": true
+        },
+        "anonymous": {
+          "invoke": false
+        }
+      }
+    },
+    "backend/me.jsw": {
+      "getMyDetails": {
+        "siteOwner": {
+          "invoke": true
+        },
+        "siteMember": {
+          "invoke": true
+        },
+        "anonymous": {
+          "invoke": false
+        }
+      },
+      "updateMyDetails": {
+        "siteOwner": {
+          "invoke": true
+        },
+        "siteMember": {
+          "invoke": true
+        },
+        "anonymous": {
+          "invoke": false
+        }
       }
     }
   }

@@ -22,8 +22,54 @@ export const PORTAL_PATHS = {
   login: '/pupil-login',
   enquire: '/enquire',
   pupilHome: '/pupil-home',
-  instructorHome: '/instructor'
+  instructorHome: '/instructor',
+  enquiries: '/enquiries',
+  pupils: '/pupils',
+  pupilRecord: '/pupil-record',
+  myDetails: '/my-details'
 };
+
+// Text navigation shown under the wordmark on every portal page.
+export const NAV_BY_ROLE = {
+  instructor: [
+    { label: 'Today', path: PORTAL_PATHS.instructorHome },
+    { label: 'Pupils', path: PORTAL_PATHS.pupils },
+    { label: 'Enquiries', path: PORTAL_PATHS.enquiries }
+  ],
+  pupil: [
+    { label: 'Home', path: PORTAL_PATHS.pupilHome },
+    { label: 'My details', path: PORTAL_PATHS.myDetails }
+  ],
+  guardian: [{ label: 'Home', path: PORTAL_PATHS.pupilHome }]
+};
+
+// The fields a pupil may change on My details. Everything else on the
+// Pupils item is the instructor's.
+export const MY_DETAILS_FIELDS = [
+  'email',
+  'phone',
+  'addressLine1',
+  'addressLine2',
+  'town',
+  'postcode',
+  'emergencyContactName',
+  'emergencyContactPhone',
+  'reminderEmail',
+  'reminderWhatsApp'
+];
+
+// Enquiry endpoint limits.
+export const ENQUIRY_LIMIT = { perWindow: 5, windowMs: 60 * 60 * 1000 };
+
+// Triggered email template IDs as created in the Wix dashboard.
+export const EMAIL_TEMPLATES = {
+  enquiryConfirmation: 'enquiryConfirmation',
+  enquiryAlert: 'enquiryAlert',
+  enquiryReply: 'enquiryReply'
+};
+
+export const WHATSAPP_CONSENT_WORDING =
+  'Send me lesson reminders on WhatsApp from the school’s number. I can turn this off here at any time.';
 
 export const ROLES = {
   INSTRUCTOR: 'instructor',
@@ -125,6 +171,9 @@ export const TEMPLATES = {
     'New enquiry from {name}, {postcode}, {transmission}, prefers {preferredContact}. Reply from the portal.',
   enquiryConfirmation:
     'Thanks {firstName}. I have your enquiry and will be in touch by {preferredContact} within a day. If you need me sooner, message me on WhatsApp.',
+  enquiryReplyDefault:
+    'Hi {firstName},\n\nThanks for getting in touch about {transmission} lessons. PLACEHOLDER: the instructor’s standard first-lesson paragraph goes here (what to bring, where we meet, the taster lesson and price).\n\nReply to this email or message me on WhatsApp to book a first lesson.',
+  enquiryRateLimited: 'That’s enough for now; I’ll be in touch about the ones you’ve sent.',
   whatsAppTemplateNames: { lessonReminder: 'lesson_reminder', newEnquiry: 'new_enquiry' }
 };
 
