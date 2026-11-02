@@ -48,8 +48,10 @@ Provider for this phase is Wix Triggered Emails via `wix-crm-backend`, as the sp
 | Template ID | To | Variables |
 |---|---|---|
 | `enquiryConfirmation` | the enquirer (a contact, created or matched by email) | firstName, preferredContact |
-| `enquiryAlert` | the instructor (member) | name, postcode, transmission, preferredContact, message, link to the Enquiries page |
-| `enquiryReply` | the enquirer | firstName, body |
+| `enquiryAlert` | the instructor (member) | name, summary (one line built in code), link to the Enquiries page |
+| `enquiryReply` | the enquirer | firstName, p1, p2, p3, p4 (one paragraph each; variables cannot carry line breaks) |
+
+As built: IDs VZpOgVC, VZpQOuG, VZpRqqd; see docs/emails.md. Sending moved out of the HTTP function (Wix answers FORBIDDEN there): the page calls `notifyEnquiry` in `backend/enquire.jsw` with a single-use token after the enquiry is stored.
 
 The reply form on the Enquiries page starts with the standard first-lesson text and the instructor can edit it before sending. That standard text is a placeholder until the instructor supplies it (decision C below). Every send writes a `SendLog` row with channel `email`, as the spec requires for alerts; `lessonId` is empty for enquiry mail.
 
@@ -91,3 +93,24 @@ Node tests for the pure parts: enquiry validation (every field, honeypot, bad po
 6. Log in as that pupil (set the password from the email). `/my-details` shows their details; change the phone and tick WhatsApp; Save; `whatsAppConsentAt` is set in the collection. Change the email too and log in with the new address. Licence number and date of birth are not editable.
 7. As that pupil, open `/pupil-record?id=<another id>` and `/enquiries`: both redirect to `/pupil-home`, and any direct backend call returns `{ ok: false }`.
 8. `npm test` passes with the new tests.
+
+### Results, 2 Nov 2026
+
+Run from the instructor's logged-in Chrome session (the enquiry form is public, so the session only changes the nav row). Two bugs found and fixed on the way, each committed and published:
+
+- Emails sent from the HTTP function failed with FORBIDDEN (ten SendLog rows). Fixed by the token handoff described in docs/emails.md; the confirmation and alert then logged as sent.
+- The element re-sends its first request after 1.5 s; the duplicate ran the (slow) send action again and its failure overwrote the result. Page code now ignores a repeated request ID.
+- Convert to pupil reported "Wix did not create the member account" although it had: the members collection lags a registration. The member ID is now read from the register() result.
+
+| Step | Result |
+|---|---|
+| 1 | Pass. Bad email refused inline; BR1 postcode shows the soft note and sends; valid form sends; the sixth submission in the hour is refused with the rate-limit wording. |
+| 2 | SendLog rows are `sent` for confirmation and alert. Inbox arrival not checked (no access to the inboxes). |
+| 3 | Pass. Reply sent to the enquirer, status Replied. |
+| 4 | Pass. Member created (keanu7pokemon+convert@gmail.com), set-password email sent, Pupils item linked, enquiry Converted with a link to the record. |
+| 5 | Pass. Search finds the pupil; last name and status (Passed) saved and shown after reload; Send login link reports sent. |
+| 6 | Not run: needs the pupil's password, which is set from the email in the test inbox. |
+| 7 | Not run: same login needed. |
+| 8 | Pass, 26 tests. |
+
+Test data left in place: enquiries from "Test Enquirer" to "Dedupe Check", the pupil Convert Tester Edited, the SendLog rows. The five RateLimit rows from the rate-limit test were deleted in the CMS so the retest was not refused.

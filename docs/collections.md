@@ -22,7 +22,7 @@ pupilId, date, result, minors (Number), serious (Number), dangerous (Number), fa
 pupilId, date, amountPence (Number), method, reference, note
 
 ## Enquiries
-name, email, phone, dateOfBirth, addressLine1, postcode, transmission, message, preferredContact, status, repliedAt, convertedPupilId
+name, email, phone, dateOfBirth, addressLine1, postcode, transmission, message, preferredContact, status, repliedAt, convertedPupilId, notifyToken (single use; empty once the emails have gone), notifiedAt
 
 ## Messages
 pupilId, body, createdAt, readAt, reply

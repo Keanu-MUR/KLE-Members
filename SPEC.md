@@ -135,7 +135,7 @@ Reminder wording (one template per channel, variables in braces): "Hi {firstName
 
 ### Enquiry alerts
 
-Event-driven, not scheduled: when Enquiries receives an item, the backend immediately emails the instructor (if enquiryAlertEmailOn) and sends a WhatsApp template new_enquiry to Settings.instructorWhatsApp (if enquiryAlertWhatsAppOn) with the enquirer's name, postcode, transmission and preferred contact. The enquirer gets a confirmation email. All three logged.
+Event-driven, not scheduled: when Enquiries receives an item, the backend immediately emails the instructor (if enquiryAlertEmailOn) and sends a WhatsApp template new_enquiry to Settings.instructorWhatsApp (if enquiryAlertWhatsAppOn) with the enquirer's name, postcode, transmission and preferred contact. The enquirer gets a confirmation email. All three logged. Implementation note (2 Nov 2026): Wix refuses triggered emails from an HTTP function (no visitor identity), so the HTTP function stores the enquiry with a single-use notifyToken and the page calls the public web method notifyEnquiry(enquiryId, token), which sends all three once. See docs/emails.md.
 
 ### Fail-soft rules
 
