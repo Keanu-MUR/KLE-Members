@@ -165,10 +165,11 @@ select { appearance: auto; }
     this.$('#backup-status').innerHTML = '<p class="muted">Backing up; this takes a few seconds.</p>';
     const result = await this.call('runExport');
     button.disabled = false;
+    // Reload the section for the new backup line, then say what happened.
+    await this.load();
     this.$('#backup-status').innerHTML = result.ok
       ? '<div class="notice" role="status">' + (result.data.ok ? 'Backed up ' + result.data.files + ' files, ' + result.data.items + ' items.' : 'Backup failed: ' + esc(result.data.error)) + '</div>'
       : this.failure(result);
-    this.load();
   }
 
   async compactNow() {
@@ -176,10 +177,10 @@ select { appearance: auto; }
     button.disabled = true;
     const result = await this.call('runCompactionNow');
     button.disabled = false;
+    await this.load();
     this.$('#backup-status').innerHTML = result.ok
-      ? '<div class="notice" role="status">' + (result.data.ran ? 'Compacted ' + result.data.lessons + ' lessons for ' + result.data.pupils + ' pupils.' : esc(result.data.reason)) + '</div>'
+      ? '<div class="notice" role="status">' + (result.data.ran ? 'Compacted ' + result.data.lessons + ' lesson' + (result.data.lessons === 1 ? '' : 's') + ' for ' + result.data.pupils + ' pupil' + (result.data.pupils === 1 ? '' : 's') + '.' : esc(result.data.reason)) + '</div>'
       : this.failure(result);
-    this.load();
   }
 
   async exportOne(name, button) {
