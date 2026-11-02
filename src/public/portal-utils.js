@@ -622,3 +622,77 @@ export function sendCounts(rows) {
   });
   return out;
 }
+
+// ---- Phase 5: CSV export and lesson compaction ------------------------
+
+// One CSV cell: objects as JSON, dates as ISO, quoted when needed.
+export function csvEscape(value) {
+  if (value == null) return '';
+  let text;
+  if (value instanceof Date) text = value.toISOString();
+  else if (typeof value === 'object') text = JSON.stringify(value);
+  else text = String(value);
+  return /[",\r\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+}
+
+const SYSTEM_COLUMNS = ['_id', '_createdDate', '_updatedDate', '_owner'];
+
+// Every key seen across the rows: the system fields first, then A to Z.
+export function csvColumns(rows) {
+  const seen = new Set();
+  rows.forEach((row) => Object.keys(row || {}).forEach((key) => seen.add(key)));
+  const system = SYSTEM_COLUMNS.filter((key) => seen.has(key));
+  const rest = Array.from(seen).filter((key) => !SYSTEM_COLUMNS.includes(key)).sort();
+  return system.concat(rest);
+}
+
+// RFC 4180 text with CRLF line ends and a header row.
+export function toCsv(rows, columns) {
+  const cols = columns || csvColumns(rows);
+  const lines = [cols.map(csvEscape).join(',')];
+  rows.forEach((row) => lines.push(cols.map((key) => csvEscape(row ? row[key] : '')).join(',')));
+  return lines.join('\r\n') + '\r\n';
+}
+
+function emptyYear() {
+  return { count: 0, hours: 0, completed: 0, cancelled: 0, noShow: 0 };
+}
+
+function round1(n) {
+  return Math.round(n * 10) / 10;
+}
+
+// Lessons dated before the cutoff (YYYY-MM-DD) that are not still planned,
+// totalled per pupil and year, plus the ids to delete.
+export function compactionPlan(lessons, cutoffDate) {
+  const totals = {};
+  const lessonIds = [];
+  (lessons || []).forEach((lesson) => {
+    const date = String(lesson.date || '');
+    if (!date || date >= cutoffDate || lesson.status === 'planned' || !lesson.pupilId) return;
+    const year = date.slice(0, 4);
+    const pupil = totals[lesson.pupilId] = totals[lesson.pupilId] || {};
+    const y = pupil[year] = pupil[year] || emptyYear();
+    y.count += 1;
+    y.hours = round1(y.hours + (Number(lesson.durationMins) || 0) / 60);
+    if (lesson.status === 'completed') y.completed += 1;
+    else if (lesson.status === 'cancelled') y.cancelled += 1;
+    else if (lesson.status === 'no-show') y.noShow += 1;
+    lessonIds.push(lesson._id);
+  });
+  return { totals, lessonIds };
+}
+
+// Adds a pupil's new yearly totals onto the history already stored.
+export function mergeHistory(history, yearTotals) {
+  const out = {};
+  const base = history && typeof history === 'object' && !Array.isArray(history) ? history : {};
+  Object.keys(base).forEach((year) => { out[year] = Object.assign(emptyYear(), base[year]); });
+  Object.keys(yearTotals || {}).forEach((year) => {
+    const y = out[year] = out[year] || emptyYear();
+    const add = yearTotals[year] || {};
+    ['count', 'completed', 'cancelled', 'noShow'].forEach((key) => { y[key] = (Number(y[key]) || 0) + (Number(add[key]) || 0); });
+    y.hours = round1((Number(y.hours) || 0) + (Number(add.hours) || 0));
+  });
+  return out;
+}

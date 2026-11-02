@@ -48,6 +48,10 @@ export function init($w, backend) {
       upcomingForTest: () => backend.upcomingForTest(),
       testReminder: (p) => backend.testReminder(p.lessonId, p.email, p.phone),
       runPrune: () => backend.runPrune(),
+      latestBackupLinks: () => backend.latestBackupLinks(),
+      runExport: () => backend.runExport(),
+      exportCollection: (p) => backend.exportCollection(p.name),
+      runCompactionNow: () => backend.runCompactionNow(),
       listSendLog: (p) => backend.listSendLog(p)
     }
   });

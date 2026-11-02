@@ -8,13 +8,16 @@ import wixData from 'wix-data';
 import { requireInstructor, run, PortalError } from 'backend/access';
 import { loadSettings, ensureSettingsItem } from 'backend/settings';
 import { PROBE_LESSON_ID } from 'backend/reminder-core';
+import { runBackup, latestLinks } from 'backend/backup';
+import { runCompaction, compactionAllowed } from 'backend/compaction';
+import { collectionCsv, isCollection } from 'backend/export';
 import { validateSettings } from 'public/portal-utils';
 import { COLLECTIONS, ITEM_LIMIT, SEND_STATUS } from 'public/portal-constants';
 
 const VISIBLE = [
   'emailRemindersOn', 'whatsAppRemindersOn', 'emailProvider', 'instructorEmail', 'instructorWhatsApp',
   'enquiryAlertEmailOn', 'enquiryAlertWhatsAppOn', 'reminderSendHour', 'defaultHourlyRatePence',
-  'lessonRetentionDays', 'sendLogRetentionDays', 'paymentRetentionDays', 'lastExportAt', 'lastExportStatus'
+  'lessonRetentionDays', 'sendLogRetentionDays', 'paymentRetentionDays', 'lastExportAt', 'lastExportStatus', 'backups'
 ];
 
 function visible(settings) {
@@ -50,7 +53,10 @@ export async function getSettings() {
     await requireInstructor();
     const { settings } = await ensureSettingsItem();
     const [items, probeResult] = await Promise.all([itemCounts(), probe()]);
-    return { settings: visible(settings), items, probe: probeResult };
+    const backups = (Array.isArray(settings.backups) ? settings.backups : []).map((b) => ({
+      date: b.date, at: b.at, files: b.files.length, items: b.files.reduce((n, f) => n + (f.items || 0), 0)
+    }));
+    return { settings: visible(settings), items, probe: probeResult, backups, compaction: compactionAllowed(settings) || 'ready' };
   });
 }
 
@@ -63,5 +69,39 @@ export async function updateSettings(fields) {
     if (!item) throw new PortalError('The Settings record is missing; open the dashboard once to create it.');
     const updated = await wixData.update('Settings', Object.assign({}, item, checked.data), { suppressAuth: true });
     return { saved: true, errors: {}, settings: visible(Object.assign({}, item, updated)) };
+  });
+}
+
+// Time-limited download links for the newest backup's files.
+export async function latestBackupLinks() {
+  return run(async () => {
+    await requireInstructor();
+    const { settings } = await loadSettings();
+    return latestLinks(settings);
+  });
+}
+
+// "Back up now": the same run the weekly job makes.
+export async function runExport() {
+  return run(async () => {
+    await requireInstructor();
+    return runBackup();
+  });
+}
+
+// One collection as CSV text, built now, for an immediate download.
+export async function exportCollection(name) {
+  return run(async () => {
+    await requireInstructor();
+    if (!isCollection(String(name || ''))) throw new PortalError('That is not one of the collections.');
+    return collectionCsv(String(name));
+  });
+}
+
+// The nightly compaction step, on demand (it still needs a recent backup).
+export async function runCompactionNow() {
+  return run(async () => {
+    await requireInstructor();
+    return runCompaction();
   });
 }

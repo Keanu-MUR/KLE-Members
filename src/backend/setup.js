@@ -116,6 +116,7 @@ export const SCHEMAS = {
     number('defaultHourlyRatePence', 'Default hourly rate (pence)'),
     text('lastExportAt', 'Last export at'),
     text('lastExportStatus', 'Last export status'),
+    json('backups', 'Backups (file list)'),
     number('lessonRetentionDays', 'Lesson retention (days)'),
     number('sendLogRetentionDays', 'Send log retention (days)'),
     number('paymentRetentionDays', 'Payment retention (days)')

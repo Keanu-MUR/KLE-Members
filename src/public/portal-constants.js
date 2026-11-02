@@ -220,6 +220,7 @@ export const SETTINGS_DEFAULTS = {
   defaultHourlyRatePence: SCHOOL.defaultHourlyRatePence,
   lastExportAt: null,
   lastExportStatus: '',
+  backups: [],
   lessonRetentionDays: 120,
   sendLogRetentionDays: 30,
   paymentRetentionDays: 400

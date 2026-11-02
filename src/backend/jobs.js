@@ -4,6 +4,8 @@
 
 import wixData from 'wix-data';
 import { loadSettings } from 'backend/settings';
+import { runBackup } from 'backend/backup';
+import { runCompaction } from 'backend/compaction';
 import { remindersFor, PROBE_LESSON_ID } from 'backend/reminder-core';
 import { sendEmail } from 'backend/messaging';
 import { lookupMemberByEmail } from 'backend/pupil-store';
@@ -45,7 +47,25 @@ export async function pruneLogs() {
     }
   }
   console.log('[portal] pruned', JSON.stringify(removed));
-  return removed;
+  // Old lessons become yearly totals, but only after a recent backup.
+  let compaction = null;
+  try {
+    compaction = await runCompaction();
+  } catch (error) {
+    console.error('[portal] compaction failed', error && error.message ? error.message : error);
+    compaction = { ran: false, reason: error && error.message ? error.message : String(error) };
+  }
+  return Object.assign(removed, { compaction });
+}
+
+// Weekly. Every collection to a private CSV file, the instructor told.
+export async function exportBackup() {
+  try {
+    return await runBackup();
+  } catch (error) {
+    console.error('[portal] exportBackup failed', error && error.message ? error.message : error);
+    return { ok: false, error: error && error.message ? error.message : String(error) };
+  }
 }
 
 // Temporary, hourly: one Wix triggered email to the instructor's member

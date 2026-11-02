@@ -63,7 +63,7 @@ select { appearance: auto; }
       this.field({ id: 'hourlyRatePounds', label: 'Default hourly rate for new pupils (£)', type: 'number', inputmode: 'decimal', value: (Number(s.defaultHourlyRatePence) / 100).toFixed(2) }) +
       '<h2>Data</h2>' +
       this.field({ id: 'sendLogRetentionDays', label: 'Keep send log and rate-limit rows for (days)', type: 'number', inputmode: 'numeric', value: s.sendLogRetentionDays, hint: 'Older rows are deleted each night at 03:00.' }) +
-      this.field({ id: 'lessonRetentionDays', label: 'Keep full lesson detail for (days)', type: 'number', inputmode: 'numeric', value: s.lessonRetentionDays, hint: 'Compaction into yearly totals arrives with the weekly export.' }) +
+      this.field({ id: 'lessonRetentionDays', label: 'Keep full lesson detail for (days)', type: 'number', inputmode: 'numeric', value: s.lessonRetentionDays, hint: 'Older lessons become yearly totals each night at 03:00, once a backup has run in the last 8 days.' }) +
       this.field({ id: 'paymentRetentionDays', label: 'Keep payment detail for (days)', type: 'number', inputmode: 'numeric', value: s.paymentRetentionDays }) +
       '<ul class="counts">' +
       Object.keys(items.counts).map((name) => '<li><span>' + esc(name) + '</span><span>' + (items.counts[name] == null ? '?' : items.counts[name]) + '</span></li>').join('') +
@@ -72,6 +72,16 @@ select { appearance: auto; }
       '<div id="status" aria-live="polite"></div>' +
       '<div class="actions"><button class="btn btn-primary" type="submit">Save</button><a class="btn btn-text" href="/send-log">Send log</a></div>' +
       '</form>' +
+      '<hr class="road">' +
+      '<h2>Backups</h2>' +
+      this.backupWords(data) +
+      '<div id="backup-status" aria-live="polite"></div>' +
+      '<div class="actions"><button class="btn btn-text" type="button" id="backup-links">Download latest backup</button><button class="btn btn-text" type="button" id="backup-now">Back up now</button><button class="btn btn-text" type="button" id="compact-now">Compact old lessons now</button></div>' +
+      '<div id="backup-out"></div>' +
+      '<h2>Export all data</h2>' +
+      '<p class="muted">One CSV per collection, built when you click it.</p>' +
+      '<div class="filters">' + Object.keys(items.counts).map((name) => '<button class="btn btn-text" type="button" data-export="' + esc(name) + '">' + esc(name) + '</button>').join('') + '</div>' +
+      '<div id="export-status" aria-live="polite"></div>' +
       '<hr class="road">' +
       '<h2>Test a reminder</h2>' +
       '<p class="muted">Sends tomorrow-style reminders for one lesson to the email and phone below, logged like any other send. Reminders from the job currently use ' + esc(upcoming.provider === 'resend' ? 'Resend' : 'Wix emails') + '.</p>' +
@@ -96,6 +106,7 @@ select { appearance: auto; }
       this.sendTest(test);
     });
     this.$('#run-prune').addEventListener('click', () => this.prune());
+    this.bindBackups();
   }
 
   async save(form) {
@@ -117,6 +128,74 @@ select { appearance: auto; }
       return;
     }
     this.$('#status').innerHTML = '<div class="notice" role="status">Saved.</div>';
+  }
+
+  backupWords(data) {
+    const s = data.settings;
+    const latest = (data.backups || [])[0];
+    const lines = [];
+    if (!s.lastExportAt) lines.push('No backup has run yet. The job runs every Monday at 02:00.');
+    else if (s.lastExportStatus === 'ok' && latest) lines.push('Last backup ' + esc(this.dateWords(latest.at || s.lastExportAt, true)) + ': ' + latest.files + ' files, ' + latest.items + ' items. Files are private; links below last an hour.');
+    else lines.push('The last backup on ' + esc(this.dateWords(s.lastExportAt, true)) + ' ' + esc(s.lastExportStatus || 'did not finish') + '.');
+    lines.push(data.compaction === 'ready' ? 'Old lessons compact tonight.' : esc(data.compaction));
+    return lines.map((l) => '<p class="muted">' + l + '</p>').join('');
+  }
+
+  bindBackups() {
+    this.$('#backup-links').addEventListener('click', () => this.showLinks());
+    this.$('#backup-now').addEventListener('click', () => this.backupNow());
+    this.$('#compact-now').addEventListener('click', () => this.compactNow());
+    this.main.querySelectorAll('[data-export]').forEach((b) => b.addEventListener('click', () => this.exportOne(b.getAttribute('data-export'), b)));
+  }
+
+  async showLinks() {
+    const out = this.$('#backup-out');
+    out.innerHTML = '<p class="muted">Getting the links.</p>';
+    const result = await this.call('latestBackupLinks');
+    if (!result.ok) { out.innerHTML = this.failure(result); return; }
+    const d = result.data;
+    if (!d.links.length) { out.innerHTML = this.empty('No backup files yet.'); return; }
+    out.innerHTML = '<p class="muted">Backup from ' + esc(this.dateWords(d.at || d.date, true)) + ', links valid for ' + d.minutes + ' minutes.</p><ul class="plain">' +
+      d.links.map((l) => '<li>' + (l.url ? '<a href="' + esc(l.url) + '" target="_blank" rel="noopener">' + esc(l.collection) + '.csv</a>' : esc(l.collection) + '.csv: ' + esc(l.error || 'no link')) + ' <span class="muted">(' + l.items + ')</span></li>').join('') + '</ul>';
+  }
+
+  async backupNow() {
+    const button = this.$('#backup-now');
+    button.disabled = true;
+    this.$('#backup-status').innerHTML = '<p class="muted">Backing up; this takes a few seconds.</p>';
+    const result = await this.call('runExport');
+    button.disabled = false;
+    this.$('#backup-status').innerHTML = result.ok
+      ? '<div class="notice" role="status">' + (result.data.ok ? 'Backed up ' + result.data.files + ' files, ' + result.data.items + ' items.' : 'Backup failed: ' + esc(result.data.error)) + '</div>'
+      : this.failure(result);
+    this.load();
+  }
+
+  async compactNow() {
+    const button = this.$('#compact-now');
+    button.disabled = true;
+    const result = await this.call('runCompactionNow');
+    button.disabled = false;
+    this.$('#backup-status').innerHTML = result.ok
+      ? '<div class="notice" role="status">' + (result.data.ran ? 'Compacted ' + result.data.lessons + ' lessons for ' + result.data.pupils + ' pupils.' : esc(result.data.reason)) + '</div>'
+      : this.failure(result);
+    this.load();
+  }
+
+  async exportOne(name, button) {
+    button.disabled = true;
+    const result = await this.call('exportCollection', { name });
+    button.disabled = false;
+    if (!result.ok) { this.$('#export-status').innerHTML = this.failure(result); return; }
+    const blob = new Blob([result.data.csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name + '-' + new Date().toISOString().slice(0, 10) + '.csv';
+    this.shadowRoot.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    this.$('#export-status').innerHTML = '<div class="notice" role="status">' + esc(name) + ': ' + result.data.items + ' items downloaded.</div>';
   }
 
   resultLines(results) {
