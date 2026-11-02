@@ -1,5 +1,4 @@
-import { init } from 'public/portal-pages/progress';
-import { getSession } from 'backend/session';
-import { getProgress, setSkill } from 'backend/progress';
+// This page now lives in the one-page portal; send visitors there.
+import { redirectToPortal } from 'public/portal-redirect';
 
-$w.onReady(() => init($w, { getSession, getProgress, setSkill }));
+$w.onReady(() => redirectToPortal('/instructor', 'progress'));

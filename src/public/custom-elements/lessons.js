@@ -150,7 +150,7 @@ select { appearance: auto; }
     const saved = result.data.lesson;
     if (!lesson) {
       // Stay on the new lesson so a second edit is one tap away.
-      if (typeof history !== 'undefined' && history.replaceState) history.replaceState(null, '', '/lessons?id=' + saved._id);
+      this.replaceUrl('/lessons?id=' + saved._id);
       this.renderForm(saved, [], presetPupilId);
       this.$('#pupilId').innerHTML = '<option value="' + esc(saved.pupilId) + '" selected>' + esc(saved.pupilName) + '</option>';
       this.$('#status').innerHTML = '<div class="notice" role="status">Added. ' + esc(saved.pupilName) + ' will see it on their lessons page. <a href="/lessons?new=1">Add another</a></div>';

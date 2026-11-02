@@ -25,6 +25,7 @@ const STYLE = `
 }
 *, *::before, *::after { box-sizing: border-box; }
 .portal { max-width: 720px; margin: 0 auto; padding: 24px 16px 56px; }
+.portal.embedded { max-width: none; padding: 0; }
 .brand { display: flex; align-items: baseline; gap: 10px; font-family: var(--kle-font-heading); text-transform: uppercase; letter-spacing: 0.14em; }
 .brand .kle { font-size: 22px; }
 .brand .driving { font-size: 12px; }
@@ -213,12 +214,13 @@ export class PortalElement extends HTMLElement {
   attributeChangedCallback(name, oldValue, value) {
     if (name === 'session') {
       const next = safeParse(value);
-      const same = this._provisional && JSON.stringify(next) === JSON.stringify(this.session);
+      const same = JSON.stringify(next) === JSON.stringify(this.session);
       this._provisional = false;
       if (next && next.loggedIn) cacheWrite(SESSION_KEY, next);
       else cacheClear(true);
-      // The real session matching the cached one means the page is already
-      // showing the right thing; loading it again would only flicker.
+      // The same session again (page code confirming the cached one, or the
+      // shell repeating it) means the page is already showing the right
+      // thing; loading it again would only flicker.
       if (same) return;
       this.session = next;
       if (this._rendered) this.renderNav();
@@ -249,12 +251,31 @@ export class PortalElement extends HTMLElement {
     const href = link.getAttribute('href') || '';
     if (!href.startsWith('/') || href.startsWith('//') || link.getAttribute('target') || link.hasAttribute('download')) return;
     event.preventDefault();
+    this.navigateTo(href);
+  }
+
+  // Goes to a path on the site. Inside the one-page portal the shell
+  // decides (a section switch, or page code for anything else).
+  navigateTo(href) {
+    if (this.hasAttribute('embedded')) {
+      this.dispatchEvent(new CustomEvent('portal-link', { detail: { href } }));
+      return;
+    }
     let done = false;
     this.request('navigate', { path: href }).then(() => { done = true; });
     // No answer and this element is still on the page: page code did not
     // take the navigation (the harness, or the bridge not wired yet). An
     // element Wix has already removed means the page swap is under way.
     setTimeout(() => { if (!done && this.isConnected) location.assign(href); }, 1200);
+  }
+
+  // Rewrites the address bar without a load (a new lesson getting its id).
+  replaceUrl(href) {
+    if (this.hasAttribute('embedded')) {
+      this.dispatchEvent(new CustomEvent('portal-replace', { detail: { href } }));
+      return;
+    }
+    if (typeof history !== 'undefined' && history.replaceState) history.replaceState(null, '', href);
   }
 
   // Resolves with { ok, data } or { ok: false, error } from page code.
@@ -264,7 +285,7 @@ export class PortalElement extends HTMLElement {
   // a change, so it empties the data cache first.
   call(action, payload) {
     const key = CACHEABLE.test(action) && action !== 'getSession'
-      ? DATA_PREFIX + location.pathname + '.' + action + '.' + JSON.stringify(payload || {})
+      ? DATA_PREFIX + location.pathname + location.hash.split('?')[0] + '.' + action + '.' + JSON.stringify(payload || {})
       : null;
     if (!key) {
       cacheClear(false);
@@ -314,7 +335,10 @@ export class PortalElement extends HTMLElement {
   }
 
   // Subclasses override these.
+  // A section inside the one-page portal (see portal-shell.js) has the
+  // brand and nav drawn by the shell, so it renders only its main.
   shell() {
+    if (this.hasAttribute('embedded')) return '<div class="portal embedded"><main id="main"><p class="muted">Loading.</p></main></div>';
     return '<div class="portal"><header>' + WORDMARK + '<nav class="portal-nav" id="nav" aria-label="Portal"></nav></header><main id="main"><p class="muted">Loading.</p></main></div>';
   }
 

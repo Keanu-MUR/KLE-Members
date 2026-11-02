@@ -1,5 +1,4 @@
-import { init } from 'public/portal-pages/my-mock-tests';
-import { getSession } from 'backend/session';
-import { listMyMockTests } from 'backend/mock-tests';
+// This page now lives in the one-page portal; send visitors there.
+import { redirectToPortal } from 'public/portal-redirect';
 
-$w.onReady(() => init($w, { getSession, listMyMockTests }));
+$w.onReady(() => redirectToPortal('/pupil', 'mock-tests'));

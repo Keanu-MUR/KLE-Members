@@ -1,5 +1,4 @@
-import { init } from 'public/portal-pages/reminders';
-import { getSession } from 'backend/session';
-import { getTomorrow, resendReminder } from 'backend/reminders';
+// This page now lives in the one-page portal; send visitors there.
+import { redirectToPortal } from 'public/portal-redirect';
 
-$w.onReady(() => init($w, { getSession, getTomorrow, resendReminder }));
+$w.onReady(() => redirectToPortal('/instructor', 'reminders'));

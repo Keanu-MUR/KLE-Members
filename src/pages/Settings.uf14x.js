@@ -1,6 +1,4 @@
-import { init } from 'public/portal-pages/settings';
-import { getSession } from 'backend/session';
-import { getSettings, updateSettings } from 'backend/portal-settings';
-import { upcomingForTest, testReminder, runPrune } from 'backend/reminders';
+// This page now lives in the one-page portal; send visitors there.
+import { redirectToPortal } from 'public/portal-redirect';
 
-$w.onReady(() => init($w, { getSession, getSettings, updateSettings, upcomingForTest, testReminder, runPrune }));
+$w.onReady(() => redirectToPortal('/instructor', 'settings'));

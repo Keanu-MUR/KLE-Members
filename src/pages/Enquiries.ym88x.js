@@ -1,5 +1,4 @@
-import { init } from 'public/portal-pages/enquiries';
-import { getSession } from 'backend/session';
-import { listEnquiries, getEnquiry, replyToEnquiry, convertEnquiry, closeEnquiry } from 'backend/enquiries';
+// This page now lives in the one-page portal; send visitors there.
+import { redirectToPortal } from 'public/portal-redirect';
 
-$w.onReady(() => init($w, { getSession, listEnquiries, getEnquiry, replyToEnquiry, convertEnquiry, closeEnquiry }));
+$w.onReady(() => redirectToPortal('/instructor', 'enquiries'));

@@ -1,5 +1,4 @@
-import { init } from 'public/portal-pages/home';
-import { getSession } from 'backend/session';
-import { getPupilHome } from 'backend/portal';
+// This page now lives in the one-page portal; send visitors there.
+import { redirectToPortal } from 'public/portal-redirect';
 
-$w.onReady(() => init($w, { getSession, getPupilHome }));
+$w.onReady(() => redirectToPortal('/pupil', 'home'));

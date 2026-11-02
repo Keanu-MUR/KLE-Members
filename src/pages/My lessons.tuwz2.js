@@ -1,6 +1,4 @@
-import { init } from 'public/portal-pages/my-lessons';
-import { getSession } from 'backend/session';
-import { listMyLessons } from 'backend/lessons';
-import { createMessage, listMyMessages } from 'backend/messages';
+// This page now lives in the one-page portal; send visitors there.
+import { redirectToPortal } from 'public/portal-redirect';
 
-$w.onReady(() => init($w, { getSession, listMyLessons, createMessage, listMyMessages }));
+$w.onReady(() => redirectToPortal('/pupil', 'lessons'));

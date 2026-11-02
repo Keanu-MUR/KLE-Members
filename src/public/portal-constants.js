@@ -21,20 +21,21 @@ export const SCHOOL = {
 export const PORTAL_PATHS = {
   login: '/pupil-login',
   enquire: '/enquire',
-  pupilHome: '/pupil-home',
+  // One page per role since 2 Nov 2026; the part after # is the section.
+  pupilHome: '/pupil',
   instructorHome: '/instructor',
-  enquiries: '/enquiries',
-  pupils: '/pupils',
-  pupilRecord: '/pupil-record',
-  myDetails: '/my-details',
-  lessons: '/lessons',
-  progress: '/progress',
-  myLessons: '/my-lessons',
-  myProgress: '/my-progress',
-  myMockTests: '/my-mock-tests',
-  settings: '/settings',
-  reminders: '/reminders',
-  sendLog: '/send-log'
+  enquiries: '/instructor#enquiries',
+  pupils: '/instructor#pupils',
+  pupilRecord: '/instructor#pupil',
+  myDetails: '/pupil#details',
+  lessons: '/instructor#lessons',
+  progress: '/instructor#progress',
+  myLessons: '/pupil#lessons',
+  myProgress: '/pupil#progress',
+  myMockTests: '/pupil#mock-tests',
+  settings: '/instructor#settings',
+  reminders: '/instructor#reminders',
+  sendLog: '/instructor#send-log'
 };
 
 // Text navigation shown under the wordmark on every portal page.

@@ -1,5 +1,4 @@
-import { init } from 'public/portal-pages/send-log';
-import { getSession } from 'backend/session';
-import { listSendLog } from 'backend/send-log';
+// This page now lives in the one-page portal; send visitors there.
+import { redirectToPortal } from 'public/portal-redirect';
 
-$w.onReady(() => init($w, { getSession, listSendLog }));
+$w.onReady(() => redirectToPortal('/instructor', 'send-log'));
