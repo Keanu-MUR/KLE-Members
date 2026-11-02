@@ -13,7 +13,12 @@ import {
   SKILLS,
   LEVELS,
   LESSON_STATUS,
-  MOCK_RESULT
+  MOCK_RESULT,
+  TEMPLATES,
+  EMAIL_PROVIDER,
+  CHANNEL,
+  SCHOOL,
+  PORTAL_PATHS
 } from './portal-constants.js';
 
 const UK_POSTCODE = /^[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}$/;
@@ -486,4 +491,134 @@ export function validateReply(text) {
   const reply = trimTo(text, 2000);
   if (reply.length < 2) return { ok: false, error: 'Write a reply first.' };
   return { ok: true, reply };
+}
+
+// ---------------------------------------------------------------------------
+// Phase 4: reminders, settings and the send log.
+
+// Decides, per channel, whether tomorrow's reminder for one lesson goes out.
+// sentToday is { email: bool, whatsapp: bool }: rows already sent for this
+// lesson and channel in today's run, so a second run sends nothing more.
+// Returns { email, whatsapp, guardianEmail, reasons } where each channel is
+// 'send' or 'skip' and reasons holds the skip reason per channel.
+export function reminderDecision(settings, pupil, lesson, sentToday) {
+  const s = settings || {};
+  const p = pupil || {};
+  const sent = sentToday || {};
+  const reasons = {};
+  let email = 'send';
+  if (!s.emailRemindersOn) { email = 'skip'; reasons.email = 'Email reminders are switched off'; }
+  else if (!p.reminderEmail) { email = 'skip'; reasons.email = 'Pupil has email reminders off'; }
+  else if (!isValidEmail(p.email || '')) { email = 'skip'; reasons.email = 'No valid email on the record'; }
+  else if (sent.email) { email = 'skip'; reasons.email = 'Already sent today'; }
+
+  let whatsapp = 'send';
+  if (!s.whatsAppRemindersOn) { whatsapp = 'skip'; reasons.whatsapp = 'WhatsApp reminders are switched off'; }
+  else if (!p.reminderWhatsApp) { whatsapp = 'skip'; reasons.whatsapp = 'Pupil has WhatsApp reminders off'; }
+  else if (!p.whatsAppConsentAt) { whatsapp = 'skip'; reasons.whatsapp = 'No WhatsApp consent recorded'; }
+  else if (!p.phone) { whatsapp = 'skip'; reasons.whatsapp = 'No phone number on the record'; }
+  else if (sent.whatsapp) { whatsapp = 'skip'; reasons.whatsapp = 'Already sent today'; }
+
+  // Under 18 on the lesson date with a guardian email: the guardian gets the
+  // email too. Guardians never receive WhatsApp.
+  let guardianEmail = 'skip';
+  if (email === 'send' && p.guardianEmail && isValidEmail(p.guardianEmail) && lesson && lesson.date) {
+    const age = ageOn(p.dateOfBirth, lesson.date);
+    if (age !== null && age < 18) guardianEmail = 'send';
+  }
+  return { email, whatsapp, guardianEmail, reasons };
+}
+
+// The variables every reminder template takes, from a lesson and its pupil.
+export function reminderVars(lesson, pupil) {
+  const l = lesson || {};
+  const p = pupil || {};
+  return {
+    firstName: p.firstName || '',
+    transmission: p.transmission || l.transmission || '',
+    dateWords: dateWords(l.date),
+    slotTime: slotTimeWords(l.slot, l.startTime, l.durationMins),
+    pickup: l.pickupLocation || '',
+    link: SCHOOL.siteUrl + PORTAL_PATHS.myLessons
+  };
+}
+
+// The reminder as one line of text, for WhatsApp and the wa.me fallback.
+export function reminderText(lesson, pupil) {
+  return fillTemplate(TEMPLATES.lessonReminder, reminderVars(lesson, pupil));
+}
+
+// https://wa.me/447700900123?text=... for the manual fallback.
+export function waMeLink(phone, text) {
+  const digits = String(phone || '').replace(/[^\d]/g, '');
+  if (!digits) return '';
+  return 'https://wa.me/' + digits + '?text=' + encodeURIComponent(text || '');
+}
+
+// ISO cutoff for pruning: rows created before it go.
+export function pruneCutoff(now, days) {
+  const n = Number(days);
+  const keep = Number.isInteger(n) && n >= 7 ? n : 30;
+  return new Date((now || new Date()).getTime() - keep * 24 * 60 * 60 * 1000).toISOString();
+}
+
+const SETTINGS_BOOLS = ['emailRemindersOn', 'whatsAppRemindersOn', 'enquiryAlertEmailOn', 'enquiryAlertWhatsAppOn'];
+const SETTINGS_DAYS = { lessonRetentionDays: [30, 400], sendLogRetentionDays: [7, 400], paymentRetentionDays: [30, 400] };
+
+// Cleans and checks the Settings form. Only known fields are returned.
+export function validateSettings(input) {
+  const src = input || {};
+  const errors = {};
+  const data = {};
+  SETTINGS_BOOLS.forEach((key) => {
+    if (Object.prototype.hasOwnProperty.call(src, key)) data[key] = Boolean(src[key]);
+  });
+  if (Object.prototype.hasOwnProperty.call(src, 'emailProvider')) {
+    if (!Object.values(EMAIL_PROVIDER).includes(src.emailProvider)) errors.emailProvider = 'Choose Wix or Resend.';
+    else data.emailProvider = src.emailProvider;
+  }
+  if (Object.prototype.hasOwnProperty.call(src, 'instructorEmail')) {
+    const email = trimTo(src.instructorEmail, 254).toLowerCase();
+    if (!isValidEmail(email)) errors.instructorEmail = "That email address doesn't look right.";
+    else data.instructorEmail = email;
+  }
+  if (Object.prototype.hasOwnProperty.call(src, 'instructorWhatsApp')) {
+    const raw = trimTo(src.instructorWhatsApp, 30);
+    if (!raw) data.instructorWhatsApp = '';
+    else {
+      const e164 = toE164(raw);
+      if (!e164) errors.instructorWhatsApp = "That phone number doesn't look right.";
+      else data.instructorWhatsApp = e164;
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(src, 'reminderSendHour')) {
+    const hour = Number(src.reminderSendHour);
+    if (!Number.isInteger(hour) || hour < 0 || hour > 23) errors.reminderSendHour = 'Pick an hour from 0 to 23.';
+    else data.reminderSendHour = hour;
+  }
+  if (Object.prototype.hasOwnProperty.call(src, 'defaultHourlyRatePence')) {
+    const rate = Number(src.defaultHourlyRatePence);
+    if (!Number.isInteger(rate) || rate < 0 || rate > 50000) errors.defaultHourlyRatePence = 'Enter the rate in pounds and pence.';
+    else data.defaultHourlyRatePence = rate;
+  }
+  Object.keys(SETTINGS_DAYS).forEach((key) => {
+    if (!Object.prototype.hasOwnProperty.call(src, key)) return;
+    const [min, max] = SETTINGS_DAYS[key];
+    const days = Number(src[key]);
+    if (!Number.isInteger(days) || days < min || days > max) errors[key] = 'A whole number of days from ' + min + ' to ' + max + '.';
+    else data[key] = days;
+  });
+  return { ok: Object.keys(errors).length === 0, data, errors };
+}
+
+// Sent and failed counts per channel from SendLog rows.
+export function sendCounts(rows) {
+  const out = { email: { sent: 0, failed: 0, skipped: 0 }, whatsapp: { sent: 0, failed: 0, skipped: 0 } };
+  (rows || []).forEach((row) => {
+    const channel = row.channel === CHANNEL.WHATSAPP ? 'whatsapp' : 'email';
+    if (row.status === 'sent') out[channel].sent += 1;
+    else if (row.status === 'failed') out[channel].failed += 1;
+    else out[channel].skipped += 1;
+  });
+  return out;
 }
