@@ -60,7 +60,7 @@ $w.onReady(() => init($w, { getSession, getInstructorDashboard, createCollection
 1. Give the instructor's member account the **Instructor** role (Dashboard > Site Members > Roles).
 2. Log in at `/pupil-login` as the instructor. The dashboard shows a setup panel because the collections do not exist yet. Press **Create collections**. It creates the ten collections with admin-only permissions and the single Settings item, then the panel disappears.
 3. If that step fails on this plan, follow `docs/collections.md` to create them by hand, then press **Create settings**.
-4. Create a test pupil member in the dashboard, and in the Pupils collection add an item whose `memberId` is that member's ID and whose `firstName`, `lastName`, `transmission` and `status` are filled. (Phase 1 adds the instructor's own Pupils screen for this.)
+4. Create a test pupil member: add a contact with the test email, then Site Members > More Actions > Set Contacts as Members (Wix emails a set-password link). Create the Pupils record with the instructor-only `createPupil` function in `backend/pupils.jsw`, which finds the member by login email and links it. Until Phase 1 adds the Pupils screen, call it from the dashboard page by dispatching a `portal-request` event with action `createPupil` and the pupil fields.
 5. Log in as the pupil: `/pupil-home` shows their name and the four empty states. Opening `/instructor` sends them back to `/pupil-home`.
 
 ## Deploying code
