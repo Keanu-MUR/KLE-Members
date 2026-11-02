@@ -27,7 +27,8 @@ const PAGE_ROLES = {
   lessons: [ROLES.INSTRUCTOR],
   progress: [ROLES.INSTRUCTOR],
   'my-lessons': [ROLES.PUPIL, ROLES.GUARDIAN],
-  'my-progress': [ROLES.PUPIL, ROLES.GUARDIAN]
+  'my-progress': [ROLES.PUPIL, ROLES.GUARDIAN],
+  'my-mock-tests': [ROLES.PUPIL, ROLES.GUARDIAN]
 };
 
 // Pages anyone may open; they still receive the session for the nav.

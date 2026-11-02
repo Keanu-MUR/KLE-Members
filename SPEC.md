@@ -46,7 +46,7 @@ Portal architecture: Wix hosts everything; messaging is the only external call. 
 | Email | Wix Triggered Emails, with Resend as a switchable fallback | Triggered emails count against the plan's email-marketing quota, which is small on Light |
 | WhatsApp | Meta Cloud API directly, using the school's existing WhatsApp Business number via coexistence | About £0.016 per message; no middleman fee |
 | SMS | None | Cost |
-| Payments | Optional Stripe Payment Link only | UK law forbids card surcharges on consumer cards, so no fee pass-through; most pupils pay by bank transfer |
+| Payments | None in the portal for now (decision 2 Nov 2026: payments, the balance and any card link are deferred; the Payments collection stays defined but unused) | Keeps the portal simple; pupils pay the instructor directly |
 | Portability | Collections export to CSV; Wix Data has a REST API | A future developer can lift the data out |
 
 Limits that shape the design: scheduled jobs run at most hourly (20 jobs); backend requests time out at 14 seconds; the data item quota is set by plan tier and shrinks on downgrade, so the item count must stay low (see hard rules); custom elements cannot call Velo APIs directly and communicate with page code through events and attributes.
@@ -64,7 +64,7 @@ Ten collections (RateLimit added 1 Nov 2026), designed to stay under 1,200 items
 | Payments | payment received | pupilId, date, amountPence, method (bank transfer / cash / card link / package), reference, note | Own: pupil and guardian; all: instructor | Instructor only |
 | Enquiries | enquiry | name, email, phone, dateOfBirth, addressLine1, postcode, transmission, message, preferredContact, status (new/replied/converted/closed), repliedAt, convertedPupilId, notifyToken (single use, cleared once the emails are sent), notifiedAt | Instructor | Insert: anyone via backend; update: instructor |
 | Messages | pupil-to-instructor note | pupilId, body, createdAt, readAt, reply | Own: pupil; all: instructor | Insert: pupil; reply: instructor |
-| Settings | the school (exactly one item) | emailRemindersOn, whatsAppRemindersOn, emailProvider (wix/resend), instructorEmail, instructorWhatsApp, enquiryAlertEmailOn, enquiryAlertWhatsAppOn, stripePaymentLinkUrl, reminderSendHour, bankDetailsText, defaultHourlyRatePence, lastExportAt, lastExportStatus, lessonRetentionDays (default 120), sendLogRetentionDays (default 30), paymentRetentionDays (default 400) | Instructor | Instructor only |
+| Settings | the school (exactly one item) | emailRemindersOn, whatsAppRemindersOn, emailProvider (wix/resend), instructorEmail, instructorWhatsApp, enquiryAlertEmailOn, enquiryAlertWhatsAppOn, reminderSendHour, defaultHourlyRatePence (stripePaymentLinkUrl and bankDetailsText removed 2 Nov 2026 with payments), lastExportAt, lastExportStatus, lessonRetentionDays (default 120), sendLogRetentionDays (default 30), paymentRetentionDays (default 400) | Instructor | Instructor only |
 | SendLog | send attempt | pupilId, lessonId, channel (email/whatsapp), status (sent/failed/skipped), providerMessageId, error, createdAt | Instructor | Backend only |
 | RateLimit | enquiry rate-limit window | ipHash, windowStart, count | Backend only | Backend only; pruned by the daily job |
 
@@ -91,16 +91,16 @@ Portal pages are top-level pages on the existing site (Wix Editor page slugs can
 
 | Page | What it does |
 |---|---|
-| Home (/pupil-home) | Next lesson (date, slot, pick-up), a one-line progress summary ("14 of 21 skills at level 4+"), balance, and the latest instructor summary |
+| Home (/pupil-home) | Next lesson (date, slot, pick-up), a one-line progress summary ("14 of 21 skills at level 4+") and the latest instructor summary (balance deferred, 2 Nov 2026) |
 | My lessons | Upcoming and past lessons; each past lesson shows the instructor's summary. No booking controls anywhere. A "Request a change" button opens a short message form to the instructor (Messages) |
 | My progress | The skills grid: every skill with its level 1–5 as a filled track, the instructor's note per skill, and date last updated. Manual-only skills hidden for automatic pupils. Theory status and practical test date at the top |
 | Mock tests | Each mock test: date, result, minors/serious/dangerous counts, fault list, feedback |
-| Payments | Running balance: hours taught × rate, minus payments received, with the list of both. Bank details shown for transfer. If Settings.stripePaymentLinkUrl is set, a "Pay by card" button; otherwise nothing |
+| Payments | Deferred (2 Nov 2026): not built. The earlier design was a running balance (hours taught × rate, minus payments received) with bank details and an optional card link |
 | My details | Edit contact details, address, emergency contact, reminder preferences (email on/off, WhatsApp on/off with consent wording). Licence number and date of birth shown read-only |
 
 ### Guardian
 
-The same Home, Lessons, Progress, Mock tests and Payments pages as their pupil, read-only, with the pupil's name in the header. No details editing, no messages.
+The same Home, Lessons, Progress and Mock tests pages as their pupil, read-only, with the pupil's name in the header. No details editing, no messages.
 
 ### Instructor
 
@@ -315,13 +315,13 @@ Read CLAUDE.md and SPEC.md. Phases 0–2 are complete and tested.
 
 Phase 3. Build:
 1. MockTests: instructor add/edit with minors/serious/dangerous counts and a fault list; pupil Mock tests page.
-2. Payments: instructor add payment (date, amount, method, reference); the balance calculation as a pure backend function (completed lessons × duration × pupil rate, minus payments) with unit tests; the pupil Payments page with bank details from Settings and the optional Stripe Payment Link button.
+2. (Payments: deferred on 2 Nov 2026; nothing built.)
 3. Messages: instructor view and reply; unread count on the dashboard.
 
 Plan first.
 ```
 
-Test: record a 2-hour completed lesson at £41/h and a £50 payment; confirm the pupil sees £32 owing; add a mock test and check the pupil view.
+Test: add a mock test and check the pupil view; reply to a change request and check the pupil sees it.
 
 ### Phase 4 — Reminders and WhatsApp
 
@@ -375,7 +375,7 @@ Everything here happens outside the code, mostly in dashboards. Items 1–6 are 
 - [ ] 2. Add the Members Area to the site (Add > Members) and create the member role "Instructor" (Dashboard > Site Members > Roles). Assign it to the instructor's own member account.
 - [ ] 3. Connect the site to GitHub (Velo sidebar > GitHub Integration) and install the Wix CLI locally (npm install -g @wix/cli); clone the repo. Install the Wix skills for Claude Code in the repo (npx skills add wix/skills).
 - [ ] 4. Create a test pupil member and a test guardian member with real email addresses you control.
-- [ ] 5. Collect brand inputs: logo file, primary colour, 3–5 photos of the car and instructor, bank details text for the Payments page. Set the two fonts in Site Design > Text.
+- [ ] 5. Collect brand inputs: logo file, primary colour, 3–5 photos of the car and instructor. Set the two fonts in Site Design > Text.
 - [ ] 6. Confirm kledrivingschool@gmail.com is the address enquiries should reach, or decide on a different one, and put it in Settings.instructorEmail.
 - [ ] 7. Meta: in Meta Business Manager, start WhatsApp Business Platform onboarding using the coexistence path so the existing WhatsApp Business app number keeps working. Update the WhatsApp Business app first (version 2.24.17 or later). Choose a provider with no platform fee, or Meta's own embedded signup, and complete business verification as a sole trader (ID plus business document). Allow up to two weeks.
 - [ ] 8. Meta: create and submit two utility templates, lesson_reminder and new_enquiry, with the exact wording in the Messaging section. Wait for approval before Phase 4.
@@ -394,7 +394,6 @@ Nothing below blocks Phases 0–3. Fill each in SPEC.md as it is settled.
 | LOGO_FILE: resolved, no file exists; wordmark is text in Lulo Clean One Bold | Design brief, login page | Phase 0 |
 | BRAND_PRIMARY: #FF5A25 (site orange); gold #F3C852; black; white | Design brief, base styles | Phase 0 |
 | Car and instructor photos | Login page, home page banner | Phase 2 |
-| Bank details text | Pupil Payments page | Phase 3 |
 | Data item limit on Light: 1,500 items per site, shared across all collections (Wix CMS limits article, checked 1 Nov 2026; Core is 4,000) | Hard rules (item budget) | Phase 0 |
 | WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID | Secrets Manager | Phase 4 |
 | RESEND_API_KEY and DNS records | Secrets Manager, Wix domain settings | Phase 4 |

@@ -28,7 +28,7 @@ name, email, phone, dateOfBirth, addressLine1, postcode, transmission, message, 
 pupilId, body, createdAt, readAt, reply
 
 ## Settings
-emailRemindersOn (Boolean), whatsAppRemindersOn (Boolean), emailProvider, instructorEmail, instructorWhatsApp, enquiryAlertEmailOn (Boolean), enquiryAlertWhatsAppOn (Boolean), stripePaymentLinkUrl, reminderSendHour (Number), bankDetailsText, defaultHourlyRatePence (Number), lastExportAt, lastExportStatus, lessonRetentionDays (Number), sendLogRetentionDays (Number), paymentRetentionDays (Number)
+emailRemindersOn (Boolean), whatsAppRemindersOn (Boolean), emailProvider, instructorEmail, instructorWhatsApp, enquiryAlertEmailOn (Boolean), enquiryAlertWhatsAppOn (Boolean), reminderSendHour (Number), defaultHourlyRatePence (Number), lastExportAt, lastExportStatus, lessonRetentionDays (Number), sendLogRetentionDays (Number), paymentRetentionDays (Number)
 
 ## SendLog
 pupilId, lessonId, channel, status, providerMessageId, error, createdAt

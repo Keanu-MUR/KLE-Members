@@ -93,12 +93,14 @@ const NAV_BY_ROLE = {
     { label: 'Home', path: '/pupil-home' },
     { label: 'Lessons', path: '/my-lessons' },
     { label: 'Progress', path: '/my-progress' },
+    { label: 'Mock tests', path: '/my-mock-tests' },
     { label: 'My details', path: '/my-details' }
   ],
   guardian: [
     { label: 'Home', path: '/pupil-home' },
     { label: 'Lessons', path: '/my-lessons' },
-    { label: 'Progress', path: '/my-progress' }
+    { label: 'Progress', path: '/my-progress' },
+    { label: 'Mock tests', path: '/my-mock-tests' }
   ]
 };
 

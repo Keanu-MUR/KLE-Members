@@ -1,13 +1,15 @@
 // Page data for the Pupil Home and Instructor Dashboard. Members only (see
-// permissions.json); the role check inside is the real guard. Balance
-// arrives with Payments in Phase 3; reminders in Phase 4.
+// permissions.json); the role check inside is the real guard. Reminders
+// arrive in Phase 4; payments are deferred (2 Nov 2026).
 
 import wixData from 'wix-data';
 import { requireInstructor, requireOwnPupil, run, publicPupil } from 'backend/access';
 import { checkSetup } from 'backend/setup';
 import { loadSettings } from 'backend/settings';
 import { shapeLesson, queryLessons, pupilNames, fullName } from 'backend/lesson-store';
-import { londonDate, addDays, progressSummary } from 'public/portal-utils';
+import { trimTo } from 'public/portal-utils';
+import { trimTo } from 'public/portal-utils';
+import { trimTo, londonDate, addDays, progressSummary } from 'public/portal-utils';
 import { LESSON_STATUS, ENQUIRY_STATUS } from 'public/portal-constants';
 
 async function latestSummaryFor(pupilId) {
@@ -34,7 +36,6 @@ export async function getPupilHome() {
       nextLesson: upcoming[0] ? shapeLesson(upcoming[0], { forPupil: true }) : null,
       progressSummary: summary.words || null,
       progressUpdatedAt: progressItem ? progressItem.updatedAt || '' : '',
-      balance: null,
       latestSummary: latest
     };
   });
@@ -51,23 +52,31 @@ export async function getInstructorDashboard() {
     if (!ready) {
       return {
         setup: Object.assign({}, setup, { settingsExists: Boolean(item) }),
-        today: [], tomorrow: [], unreadEnquiries: 0, unreadMessages: 0, reminders: { sent: 0, failed: 0 }, dates: { today, tomorrow }
+        today: [], tomorrow: [], unreadEnquiries: 0, unreadMessages: 0, unread: [], reminders: { sent: 0, failed: 0 }, dates: { today, tomorrow }
       };
     }
-    const [lessons, newEnquiries, unreadMessages] = await Promise.all([
+    const [lessons, newEnquiries, unreadResult] = await Promise.all([
       queryLessons({ from: today, to: tomorrow, limit: 100 }),
       wixData.query('Enquiries').eq('status', ENQUIRY_STATUS.NEW).count({ suppressAuth: true }),
-      wixData.query('Messages').isEmpty('readAt').count({ suppressAuth: true })
+      wixData.query('Messages').isEmpty('readAt').descending('createdAt').limit(20).find({ suppressAuth: true })
     ]);
-    const names = await pupilNames(lessons.map((l) => l.pupilId));
+    const names = await pupilNames(lessons.map((l) => l.pupilId).concat(unreadResult.items.map((m) => m.pupilId)));
     const shaped = lessons.map((l) => Object.assign(shapeLesson(l), { pupilName: fullName(names[l.pupilId]) || 'Unknown pupil' }));
+    const unread = unreadResult.items.map((m) => ({
+      _id: m._id,
+      pupilId: m.pupilId || '',
+      pupilName: fullName(names[m.pupilId]) || 'Unknown pupil',
+      body: trimTo(m.body, 140),
+      createdAt: m.createdAt || ''
+    }));
     return {
       setup: Object.assign({}, setup, { settingsExists: Boolean(item) }),
       dates: { today, tomorrow },
       today: shaped.filter((l) => l.date === today),
       tomorrow: shaped.filter((l) => l.date === tomorrow),
       unreadEnquiries: newEnquiries,
-      unreadMessages,
+      unreadMessages: unreadResult.totalCount != null ? unreadResult.totalCount : unread.length,
+      unread,
       reminders: { sent: 0, failed: 0 }
     };
   });

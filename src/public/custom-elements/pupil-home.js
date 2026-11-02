@@ -1,5 +1,5 @@
 // <kle-pupil-home>: the pupil's (or guardian's) home: next lesson, the
-// one-line progress summary, balance (Phase 3) and the latest note.
+// one-line progress summary and the latest note.
 
 import { PortalElement, esc } from './portal-base.js';
 import { LESSON_STYLE, renderLessonRow, dayWords } from './lesson-list.js';
@@ -38,8 +38,6 @@ class KlePupilHome extends PortalElement {
       (home.progressSummary
         ? '<p>' + esc(home.progressSummary) + '. <a href="/my-progress">See the driver’s record</a></p>'
         : this.empty('Your driver’s record will appear here after your first lesson.')) +
-      '<h2>Balance</h2>' +
-      (home.balance ? '' : this.empty('Your balance will show here once a lesson has been taught.')) +
       '<h2>Latest note</h2>' +
       (latest
         ? '<p class="smallcaps muted">' + esc(dayWords(latest.date, true)) + '</p><p class="lesson-summary">' + esc(latest.pupilSummary) + '</p>'

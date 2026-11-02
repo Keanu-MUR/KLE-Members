@@ -30,7 +30,8 @@ export const PORTAL_PATHS = {
   lessons: '/lessons',
   progress: '/progress',
   myLessons: '/my-lessons',
-  myProgress: '/my-progress'
+  myProgress: '/my-progress',
+  myMockTests: '/my-mock-tests'
 };
 
 // Text navigation shown under the wordmark on every portal page.
@@ -45,12 +46,14 @@ export const NAV_BY_ROLE = {
     { label: 'Home', path: PORTAL_PATHS.pupilHome },
     { label: 'Lessons', path: PORTAL_PATHS.myLessons },
     { label: 'Progress', path: PORTAL_PATHS.myProgress },
+    { label: 'Mock tests', path: PORTAL_PATHS.myMockTests },
     { label: 'My details', path: PORTAL_PATHS.myDetails }
   ],
   guardian: [
     { label: 'Home', path: PORTAL_PATHS.pupilHome },
     { label: 'Lessons', path: PORTAL_PATHS.myLessons },
-    { label: 'Progress', path: PORTAL_PATHS.myProgress }
+    { label: 'Progress', path: PORTAL_PATHS.myProgress },
+    { label: 'Mock tests', path: PORTAL_PATHS.myMockTests }
   ]
 };
 
@@ -208,9 +211,7 @@ export const SETTINGS_DEFAULTS = {
   instructorWhatsApp: '',
   enquiryAlertEmailOn: true,
   enquiryAlertWhatsAppOn: false,
-  stripePaymentLinkUrl: '',
   reminderSendHour: 8,
-  bankDetailsText: '',
   defaultHourlyRatePence: SCHOOL.defaultHourlyRatePence,
   lastExportAt: null,
   lastExportStatus: '',
