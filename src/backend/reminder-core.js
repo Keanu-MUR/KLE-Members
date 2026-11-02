@@ -162,7 +162,7 @@ export async function tomorrowOverview() {
       return Object.assign(shapeLesson(lesson), {
         pupilName: fullName(pupil) || 'Unknown pupil',
         pupilPhone: pupil.phone || '',
-        status: channelStatus(rows.filter((r) => r.lessonId === lesson._id)),
+        channels: channelStatus(rows.filter((r) => r.lessonId === lesson._id)),
         wouldSend: { email: decision.email, whatsapp: decision.whatsapp, reasons: decision.reasons },
         waMe: waMeLink(pupil.phone, text),
         text

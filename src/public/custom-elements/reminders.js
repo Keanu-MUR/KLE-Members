@@ -40,7 +40,7 @@ class KleReminders extends PortalElement {
   }
 
   channelLine(item, channel, label, on) {
-    const st = item.status[channel];
+    const st = item.channels[channel];
     const would = item.wouldSend[channel];
     let word;
     let why = '';
