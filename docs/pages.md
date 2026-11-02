@@ -14,11 +14,12 @@ Wix only pushes page code files to GitHub through the Wix CLI local editor, so w
 
 1. Pages & Menu > Add Page > Blank page. Name it as in the table.
 2. Page settings > Page Info: set the URL slug as in the table. Under SEO, hide the page from search engines. Untick "Show in menu" for now (checklist item 12 adds Pupil login and Enquire to the menu later).
-3. Page settings > Permissions: leave as **Everyone**. Setting "Members only" would trigger Wix's own login popup over our form. The page code redirects visitors who should not be there, and every backend call checks the role again.
-4. Add > Embed Code > Custom Element. In its settings choose **Velo file** as the source, pick the file from the table, and type the tag name exactly. In the element's Properties panel (Dev Mode) set its ID to `portal`.
-5. Stretch the element to full width and let it set the page height. Delete any other element Wix placed on the page.
-6. Publish. Wix pushes a file such as `src/pages/Pupil login.abc12.js` to the repo.
-7. Locally: `git pull`, open that file, replace its contents with the matching snippet below, commit and push. Wix publishes from the default branch.
+3. Page settings > Page info > Advanced settings: turn on **Manually control caching for this page** and choose **Never (disable caching)**. Portal pages render differently per member, and Wix otherwise caches the server-rendered response for the URL (on 2 Nov 2026 the pupil was served the instructor's cached redirect). Page code also routes only in the browser for the same reason.
+4. Page settings > Permissions: leave as **Everyone**. Setting "Members only" would trigger Wix's own login popup over our form. The page code redirects visitors who should not be there, and every backend call checks the role again.
+5. Add > Embed Code > Custom Element. In its settings choose **Velo file** as the source, pick the file from the table, and type the tag name exactly. In the element's Properties panel (Dev Mode) set its ID to `portal`.
+6. Stretch the element to full width and let it set the page height. Delete any other element Wix placed on the page.
+7. Publish. Wix pushes a file such as `src/pages/Pupil login.abc12.js` to the repo.
+8. Locally: `git pull`, open that file, replace its contents with the matching snippet below, commit and push. Wix publishes from the default branch.
 
 ## Page code snippets
 
