@@ -12,7 +12,8 @@ import {
   ENQUIRY_LIMIT,
   SKILLS,
   LEVELS,
-  LESSON_STATUS
+  LESSON_STATUS,
+  MOCK_RESULT
 } from './portal-constants.js';
 
 const UK_POSTCODE = /^[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}$/;
@@ -421,4 +422,68 @@ export function validateSkill(skillKey, level, note, transmission) {
   const lvl = Number(level);
   if (!LEVELS.some((l) => l.level === lvl)) errors.level = 'Levels run from 1 to 5.';
   return { ok: Object.keys(errors).length === 0, data: { skillKey, level: lvl, note: trimTo(note, 500) }, errors };
+}
+
+// ---------------------------------------------------------------------------
+// Phase 3: mock tests and message replies.
+
+const MOCK_RESULTS = Object.values(MOCK_RESULT);
+const SKILL_KEYS = SKILLS.map((s) => s.key);
+
+function countField(value) {
+  if (value === '' || value == null) return 0;
+  const n = Number(value);
+  return Number.isInteger(n) && n >= 0 && n <= 99 ? n : null;
+}
+
+// Cleans and checks a mock test from the instructor's form. faults is an
+// array of { category, note } where category is a skill key.
+export function validateMockTest(input) {
+  const src = input || {};
+  const errors = {};
+  const date = trimTo(src.date, 10);
+  if (!isValidIsoDate(date)) errors.date = 'Pick the date of the mock test.';
+  const result = MOCK_RESULTS.includes(src.result) ? src.result : '';
+  if (!result) errors.result = 'Pass or fail?';
+  const counts = {};
+  [['minors', 'minor'], ['serious', 'serious'], ['dangerous', 'dangerous']].forEach(([key, word]) => {
+    const n = countField(src[key]);
+    if (n === null) errors[key] = 'A whole number from 0 to 99 of ' + word + ' faults.';
+    else counts[key] = n;
+  });
+  const faults = [];
+  const rows = Array.isArray(src.faults) ? src.faults.slice(0, 30) : [];
+  rows.forEach((row) => {
+    const category = trimTo(row && row.category, 60);
+    const note = trimTo(row && row.note, 200);
+    if (!category && !note) return;
+    if (!SKILL_KEYS.includes(category)) {
+      errors.faults = 'Choose a category for every fault.';
+      return;
+    }
+    faults.push({ category, note });
+  });
+  return {
+    ok: Object.keys(errors).length === 0,
+    data: Object.assign({ date, result, faults, feedback: trimTo(src.feedback, 2000) }, counts),
+    errors
+  };
+}
+
+// "5 minors, 1 serious, 0 dangerous"
+export function mockTestWords(test) {
+  const t = test || {};
+  const n = (v) => Number(v) || 0;
+  return n(t.minors) + ' minor' + (n(t.minors) === 1 ? '' : 's') + ', ' + n(t.serious) + ' serious, ' + n(t.dangerous) + ' dangerous';
+}
+
+export function skillName(key) {
+  const skill = SKILLS.find((s) => s.key === key);
+  return skill ? skill.name : key;
+}
+
+export function validateReply(text) {
+  const reply = trimTo(text, 2000);
+  if (reply.length < 2) return { ok: false, error: 'Write a reply first.' };
+  return { ok: true, reply };
 }
