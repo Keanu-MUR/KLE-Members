@@ -26,21 +26,32 @@ export const PORTAL_PATHS = {
   enquiries: '/enquiries',
   pupils: '/pupils',
   pupilRecord: '/pupil-record',
-  myDetails: '/my-details'
+  myDetails: '/my-details',
+  lessons: '/lessons',
+  progress: '/progress',
+  myLessons: '/my-lessons',
+  myProgress: '/my-progress'
 };
 
 // Text navigation shown under the wordmark on every portal page.
 export const NAV_BY_ROLE = {
   instructor: [
     { label: 'Today', path: PORTAL_PATHS.instructorHome },
+    { label: 'Lessons', path: PORTAL_PATHS.lessons },
     { label: 'Pupils', path: PORTAL_PATHS.pupils },
     { label: 'Enquiries', path: PORTAL_PATHS.enquiries }
   ],
   pupil: [
     { label: 'Home', path: PORTAL_PATHS.pupilHome },
+    { label: 'Lessons', path: PORTAL_PATHS.myLessons },
+    { label: 'Progress', path: PORTAL_PATHS.myProgress },
     { label: 'My details', path: PORTAL_PATHS.myDetails }
   ],
-  guardian: [{ label: 'Home', path: PORTAL_PATHS.pupilHome }]
+  guardian: [
+    { label: 'Home', path: PORTAL_PATHS.pupilHome },
+    { label: 'Lessons', path: PORTAL_PATHS.myLessons },
+    { label: 'Progress', path: PORTAL_PATHS.myProgress }
+  ]
 };
 
 // The fields a pupil may change on My details. Everything else on the
@@ -86,29 +97,37 @@ export const ROLES = {
 export const INSTRUCTOR_ROLE_TITLE = 'Instructor';
 
 // DVSA driver's record categories, in display order. manualOnly skills are
-// hidden for automatic pupils.
+// hidden for automatic pupils. The group only decides where the dashed
+// road-marking rules fall on the driver's record card.
+export const SKILL_GROUPS = [
+  { key: 'basics', name: 'Before you drive' },
+  { key: 'road', name: 'On the road' },
+  { key: 'manoeuvres', name: 'Manoeuvres' },
+  { key: 'conditions', name: 'Other conditions' }
+];
+
 export const SKILLS = [
-  { key: 'cockpit-drill', name: 'Cockpit drill and safety checks' },
-  { key: 'show-me-tell-me', name: 'Show-me/tell-me questions' },
-  { key: 'controls-instruments', name: 'Controls and instruments' },
-  { key: 'moving-off-stopping', name: 'Moving off and stopping' },
-  { key: 'clutch-control', name: 'Clutch control', manualOnly: true },
-  { key: 'safe-positioning', name: 'Safe positioning' },
-  { key: 'mirrors-signals-anticipation', name: 'Mirrors, signals and anticipation' },
-  { key: 'use-of-speed', name: 'Use of speed' },
-  { key: 'meeting-crossing-traffic', name: 'Meeting and crossing traffic' },
-  { key: 'junctions', name: 'Junctions' },
-  { key: 'roundabouts', name: 'Roundabouts' },
-  { key: 'pedestrian-crossings', name: 'Pedestrian crossings' },
-  { key: 'dual-carriageways', name: 'Dual carriageways' },
-  { key: 'independent-driving', name: 'Independent driving (sat nav and signs)' },
-  { key: 'emergency-stop', name: 'Emergency stop' },
-  { key: 'reverse-park-road', name: 'Reverse park on the road' },
-  { key: 'bay-park', name: 'Bay park' },
-  { key: 'pull-up-right-reverse', name: 'Pull up on the right and reverse' },
-  { key: 'rural-roads', name: 'Rural roads' },
-  { key: 'night-driving', name: 'Night driving' },
-  { key: 'eco-safe-driving', name: 'Eco-safe driving' }
+  { key: 'cockpit-drill', name: 'Cockpit drill and safety checks', group: 'basics' },
+  { key: 'show-me-tell-me', name: 'Show-me/tell-me questions', group: 'basics' },
+  { key: 'controls-instruments', name: 'Controls and instruments', group: 'basics' },
+  { key: 'moving-off-stopping', name: 'Moving off and stopping', group: 'basics' },
+  { key: 'clutch-control', name: 'Clutch control', manualOnly: true, group: 'basics' },
+  { key: 'safe-positioning', name: 'Safe positioning', group: 'road' },
+  { key: 'mirrors-signals-anticipation', name: 'Mirrors, signals and anticipation', group: 'road' },
+  { key: 'use-of-speed', name: 'Use of speed', group: 'road' },
+  { key: 'meeting-crossing-traffic', name: 'Meeting and crossing traffic', group: 'road' },
+  { key: 'junctions', name: 'Junctions', group: 'road' },
+  { key: 'roundabouts', name: 'Roundabouts', group: 'road' },
+  { key: 'pedestrian-crossings', name: 'Pedestrian crossings', group: 'road' },
+  { key: 'dual-carriageways', name: 'Dual carriageways', group: 'road' },
+  { key: 'independent-driving', name: 'Independent driving (sat nav and signs)', group: 'road' },
+  { key: 'emergency-stop', name: 'Emergency stop', group: 'manoeuvres' },
+  { key: 'reverse-park-road', name: 'Reverse park on the road', group: 'manoeuvres' },
+  { key: 'bay-park', name: 'Bay park', group: 'manoeuvres' },
+  { key: 'pull-up-right-reverse', name: 'Pull up on the right and reverse', group: 'manoeuvres' },
+  { key: 'rural-roads', name: 'Rural roads', group: 'conditions' },
+  { key: 'night-driving', name: 'Night driving', group: 'conditions' },
+  { key: 'eco-safe-driving', name: 'Eco-safe driving', group: 'conditions' }
 ];
 
 export const LEVELS = [
