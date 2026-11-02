@@ -1,6 +1,6 @@
 # Phase 0 plan — scaffold, login, roles
 
-Status: approved and built 1 Nov 2026. Elements checked in a local harness at 375px; the live test script (section 8) still needs running once the Editor pages exist.
+Status: complete. Built 1 Nov 2026, deployed and tested on the live site 2 Nov 2026; every step of the test script in section 8 passes.
 
 ## 0. Environment and repo check (done 1 Nov 2026)
 
@@ -107,7 +107,7 @@ Two facts from the Wix docs that shape setup: once the site is connected to GitH
 
 ## 8. Phase 0 test script
 
-Results on the live site, 2 Nov 2026: steps 1 to 3 done (pages created, collections and Settings created from the dashboard panel; all ten show in the CMS with custom permissions). Step 5 passes (instructor lands on /instructor; opening /pupil-login while logged in redirects there). Step 8 passes (logged out, /pupil-home and /instructor redirect to /pupil-login). Step 9 passes (16 node tests). Step 4 done: test member keanu7pokemon@gmail.com created from a contact (Site Members > More Actions > Set Contacts as Members, which emails a set-password link) and linked through the new instructor-only createPupil function, which looked the member up by login email. First pupil login exposed Wix SSR caching: /pupil-home served the pupil the instructor's cached redirect. Fixed by routing only in the browser (wix-window-frontend rendering.env) and setting caching to Never on all three pages. Step 6 passes (pupil in a private window sees /pupil-home with name and four empty states, 2 Nov 2026). Step 7 to be confirmed by the pupil.
+Results on the live site, 2 Nov 2026: steps 1 to 3 done (pages created, collections and Settings created from the dashboard panel; all ten show in the CMS with custom permissions). Step 5 passes (instructor lands on /instructor; opening /pupil-login while logged in redirects there). Step 8 passes (logged out, /pupil-home and /instructor redirect to /pupil-login). Step 9 passes (16 node tests). Step 4 done: test member keanu7pokemon@gmail.com created from a contact (Site Members > More Actions > Set Contacts as Members, which emails a set-password link) and linked through the new instructor-only createPupil function, which looked the member up by login email. First pupil login exposed Wix SSR caching: /pupil-home served the pupil the instructor's cached redirect. Fixed by routing only in the browser (wix-window-frontend rendering.env) and setting caching to Never on all three pages. Step 6 passes (pupil in a private window sees /pupil-home with name and four empty states, 2 Nov 2026). Step 7 passes (pupil opening /instructor is returned to /pupil-home). Phase 0 test script complete, 2 Nov 2026.
 
 Two platform facts learnt on the way: a Wix custom element loses a request dispatched synchronously from attributeChangedCallback (fixed in portal-base.js), and creating collections from code logs ten harmless "Sandbox environment is disabled" errors in Wix Logs.
 
