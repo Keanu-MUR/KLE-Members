@@ -2,29 +2,28 @@
 // these; Phase 0 uses them to link the test pupil.
 
 import wixData from 'wix-data';
-import { members } from 'wix-members-backend';
 import { requireInstructor, run, PortalError } from 'backend/access';
 import { loadSettings } from 'backend/settings';
 import { isValidEmail, toE164, trimTo } from 'public/portal-utils';
 import { TRANSMISSION, PUPIL_STATUS } from 'public/portal-constants';
 
-function memberSummary(member) {
-  const contact = member.contactDetails || {};
-  return {
-    memberId: member._id,
-    loginEmail: member.loginEmail || '',
-    firstName: contact.firstName || '',
-    lastName: contact.lastName || ''
-  };
-}
-
+// Members/PrivateMembersData is Wix's own members collection; its _id is
+// the member ID that currentMember.getMember() reports. Read with elevated
+// permissions after the instructor check.
 async function lookupMember(email) {
-  const result = await members
-    .queryMembers()
+  const result = await wixData
+    .query('Members/PrivateMembersData')
     .eq('loginEmail', email)
     .limit(1)
     .find({ suppressAuth: true });
-  return result.items[0] ? memberSummary(result.items[0]) : null;
+  const member = result.items[0];
+  if (!member) return null;
+  return {
+    memberId: member._id,
+    loginEmail: member.loginEmail || '',
+    firstName: member.firstName || '',
+    lastName: member.lastName || ''
+  };
 }
 
 export async function findMemberByEmail(email) {
