@@ -1,15 +1,13 @@
 // Pupil home page (also the guardian's landing page, read only).
 
 import { mountPortal } from 'public/portal-page';
-import { getSession } from 'backend/session.web';
-import { getPupilHome } from 'backend/portal.web';
 
-export function init($w) {
+export function init($w, backend) {
   return mountPortal($w, '#portal', {
     page: 'home',
-    getSession,
+    getSession: backend.getSession,
     actions: {
-      getPupilHome: () => getPupilHome()
+      getPupilHome: () => backend.getPupilHome()
     }
   });
 }

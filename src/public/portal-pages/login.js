@@ -1,14 +1,14 @@
-// Pupil login page. The page code file is two lines; everything lives here.
+// Pupil login page. Page code imports the backend web methods (public
+// files cannot resolve them) and hands them in; everything else lives here.
 
 import { mountPortal } from 'public/portal-page';
-import { getSession, requestLoginLink } from 'backend/session.web';
 
-export function init($w) {
+export function init($w, backend) {
   return mountPortal($w, '#portal', {
     page: 'login',
-    getSession,
+    getSession: backend.getSession,
     actions: {
-      requestLoginLink: (payload) => requestLoginLink(payload.email)
+      requestLoginLink: (payload) => backend.requestLoginLink(payload.email)
     }
   });
 }

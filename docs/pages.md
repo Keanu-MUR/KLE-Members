@@ -22,25 +22,36 @@ Wix only pushes page code files to GitHub through the Wix CLI local editor, so w
 
 ## Page code snippets
 
+Page code must hold the backend imports itself: a public file cannot resolve a web module (its import comes back undefined), so each page passes the functions it needs into `init`.
+
 Pupil login:
 
 ```js
 import { init } from 'public/portal-pages/login';
-$w.onReady(() => init($w));
+import { getSession, requestLoginLink } from 'backend/session.web';
+
+$w.onReady(() => init($w, { getSession, requestLoginLink }));
 ```
 
 Pupil home:
 
 ```js
 import { init } from 'public/portal-pages/home';
-$w.onReady(() => init($w));
+import { getSession } from 'backend/session.web';
+import { getPupilHome } from 'backend/portal.web';
+
+$w.onReady(() => init($w, { getSession, getPupilHome }));
 ```
 
 Instructor dashboard:
 
 ```js
 import { init } from 'public/portal-pages/instructor';
-$w.onReady(() => init($w));
+import { getSession } from 'backend/session.web';
+import { getInstructorDashboard } from 'backend/portal.web';
+import { createCollections, ensureSettings } from 'backend/setup.web';
+
+$w.onReady(() => init($w, { getSession, getInstructorDashboard, createCollections, ensureSettings }));
 ```
 
 ## First run
