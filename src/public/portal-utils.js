@@ -9,7 +9,10 @@ import {
   TRANSMISSION,
   PREFERRED_CONTACT,
   MY_DETAILS_FIELDS,
-  ENQUIRY_LIMIT
+  ENQUIRY_LIMIT,
+  SKILLS,
+  LEVELS,
+  LESSON_STATUS
 } from './portal-constants.js';
 
 const UK_POSTCODE = /^[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}$/;
@@ -305,4 +308,117 @@ export function pickMyDetails(input) {
     }
   }
   return { ok: Object.keys(errors).length === 0, data: out, errors };
+}
+
+// ---------------------------------------------------------------------------
+// Phase 2: lessons and progress.
+
+// Monday-to-Sunday ranges for the week holding `today` and the week after.
+export function weekRanges(today) {
+  const day = new Date(today + 'T12:00:00Z').getUTCDay(); // 0 Sunday .. 6 Saturday
+  const sinceMonday = (day + 6) % 7;
+  const monday = addDays(today, -sinceMonday);
+  return {
+    thisWeek: { from: monday, to: addDays(monday, 6) },
+    nextWeek: { from: addDays(monday, 7), to: addDays(monday, 13) }
+  };
+}
+
+export function lessonEnd(lesson) {
+  return addMinutes(lesson.startTime, Number(lesson.durationMins));
+}
+
+// True when two lessons on the same date share any minute.
+export function lessonsOverlap(a, b) {
+  if (!a || !b || a.date !== b.date) return false;
+  const toMins = (t) => {
+    const [h, m] = String(t).split(':').map(Number);
+    return h * 60 + m;
+  };
+  const aStart = toMins(a.startTime);
+  const aEnd = aStart + Number(a.durationMins);
+  const bStart = toMins(b.startTime);
+  const bEnd = bStart + Number(b.durationMins);
+  return aStart < bEnd && bStart < aEnd;
+}
+
+// "Early morning, 07:30–09:30" or "11:15–12:45" for a custom time.
+export function lessonTimeLabel(lesson) {
+  if (!lesson) return '';
+  return slotTimeWords(lesson.slot, lesson.startTime, lesson.durationMins);
+}
+
+const LESSON_STATUSES = Object.values(LESSON_STATUS);
+
+// Cleans and checks the fields the instructor's lesson form sends. Returns
+// { ok, data, errors } with plain-English errors keyed by field.
+export function validateLesson(input) {
+  const src = input || {};
+  const errors = {};
+  const pupilId = trimTo(src.pupilId, 64);
+  if (!pupilId) errors.pupilId = 'Choose a pupil.';
+  const date = trimTo(src.date, 10);
+  if (!isValidIsoDate(date)) errors.date = 'Pick a date.';
+  const timing = parseSlot(src.slot, trimTo(src.startTime, 5), src.durationMins === '' || src.durationMins == null ? NaN : Number(src.durationMins));
+  if (!timing) {
+    errors.slot = src.slot === CUSTOM_SLOT
+      ? 'A custom lesson needs a start time (like 11:15) and a length between 30 minutes and 8 hours.'
+      : 'Choose a slot.';
+  }
+  const pickupLocation = trimTo(src.pickupLocation, 160);
+  if (!pickupLocation) errors.pickupLocation = 'Where are you picking them up?';
+  const status = LESSON_STATUSES.includes(src.status) ? src.status : LESSON_STATUS.PLANNED;
+  const data = Object.assign({
+    pupilId,
+    date,
+    pickupLocation,
+    status,
+    pupilSummary: trimTo(src.pupilSummary, 2000),
+    instructorNotes: trimTo(src.instructorNotes, 4000)
+  }, timing ? { slot: timing.slot, startTime: timing.startTime, durationMins: timing.durationMins } : {});
+  return { ok: Object.keys(errors).length === 0, data, errors };
+}
+
+// Lessons grouped by date, each day sorted by start time, days ascending.
+export function groupLessonsByDay(lessons) {
+  const byDate = new Map();
+  for (const lesson of lessons || []) {
+    if (!byDate.has(lesson.date)) byDate.set(lesson.date, []);
+    byDate.get(lesson.date).push(lesson);
+  }
+  return Array.from(byDate.keys()).sort().map((date) => ({
+    date,
+    lessons: byDate.get(date).slice().sort((a, b) => String(a.startTime).localeCompare(String(b.startTime)))
+  }));
+}
+
+// The skills a pupil's record shows: manual-only ones drop for automatic.
+export function visibleSkills(transmission) {
+  const automatic = transmission === TRANSMISSION.AUTOMATIC;
+  return SKILLS.filter((skill) => !(automatic && skill.manualOnly));
+}
+
+// { total, set, strong, words } where words is "14 of 21 skills at level 4
+// or above", or '' while nothing has been set.
+export function progressSummary(skillsJson, transmission) {
+  const data = skillsJson && typeof skillsJson === 'object' ? skillsJson : {};
+  const visible = visibleSkills(transmission);
+  const set = visible.filter((s) => data[s.key] && Number(data[s.key].level) > 0).length;
+  const strong = visible.filter((s) => data[s.key] && Number(data[s.key].level) >= 4).length;
+  return {
+    total: visible.length,
+    set,
+    strong,
+    words: set ? strong + ' of ' + visible.length + ' skills at level 4 or above' : ''
+  };
+}
+
+// Checks one tap on the grid: a known, visible skill and a level 1 to 5.
+export function validateSkill(skillKey, level, note, transmission) {
+  const errors = {};
+  const skill = visibleSkills(transmission).find((s) => s.key === skillKey);
+  if (!skill) errors.skillKey = 'That skill is not on this pupil’s record.';
+  const lvl = Number(level);
+  if (!LEVELS.some((l) => l.level === lvl)) errors.level = 'Levels run from 1 to 5.';
+  return { ok: Object.keys(errors).length === 0, data: { skillKey, level: lvl, note: trimTo(note, 500) }, errors };
 }
