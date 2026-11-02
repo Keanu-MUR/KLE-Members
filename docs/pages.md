@@ -1,6 +1,6 @@
 # Portal pages in the Wix Editor
 
-Page code files cannot be created from the repo. Create each page in the Editor, let Wix push its code file to GitHub, pull, then paste the two-line page code below into that file.
+Wix only pushes page code files to GitHub through the Wix CLI local editor, so with the CLI not logged in they never arrive on their own. The workaround that works: create the page in the Editor, read the file name Wix shows in the Page Code panel (for example `Pupil login.b100g.js`, where the suffix is the page ID), create that exact file under `src/pages/`, and push. The Editor then shows the pushed code for the page (confirmed 2 Nov 2026).
 
 ## Phase 0 pages
 
