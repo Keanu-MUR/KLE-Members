@@ -85,12 +85,12 @@ export const ENQUIRY_LIMIT = { perWindow: 5, windowMs: 60 * 60 * 1000 };
 // enquiryConfirmation: firstName, preferredContact
 // enquiryAlert: name, summary, link
 // enquiryReply: firstName, p1, p2, p3, p4 (one paragraph each)
-// lessonReminder: firstName, transmission, dateWords, slotTime, pickup, link
+// lessonReminder (Wix template): firstName, body, link; Resend gets the full set
 export const EMAIL_TEMPLATES = {
   enquiryConfirmation: 'VZpOgVC',
   enquiryAlert: 'VZpQOuG',
   enquiryReply: 'VZpRqqd',
-  lessonReminder: 'REPLACE_WHEN_CREATED'
+  lessonReminder: 'VZqtht5'
 };
 
 export const WHATSAPP_CONSENT_WORDING =

@@ -62,6 +62,11 @@ export async function jobEmailProvider(settings) {
 // Returns { email, whatsapp, guardian } result objects.
 export async function sendLessonReminder(lesson, pupil, settings, channels, override, provider) {
   const vars = reminderVars(lesson, pupil);
+  // The Wix template carries three variables (firstName, body, link); the
+  // whole reminder sentence travels as body so the template never needs
+  // editing when the wording or a field changes. Resend builds its own HTML
+  // from the full set.
+  const wixVars = { firstName: vars.firstName, body: reminderText(lesson, pupil), link: vars.link };
   const context = { pupilId: pupil._id, lessonId: lesson._id };
   const out = {};
   const want = channels || { email: true, whatsapp: true, guardian: true };
@@ -73,10 +78,10 @@ export async function sendLessonReminder(lesson, pupil, settings, channels, over
       : pupil.memberId && useProvider === EMAIL_PROVIDER.WIX
         ? { memberId: pupil.memberId, email: pupil.email }
         : { email: pupil.email, firstName: pupil.firstName, lastName: pupil.lastName, phone: pupil.phone };
-    out.email = await sendEmail('lessonReminder', to, vars, context, { provider: useProvider });
+    out.email = await sendEmail('lessonReminder', to, useProvider === EMAIL_PROVIDER.WIX ? wixVars : vars, context, { provider: useProvider });
   }
   if (want.guardian && !override) {
-    out.guardian = await sendEmail('lessonReminder', { email: pupil.guardianEmail, firstName: pupil.guardianName || 'Guardian', lastName: '' }, vars, context, { provider: useProvider });
+    out.guardian = await sendEmail('lessonReminder', { email: pupil.guardianEmail, firstName: pupil.guardianName || 'Guardian', lastName: '' }, useProvider === EMAIL_PROVIDER.WIX ? wixVars : vars, context, { provider: useProvider });
   }
   if (want.whatsapp) {
     const phone = override && override.phone ? override.phone : pupil.phone;

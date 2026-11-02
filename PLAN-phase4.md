@@ -30,7 +30,7 @@ Reminder recipients, per SPEC: the pupil's email when `emailRemindersOn` and `pu
 
 Pure helpers in `public/portal-utils.js`, with tests in `tests/phase4.test.mjs`: `reminderDecision(settings, pupil, lesson, sentToday)` returning `{ email: 'send' | 'skip', whatsapp: ..., reasons }`, `reminderText(lesson, pupil)` filling `TEMPLATES.lessonReminder`, `waMeLink(phone, text)`, `validateSettings(input)`, `pruneCutoff(now, days)`.
 
-Wix side: one new triggered email `lessonReminder` (variables firstName, transmission, dateWords, slotTime, pickup, link) created in the dashboard like the Phase 1 three, ID added to `EMAIL_TEMPLATES`.
+Wix side: one new triggered email `lessonReminder` (ID VZqtht5, created 2 Nov 2026; variables firstName, body, link, where body is the whole reminder sentence so the template never needs editing) created in the dashboard like the Phase 1 three, ID added to `EMAIL_TEMPLATES`. The Resend provider gets the full set (firstName, transmission, dateWords, slotTime, pickup, link).
 
 ## 2. Pages and elements
 
