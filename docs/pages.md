@@ -26,15 +26,41 @@ All five were created on 2 Nov 2026 by duplicating the first (Duplicate copies t
 
 | Editor page name | URL slug | Custom element tag | Velo file | Page code file |
 |---|---|---|---|---|
-| Lessons |  |  |  |  |
-| Progress editor |  |  |  |  |
-| My lessons |  |  |  |  |
-| My progress |  |  |  |  |
+| Lessons | `lessons` | `kle-lessons` | `public/custom-elements/lessons.js` | `pages/Lessons.<id>.js` |
+| Progress editor | `progress` | `kle-progress-editor` | `public/custom-elements/progress-editor.js` | `pages/Progress editor.<id>.js` |
+| My lessons | `my-lessons` | `kle-my-lessons` | `public/custom-elements/my-lessons.js` | `pages/My lessons.<id>.js` |
+| My progress | `my-progress` | `kle-my-progress` | `public/custom-elements/my-progress.js` | `pages/My progress.<id>.js` |
 
-Create each by duplicating an existing portal page (same settings: hidden from menu and search, access Everyone, caching Never, element ID ), then rename, set the slug and repoint the element. Page code for each:
+Create each by duplicating an existing portal page (same settings: hidden from menu and search, access Everyone, caching Never, element ID `portal`), then rename, set the slug and repoint the element to its file and tag. Page code for each:
 
-\
-The Pupil record page code () now also imports , ,  and ; it is already pushed.
+```js
+// Lessons
+import { init } from 'public/portal-pages/lessons';
+import { getSession } from 'backend/session';
+import { listLessons, getLesson, createLesson, updateLesson } from 'backend/lessons';
+$w.onReady(() => init($w, { getSession, listLessons, getLesson, createLesson, updateLesson }));
+
+// Progress editor
+import { init } from 'public/portal-pages/progress';
+import { getSession } from 'backend/session';
+import { getProgress, setSkill } from 'backend/progress';
+$w.onReady(() => init($w, { getSession, getProgress, setSkill }));
+
+// My lessons
+import { init } from 'public/portal-pages/my-lessons';
+import { getSession } from 'backend/session';
+import { listMyLessons } from 'backend/lessons';
+import { createMessage } from 'backend/messages';
+$w.onReady(() => init($w, { getSession, listMyLessons, createMessage }));
+
+// My progress
+import { init } from 'public/portal-pages/my-progress';
+import { getSession } from 'backend/session';
+import { getMyProgress } from 'backend/progress';
+$w.onReady(() => init($w, { getSession, getMyProgress }));
+```
+
+The Pupil record page code (`pages/Pupil record.w7oqk.js`) now also imports `listLessons`, `getProgress`, `listPupilMessages` and `markMessageRead`; it is already pushed.
 
 ## Creating a page
 
