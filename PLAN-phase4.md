@@ -79,3 +79,19 @@ Navigation: instructor Today, Lessons, Pupils, Enquiries, Reminders, Settings (t
 2. Reminder core, jobs, settings and reminder web modules, send log module, dashboard counts; the lessonReminder triggered email in the dashboard.
 3. Three elements and page modules, harness fixtures, 375px check.
 4. On your word: three Editor pages, page code files, publish, test script, results into PLAN-phase4.md and docs; remove the probe job once its answer is recorded.
+
+## Results (2 Nov 2026, live site)
+
+1. Probe: the hourly probe ran at 21:30 and logged a sent row (`lessonId` `probe:job-email`, provider wix). Wix triggered emails work from a scheduled job; the earlier FORBIDDEN was specific to HTTP functions. Settings shows the verdict. Probe job removed from `jobs.config` afterwards.
+2. Settings: hour changed and saved, reload showed it; item counts and headroom shown (39 of 1,500).
+3. Manual test: a Wix email for Test Pupil's lesson went to the instructor's address; the row shows on the Send log with a lesson link. WhatsApp left empty (email-only test).
+4. Toggle check: not run as a separate step; the WhatsApp channel's "switched off" skip was exercised by the job (step 5).
+5. Schedule: with a planned test lesson for 3 Nov and the hour set to 22, the 22:00 pass ran at 22:03 and logged one sent email row and one skipped WhatsApp row ("WhatsApp reminders are switched off"). Tomorrow's reminders showed "sent 22:03" and "skipped". A second pass in the same hour cannot be forced; idempotence is covered by the unit tests and the "Already sent today" decision.
+6. Resend: "Send again" on Tomorrow's reminders sent a second email (row at 22:11) and the status updated. The wa.me link could not be tried because Test Pupil has no phone number; the page shows the "No phone number for the WhatsApp fallback" note instead.
+7. Deliberate failure: provider set to Resend with no key, Send test logged a skipped email row "Resend is not set up (no RESEND_API_KEY)"; provider set back to Wix.
+8. Pruning: "Run the clean-up now" reported 0 rows removed (nothing older than 30 days yet); the nightly job is scheduled.
+9. `npm test` passes (48 tests).
+
+Clean-up: the test lesson was deleted and the hour put back to 08:00. The reminder email template is `VZqtht5` (firstName, body, link).
+
+The same evening the portal was reworked into one page per role (see docs/pages.md, "The one-page portal") after section switches proved slow; the Phase 4 pages are now the `#reminders`, `#settings` and `#send-log` sections of `/instructor`.

@@ -78,6 +78,8 @@ Secrets, held in the Wix Secrets Manager and read only in backend code: WHATSAPP
 
 ## Pages and features by role
 
+**One page per role (decided 2 Nov 2026, after section switches between separate Wix pages took 2 to 3 seconds each).** The pupil and guardian sections live on one Wix page, `/pupil`, and the instructor sections on `/instructor`. A shell custom element draws the nav and swaps the section element inside itself; the section is the URL hash (`/pupil#lessons`, `/instructor#pupil?id=…`), so there is no Wix page load between sections. The pages in the tables below are now sections of those two pages; the old one-section pages still exist and redirect into the portal with their query kept.
+
 Portal pages are top-level pages on the existing site (Wix Editor page slugs cannot contain a slash, so the planned /pupils/... prefix became /pupil-login, /pupil-home, /instructor and /enquire; changed 2 Nov 2026), use the same header and footer, and are built as custom elements. Public pages are /enquire and /pupil-login; everything else requires login and is routed by role.
 
 ### Public

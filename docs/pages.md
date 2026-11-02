@@ -114,6 +114,23 @@ $w.onReady(() => init($w, { getSession, listSendLog }));
 
 Scheduled jobs live in `backend/jobs.config` (three: `sendReminders` hourly, `pruneLogs` nightly at 03:00 UTC, `probeJobEmail` hourly at half past, temporary). Jobs only run on the published site, so a publish is needed after any change to them.
 
+## The one-page portal (2 Nov 2026)
+
+Switching between separate Wix pages cost 2 to 3 seconds each (the Wix framework boots, or on an in-site swap fetches and mounts the next page), so the portal is now one Wix page per role:
+
+| Editor page | URL | Element tag | Velo file | Page code file |
+|---|---|---|---|---|
+| Instructor dashboard (existing page, element repointed) | `/instructor` | `kle-instructor-portal` | `public/custom-elements/instructor-portal.js` | `pages/Instructor dashboard.ve1km.js` |
+| Pupil portal (duplicated from Pupil home, slug `pupil`) | `/pupil` | `kle-pupil-portal` | `public/custom-elements/pupil-portal.js` | `pages/Pupil portal.dqjiq.js` |
+
+How it works (`public/custom-elements/portal-shell.js`):
+
+- The shell extends `PortalElement`, draws the brand and nav, and mounts the section element the URL hash names inside its own main (`#home`, `#lessons`, `#pupils`, `#pupil?id=…`, `#enquiries`, `#progress?id=…`, `#reminders`, `#settings`, `#send-log` for the instructor; `#home`, `#lessons`, `#progress`, `#mock-tests`, `#details` for pupils, with `details` pupils only). A hash change swaps the child; nothing else loads.
+- A section runs with the `embedded` attribute, so its base renders only its main. Its requests, link clicks (`portal-link`) and address rewrites (`portal-replace`) are relayed by the shell: requests go up to page code on the shell, answers come back down to whichever section is mounted. Links inside sections still use the old paths (`/lessons?id=…`); the shell maps them to hashes, and anything outside the portal goes through page code's `navigate`.
+- Page code for each page (`public/portal-pages/instructor-portal.js`, `pupil-portal.js`) exposes every action that role's sections use. Security is unchanged: page code routes by role and every backend call checks the caller.
+- The old one-section pages (Pupil home, My lessons, My progress, My mock tests, My details, Lessons, Pupils, Pupil record, Enquiries, Progress editor, Settings, Tomorrow's reminders, Send log) keep their Editor pages but their page code is a redirect (`public/portal-redirect.js`): `/lessons?id=abc` becomes `/instructor?s=lessons&id=abc`, because `wixLocation.to()` drops a hash, and the shell folds `?s=` into the hash on mount. They can be deleted from the Editor once nothing links to them; `PORTAL_PATHS` already points at the new locations.
+- Every element file guards its `customElements.define`, because an old page's bundle defines its element before the redirect and the shell's bundle then loads the same file again on the next page.
+
 ## What the browser keeps between pages (added 2 Nov 2026)
 
 Every portal page is a full Wix page load, and the session and the page's data each take a round trip to the backend, so a page used to open as a bare wordmark with no nav (looking signed out) until the session arrived, then load its data. `PortalElement` in `public/custom-elements/portal-base.js` now keeps two things in the tab's `sessionStorage`:
