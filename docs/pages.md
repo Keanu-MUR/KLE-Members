@@ -22,6 +22,20 @@ Wix only pushes page code files to GitHub through the Wix CLI local editor, so w
 
 All five were created on 2 Nov 2026 by duplicating the first (Duplicate copies the element, the caching setting and the menu and index flags), then renaming, changing the slug, and repointing the element to its own file and tag. A backend `.js` and `.jsw` must not share a base name: `backend/enquiries.js` next to `backend/enquiries.jsw` broke the code build, hence `enquiry-pipeline.js`.
 
+## Phase 2 pages (code pushed 2 Nov 2026; Editor pages still to create)
+
+| Editor page name | URL slug | Custom element tag | Velo file | Page code file |
+|---|---|---|---|---|
+| Lessons |  |  |  |  |
+| Progress editor |  |  |  |  |
+| My lessons |  |  |  |  |
+| My progress |  |  |  |  |
+
+Create each by duplicating an existing portal page (same settings: hidden from menu and search, access Everyone, caching Never, element ID ), then rename, set the slug and repoint the element. Page code for each:
+
+\
+The Pupil record page code () now also imports , ,  and ; it is already pushed.
+
 ## Creating a page
 
 1. Pages & Menu > Add Page > Blank page. Name it as in the table.

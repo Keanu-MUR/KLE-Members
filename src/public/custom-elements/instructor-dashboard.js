@@ -3,8 +3,13 @@
 // Settings item, which only appears while something is missing.
 
 import { PortalElement, esc } from './portal-base.js';
+import { LESSON_STYLE, renderLessonRow } from './lesson-list.js';
 
 class KleInstructorDashboard extends PortalElement {
+  extraStyle() {
+    return LESSON_STYLE;
+  }
+
   onSession() {
     this.setMain('<p class="muted">Loading today.</p>');
     this.load();
@@ -22,15 +27,21 @@ class KleInstructorDashboard extends PortalElement {
   render(dash) {
     const setup = dash.setup || { checked: false, missing: [] };
     const needsSetup = !setup.checked || setup.missing.length > 0 || !setup.settingsExists;
+    const rows = (lessons) => lessons.map((l) => renderLessonRow(l, { href: '/lessons?id=' + l._id, who: l.pupilName })).join('');
+    const enquiryWords = dash.unreadEnquiries === 1 ? '1 new enquiry' : dash.unreadEnquiries + ' new enquiries';
+    const messageWords = dash.unreadMessages === 1 ? '1 unread message' : dash.unreadMessages + ' unread messages';
     this.setMain(
       '<h1>Today</h1>' +
       (needsSetup ? this.setupPanel(setup) : '') +
-      (dash.today.length ? '' : this.empty('No lessons today.')) +
+      '<div class="actions"><a class="btn btn-primary" href="/lessons?new=1">Add lesson</a><a class="btn btn-text" href="/lessons">This week and next</a></div>' +
+      (dash.today.length ? rows(dash.today) : this.empty('No lessons today.')) +
       '<h2>Tomorrow</h2>' +
-      (dash.tomorrow.length ? '' : this.empty('Nothing booked for tomorrow yet.')) +
+      (dash.tomorrow.length ? rows(dash.tomorrow) : this.empty('Nothing booked for tomorrow yet.')) +
       '<h2>Enquiries and messages</h2>' +
-      this.empty(dash.unreadEnquiries ? dash.unreadEnquiries + ' new enquiries.' : 'No new enquiries.') +
-      this.empty(dash.unreadMessages ? dash.unreadMessages + ' unread messages.' : 'No unread messages.') +
+      (dash.unreadEnquiries ? '<p><a href="/enquiries">' + esc(enquiryWords) + '</a></p>' : this.empty('No new enquiries.')) +
+      (dash.unreadMessages
+        ? '<p>' + esc(messageWords) + ' from pupils. <a href="/pupils">Open the pupil’s record</a> to read them.</p>'
+        : this.empty('No unread messages.')) +
       '<h2>Reminders for tomorrow</h2>' +
       this.empty('Sent and failed counts will show here once reminders are switched on.')
     );

@@ -1,10 +1,23 @@
-// <kle-pupil-record>: one pupil, every field editable by the instructor.
-// Lessons, progress, mock tests, payments and messages get their sections
-// here in Phases 2 and 3; the empty states are in place now.
+// <kle-pupil-record>: one pupil, every field editable by the instructor,
+// with the last lessons, the progress summary and the pupil's messages
+// underneath. Mock tests and payments arrive in Phase 3.
 
 import { PortalElement, esc } from './portal-base.js';
+import { LESSON_STYLE, renderLessonRow, dayWords } from './lesson-list.js';
+
+const RECORD_STYLE = `
+.message { padding: 10px 0; }
+.message + .message { border-top: 1px solid #e3ded6; }
+.message-when { font-variant-caps: all-small-caps; letter-spacing: 0.08em; color: var(--kle-muted); }
+.message-body { margin: 2px 0 6px; white-space: pre-line; }
+.section-actions { margin-top: 0; }
+`;
 
 class KlePupilRecord extends PortalElement {
+  extraStyle() {
+    return LESSON_STYLE + RECORD_STYLE;
+  }
+
   onSession() {
     const id = this.params && this.params.id;
     if (!id) {
@@ -58,18 +71,83 @@ class KlePupilRecord extends PortalElement {
       '<button class="btn btn-text" type="button" id="login-link">Send login link</button></div>' +
       '</form>' +
       '<hr class="road">' +
-      '<h2>Lessons</h2>' + this.empty('Lessons appear here once you add them.') +
-      '<h2>Progress</h2>' + this.empty('The driver’s record appears here after the first lesson.') +
+      '<h2>Lessons</h2><div id="lessons"><p class="muted">Loading.</p></div>' +
+      '<h2>Progress</h2><div id="progress"><p class="muted">Loading.</p></div>' +
       '<h2>Mock tests</h2>' + this.empty('Mock tests appear here once recorded.') +
       '<h2>Payments</h2>' + this.empty('Payments and the running balance appear here once a lesson has been taught.') +
-      '<h2>Messages</h2>' + this.empty('Messages from this pupil appear here.')
+      '<h2>Messages</h2><div id="messages"><p class="muted">Loading.</p></div>'
     );
+    this.loadLessons(p);
+    this.loadProgress(p);
+    this.loadMessages(p);
     const form = this.$('#form');
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       this.save(p, form);
     });
     this.$('#login-link').addEventListener('click', () => this.loginLink(p, form));
+  }
+
+  async loadLessons(p) {
+    const result = await this.call('listLessons', { pupilId: p._id });
+    const box = this.$('#lessons');
+    if (!result.ok) {
+      box.innerHTML = this.failure(result);
+      return;
+    }
+    const all = result.data.items;
+    const items = all.slice(0, 5);
+    box.innerHTML =
+      '<div class="actions section-actions"><a class="btn btn-text" href="/lessons?new=1&pupil=' + esc(p._id) + '">Add lesson</a>' +
+      (all.length > 5 ? '<a class="btn btn-text" href="/lessons?pupil=' + esc(p._id) + '">All ' + all.length + ' lessons</a>' : '') + '</div>' +
+      (items.length
+        ? items.map((l) => renderLessonRow(l, { href: '/lessons?id=' + l._id, showDate: true, withYear: true })).join('')
+        : this.empty('Lessons appear here once you add them.'));
+  }
+
+  async loadProgress(p) {
+    const result = await this.call('getProgress', { id: p._id });
+    const box = this.$('#progress');
+    if (!result.ok) {
+      box.innerHTML = this.failure(result);
+      return;
+    }
+    const s = result.data;
+    box.innerHTML =
+      (s.summary
+        ? '<p>' + esc(s.summary) + (s.updatedAt ? ', last updated ' + esc(dayWords(s.updatedAt.slice(0, 10))) : '') + '.</p>'
+        : this.empty('Nothing set on the driver’s record yet.')) +
+      '<div class="actions section-actions"><a class="btn btn-text" href="/progress?id=' + esc(p._id) + '">' + (s.summary ? 'Edit progress' : 'Start the driver’s record') + '</a></div>';
+  }
+
+  async loadMessages(p) {
+    const result = await this.call('listPupilMessages', { id: p._id });
+    const box = this.$('#messages');
+    if (!result.ok) {
+      box.innerHTML = this.failure(result);
+      return;
+    }
+    const items = result.data.items;
+    box.innerHTML = items.length
+      ? items.map((m) =>
+        '<div class="message" id="m-' + esc(m._id) + '"><div class="message-when">' + esc(this.dateWords(m.createdAt, true)) +
+        (m.readAt ? '' : ' <span class="lesson-status">Unread</span>') + '</div>' +
+        '<p class="message-body">' + esc(m.body) + '</p>' +
+        (m.readAt ? '' : '<button class="btn btn-text" type="button" data-read="' + esc(m._id) + '">Mark read</button>') + '</div>'
+      ).join('')
+      : this.empty('Messages from ' + p.firstName + ' appear here.');
+    box.querySelectorAll('[data-read]').forEach((button) => button.addEventListener('click', async () => {
+      button.disabled = true;
+      const r = await this.call('markMessageRead', { id: button.getAttribute('data-read') });
+      if (!r.ok) {
+        button.disabled = false;
+        return;
+      }
+      const wrap = this.$('#m-' + button.getAttribute('data-read'));
+      const flag = wrap.querySelector('.lesson-status');
+      if (flag) flag.remove();
+      button.remove();
+    }));
   }
 
   async save(p, form) {

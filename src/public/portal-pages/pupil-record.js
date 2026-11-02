@@ -10,7 +10,11 @@ export function init($w, backend) {
       getPupil: (p) => backend.getPupil(p.id),
       updatePupil: (p) => backend.updatePupil(p.id, p.fields),
       setPupilStatus: (p) => backend.setPupilStatus(p.id, p.status),
-      sendLoginLink: (p) => backend.sendLoginLink(p.id)
+      sendLoginLink: (p) => backend.sendLoginLink(p.id),
+      listLessons: (p) => backend.listLessons(p),
+      getProgress: (p) => backend.getProgress(p.id),
+      listPupilMessages: (p) => backend.listPupilMessages(p.id),
+      markMessageRead: (p) => backend.markMessageRead(p.id)
     }
   });
 }
