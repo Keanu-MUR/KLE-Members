@@ -47,6 +47,18 @@
         "siteMember": { "invoke": true },
         "anonymous": { "invoke": false }
       }
+    },
+    "backend/pupils.jsw": {
+      "findMemberByEmail": {
+        "siteOwner": { "invoke": true },
+        "siteMember": { "invoke": true },
+        "anonymous": { "invoke": false }
+      },
+      "createPupil": {
+        "siteOwner": { "invoke": true },
+        "siteMember": { "invoke": true },
+        "anonymous": { "invoke": false }
+      }
     }
   }
 }

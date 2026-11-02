@@ -1,0 +1,88 @@
+// Pupil records, instructor only. Phase 1 builds the Pupils screens on
+// these; Phase 0 uses them to link the test pupil.
+
+import wixData from 'wix-data';
+import { members } from 'wix-members-backend';
+import { requireInstructor, run, PortalError } from 'backend/access';
+import { loadSettings } from 'backend/settings';
+import { isValidEmail, toE164, trimTo } from 'public/portal-utils';
+import { TRANSMISSION, PUPIL_STATUS } from 'public/portal-constants';
+
+function memberSummary(member) {
+  const contact = member.contactDetails || {};
+  return {
+    memberId: member._id,
+    loginEmail: member.loginEmail || '',
+    firstName: contact.firstName || '',
+    lastName: contact.lastName || ''
+  };
+}
+
+async function lookupMember(email) {
+  const result = await members
+    .queryMembers()
+    .eq('loginEmail', email)
+    .limit(1)
+    .find({ suppressAuth: true });
+  return result.items[0] ? memberSummary(result.items[0]) : null;
+}
+
+export async function findMemberByEmail(email) {
+  return run(async () => {
+    await requireInstructor();
+    const address = String(email || '').trim().toLowerCase();
+    if (!isValidEmail(address)) throw new PortalError("That email address doesn't look right.");
+    return lookupMember(address);
+  });
+}
+
+// Creates a Pupils item. If memberId is not given, the member is looked up
+// by email so the pupil can log in straight away.
+export async function createPupil(input) {
+  return run(async () => {
+    await requireInstructor();
+    const data = input || {};
+    const firstName = trimTo(data.firstName, 60);
+    const lastName = trimTo(data.lastName, 60);
+    const email = trimTo(data.email, 254).toLowerCase();
+    const transmission = data.transmission === TRANSMISSION.AUTOMATIC ? TRANSMISSION.AUTOMATIC : TRANSMISSION.MANUAL;
+
+    if (!firstName || !lastName) throw new PortalError('A pupil needs a first name and a last name.');
+    if (!isValidEmail(email)) throw new PortalError("That email address doesn't look right.");
+    const phone = data.phone ? toE164(data.phone) : '';
+    if (data.phone && !phone) throw new PortalError("That phone number doesn't look right.");
+
+    const existing = await wixData.query('Pupils').eq('email', email).limit(1).find({ suppressAuth: true });
+    if (existing.items.length) throw new PortalError('There is already a pupil with that email address.');
+
+    let memberId = trimTo(data.memberId, 64);
+    if (!memberId) {
+      const member = await lookupMember(email);
+      memberId = member ? member.memberId : '';
+    }
+
+    const { settings } = await loadSettings();
+    const item = await wixData.insert('Pupils', {
+      memberId,
+      firstName,
+      lastName,
+      dateOfBirth: trimTo(data.dateOfBirth, 10),
+      email,
+      phone,
+      addressLine1: trimTo(data.addressLine1, 120),
+      addressLine2: trimTo(data.addressLine2, 120),
+      town: trimTo(data.town, 60),
+      postcode: trimTo(data.postcode, 10).toUpperCase(),
+      transmission,
+      status: PUPIL_STATUS.ACTIVE,
+      theoryPassed: false,
+      hourlyRatePence: settings.defaultHourlyRatePence,
+      reminderEmail: true,
+      reminderWhatsApp: false,
+      instructorNotes: '',
+      lessonHistory: {}
+    }, { suppressAuth: true });
+
+    return { pupilId: item._id, memberId, linked: Boolean(memberId) };
+  });
+}
