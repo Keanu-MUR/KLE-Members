@@ -4,6 +4,7 @@
 // does the role routing before handing the session to the element.
 
 import wixLocation from 'wix-location';
+import wixWindow from 'wix-window-frontend';
 import { authentication } from 'wix-members-frontend';
 import { PORTAL_PATHS, ROLES } from 'public/portal-constants';
 
@@ -43,6 +44,10 @@ export async function mountPortal($w, selector, config) {
     element.setAttribute('response', JSON.stringify(Object.assign({ id: detail.id }, result)));
   });
 
+  // Wix renders page code on the server first and may cache that response
+  // for the URL. A member-specific redirect made there would be served to
+  // the next visitor, so routing only ever runs in the browser.
+  if (wixWindow.rendering.env !== 'browser') return;
   await route(element, config);
 }
 
