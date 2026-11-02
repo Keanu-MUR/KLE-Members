@@ -80,4 +80,6 @@ $w.onReady(() => init($w, { getSession, getInstructorDashboard, createCollection
 
 Pushing to `main` updates what the Editor shows, but the live site only picks up new code when the site is published (Editor **Publish**, or `wix publish` from the CLI). After every push that should go live, publish.
 
+With the Wix MCP connector attached (added 2 Nov 2026), the publish can be made by API: `POST https://www.wixapis.com/site-publisher/v1/site/publish` at site scope (site ID b90f2839-ee94-4152-9d9a-8a16bc7a54c2), per the "Rename, Duplicate, Publish or Delete a Site" recipe. Give the Editor about 40 seconds after a push to pull the commit first. The same connector reads and writes the collections through the Data Items API (`/wix-data/v2/items/query`, `/count`), which replaces opening the CMS in the dashboard to check SendLog or RateLimit. It does not touch Velo code: code still travels push to GitHub, Editor pulls, publish.
+
 `src/backend/permissions.json` lists every web-module function: `getSession` and `requestLoginLink` are open to anyone, the rest to members. Web modules are `.jsw` files on this site: a `.web.js` module imports as undefined on this Git Integration build (confirmed on the live site 2 Nov 2026). Function permissions live in `permissions.json`, with the role check inside each function as the real guard.
