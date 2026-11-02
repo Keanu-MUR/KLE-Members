@@ -37,3 +37,5 @@ pupilId, lessonId, channel, status, providerMessageId, error, createdAt
 ipHash, windowStart, count (Number)
 
 After creating them by hand, log in as the instructor and press **Create settings** on the dashboard to insert the single Settings item with its defaults.
+
+Note: creating the collections from code writes one "Sandbox environment is disabled" error per collection to Wix Logs. That is Wix noting the site has no sandbox database; the live collections are created normally.

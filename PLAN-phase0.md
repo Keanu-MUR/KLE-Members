@@ -107,6 +107,10 @@ Two facts from the Wix docs that shape setup: once the site is connected to GitH
 
 ## 8. Phase 0 test script
 
+Results on the live site, 2 Nov 2026: steps 1 to 3 done (pages created, collections and Settings created from the dashboard panel; all ten show in the CMS with custom permissions). Step 5 passes (instructor lands on /instructor; opening /pupil-login while logged in redirects there). Step 8 passes (logged out, /pupil-home and /instructor redirect to /pupil-login). Step 9 passes (16 node tests). Steps 4, 6 and 7 wait for a test pupil member.
+
+Two platform facts learnt on the way: a Wix custom element loses a request dispatched synchronously from attributeChangedCallback (fixed in portal-base.js), and creating collections from code logs ten harmless "Sandbox environment is disabled" errors in Wix Logs.
+
 1. Create the three Editor pages per section 5 and publish.
 2. Run `createCollections()` once from the instructor account (or follow docs/collections.md); confirm all collections and permissions in the dashboard.
 3. Run `ensureSettings()`; confirm one Settings item.
