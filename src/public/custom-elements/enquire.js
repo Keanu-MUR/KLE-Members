@@ -113,4 +113,5 @@ class KleEnquire extends PortalElement {
   }
 }
 
-customElements.define('kle-enquire', KleEnquire);
+// Guarded: Wix may load this file in more than one bundle on a page.
+if (!customElements.get('kle-enquire')) customElements.define('kle-enquire', KleEnquire);

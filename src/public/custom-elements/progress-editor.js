@@ -103,4 +103,5 @@ class KleProgressEditor extends PortalElement {
   }
 }
 
-customElements.define('kle-progress-editor', KleProgressEditor);
+// Guarded: Wix may load this file in more than one bundle on a page.
+if (!customElements.get('kle-progress-editor')) customElements.define('kle-progress-editor', KleProgressEditor);

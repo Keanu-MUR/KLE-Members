@@ -161,4 +161,5 @@ select { appearance: auto; }
   }
 }
 
-customElements.define('kle-lessons', KleLessons);
+// Guarded: Wix may load this file in more than one bundle on a page.
+if (!customElements.get('kle-lessons')) customElements.define('kle-lessons', KleLessons);

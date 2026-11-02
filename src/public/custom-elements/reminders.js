@@ -97,4 +97,5 @@ class KleReminders extends PortalElement {
   }
 }
 
-customElements.define('kle-reminders', KleReminders);
+// Guarded: Wix may load this file in more than one bundle on a page.
+if (!customElements.get('kle-reminders')) customElements.define('kle-reminders', KleReminders);

@@ -120,4 +120,5 @@ class KleInstructorDashboard extends PortalElement {
   }
 }
 
-customElements.define('kle-instructor-dashboard', KleInstructorDashboard);
+// Guarded: Wix may load this file in more than one bundle on a page.
+if (!customElements.get('kle-instructor-dashboard')) customElements.define('kle-instructor-dashboard', KleInstructorDashboard);

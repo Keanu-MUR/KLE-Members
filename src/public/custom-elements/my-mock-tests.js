@@ -54,4 +54,5 @@ class KleMyMockTests extends PortalElement {
   }
 }
 
-customElements.define('kle-my-mock-tests', KleMyMockTests);
+// Guarded: Wix may load this file in more than one bundle on a page.
+if (!customElements.get('kle-my-mock-tests')) customElements.define('kle-my-mock-tests', KleMyMockTests);

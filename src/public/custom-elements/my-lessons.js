@@ -118,4 +118,5 @@ class KleMyLessons extends PortalElement {
   }
 }
 
-customElements.define('kle-my-lessons', KleMyLessons);
+// Guarded: Wix may load this file in more than one bundle on a page.
+if (!customElements.get('kle-my-lessons')) customElements.define('kle-my-lessons', KleMyLessons);

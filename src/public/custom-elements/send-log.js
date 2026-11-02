@@ -69,4 +69,5 @@ class KleSendLog extends PortalElement {
   }
 }
 
-customElements.define('kle-send-log', KleSendLog);
+// Guarded: Wix may load this file in more than one bundle on a page.
+if (!customElements.get('kle-send-log')) customElements.define('kle-send-log', KleSendLog);

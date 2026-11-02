@@ -38,4 +38,5 @@ class KleInstructorPortal extends PortalShell {
   }
 }
 
-customElements.define('kle-instructor-portal', KleInstructorPortal);
+// Guarded: Wix may load this file in more than one bundle on a page.
+if (!customElements.get('kle-instructor-portal')) customElements.define('kle-instructor-portal', KleInstructorPortal);

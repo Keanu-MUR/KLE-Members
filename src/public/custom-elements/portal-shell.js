@@ -107,9 +107,22 @@ export class PortalShell extends PortalElement {
     if (name === 'params') this.mount();
   }
 
+  // A redirect from an old page arrives as /instructor?s=lessons&id=abc,
+  // because Wix drops a hash on its own navigation; move that into the
+  // hash form the shell uses, without a load.
+  foldQuery() {
+    const q = parseQuery(location.search.replace(/^\?/, ''));
+    if (!q.s) return;
+    const rest = Object.keys(q).filter((k) => k !== 's').map((k) => encodeURIComponent(k) + '=' + encodeURIComponent(q[k]));
+    const hash = '#' + q.s + (rest.length ? '?' + rest.join('&') : '');
+    if (history.replaceState) history.replaceState(null, '', location.pathname + hash);
+    else location.hash = hash;
+  }
+
   // Puts the section the hash names into main, if it is not there already.
   mount() {
     if (!this.session || !this.session.loggedIn) return;
+    this.foldQuery();
     const role = this.session.role;
     const { sections } = this.config();
     let { section, params } = parseHash(location.hash);

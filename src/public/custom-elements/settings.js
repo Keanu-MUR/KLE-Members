@@ -150,4 +150,5 @@ select { appearance: auto; }
   }
 }
 
-customElements.define('kle-settings', KleSettings);
+// Guarded: Wix may load this file in more than one bundle on a page.
+if (!customElements.get('kle-settings')) customElements.define('kle-settings', KleSettings);

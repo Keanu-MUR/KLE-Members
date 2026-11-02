@@ -380,4 +380,5 @@ class KlePupilRecord extends PortalElement {
   }
 }
 
-customElements.define('kle-pupil-record', KlePupilRecord);
+// Guarded: Wix may load this file in more than one bundle on a page.
+if (!customElements.get('kle-pupil-record')) customElements.define('kle-pupil-record', KlePupilRecord);

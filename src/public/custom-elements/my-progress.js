@@ -45,4 +45,5 @@ class KleMyProgress extends PortalElement {
   }
 }
 
-customElements.define('kle-my-progress', KleMyProgress);
+// Guarded: Wix may load this file in more than one bundle on a page.
+if (!customElements.get('kle-my-progress')) customElements.define('kle-my-progress', KleMyProgress);

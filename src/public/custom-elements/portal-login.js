@@ -149,4 +149,5 @@ class KleLogin extends PortalElement {
   }
 }
 
-customElements.define('kle-login', KleLogin);
+// Guarded: Wix may load this file in more than one bundle on a page.
+if (!customElements.get('kle-login')) customElements.define('kle-login', KleLogin);

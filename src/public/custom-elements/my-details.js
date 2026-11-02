@@ -81,4 +81,5 @@ class KleMyDetails extends PortalElement {
   }
 }
 
-customElements.define('kle-my-details', KleMyDetails);
+// Guarded: Wix may load this file in more than one bundle on a page.
+if (!customElements.get('kle-my-details')) customElements.define('kle-my-details', KleMyDetails);

@@ -46,4 +46,5 @@ class KlePupilHome extends PortalElement {
   }
 }
 
-customElements.define('kle-pupil-home', KlePupilHome);
+// Guarded: Wix may load this file in more than one bundle on a page.
+if (!customElements.get('kle-pupil-home')) customElements.define('kle-pupil-home', KlePupilHome);
