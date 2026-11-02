@@ -1,6 +1,6 @@
 # Phase 1 plan — pupils and enquiries
 
-Status: awaiting approval. No code written yet.
+Status: approved 2 Nov 2026 with decisions A to D as recommended and E changed: pupils may change their email.
 
 Outcome (from SPEC.md): the public enquiry form works and the instructor receives it by email; the instructor can manage pupil records and convert an enquiry into a pupil; pupils can edit their own details.
 
@@ -39,7 +39,7 @@ Convert to pupil: creates the Wix member with `authentication.register` under a 
 
 Send login link on the pupil record: `authentication.sendSetPasswordEmail` for the pupil's email, same as the login page's button.
 
-My details whitelist: phone, addressLine1, addressLine2, town, postcode, emergencyContactName, emergencyContactPhone, reminderEmail, reminderWhatsApp. Email stays read-only because it is the login identity; licence number and date of birth are shown read-only as the spec says. Ticking WhatsApp sets `whatsAppConsentAt` to now; unticking clears it.
+My details whitelist: email, phone, addressLine1, addressLine2, town, postcode, emergencyContactName, emergencyContactPhone, reminderEmail, reminderWhatsApp. A changed email is applied with `authentication.changeLoginEmail` from `wix-members-backend` for the caller's own member (checked unused first), then written to the Pupils item, so the pupil logs in with the new address from then on; the page says so next to the field. Licence number and date of birth are shown read-only as the spec says. Ticking WhatsApp sets `whatsAppConsentAt` to now; unticking clears it.
 
 ## 4. Email
 
@@ -79,7 +79,7 @@ Node tests for the pure parts: enquiry validation (every field, honeypot, bad po
 
 **D. Instructor alert address.** `Settings.instructorEmail` defaults to the Gmail address from the spec. The alert goes to the instructor's member account (the yahoo address) through Wix's emailMember, because Wix triggered emails address members or contacts, not raw addresses. If the alert must reach the Gmail inbox instead, that address needs to exist as a contact or the member's login email must change. Which inbox should receive enquiry alerts?
 
-**E. Pupil email changes.** My details keeps the email read-only. Recommend yes; changing a login email is an instructor action on the pupil record.
+**E. Pupil email changes.** Decided 2 Nov 2026: pupils may change their email on My details. Wix supports it through `changeLoginEmail`; if it misbehaves on this site the fallback is Wix's own Account Settings page, which already exists in the Members Area.
 
 ## 8. Phase 1 test script (from SPEC.md, expanded)
 
@@ -88,6 +88,6 @@ Node tests for the pure parts: enquiry validation (every field, honeypot, bad po
 3. On `/enquiries` as the instructor, the new enquiry appears under New. Reply with the template; the enquirer receives it; status becomes Replied.
 4. Convert it. A member is created, the set-password email arrives, the Pupils item exists with the member linked, status Converted, and the enquiry shows the pupil link.
 5. On `/pupils`, search finds the new pupil; the record opens; change a field and the status; Save; reload shows the change. Send login link sends the email again.
-6. Log in as that pupil (set the password from the email). `/my-details` shows their details; change the phone and tick WhatsApp; Save; `whatsAppConsentAt` is set in the collection. Licence number and date of birth are not editable.
+6. Log in as that pupil (set the password from the email). `/my-details` shows their details; change the phone and tick WhatsApp; Save; `whatsAppConsentAt` is set in the collection. Change the email too and log in with the new address. Licence number and date of birth are not editable.
 7. As that pupil, open `/pupil-record?id=<another id>` and `/enquiries`: both redirect to `/pupil-home`, and any direct backend call returns `{ ok: false }`.
 8. `npm test` passes with the new tests.
