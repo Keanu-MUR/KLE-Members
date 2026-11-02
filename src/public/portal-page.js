@@ -28,7 +28,10 @@ const PAGE_ROLES = {
   progress: [ROLES.INSTRUCTOR],
   'my-lessons': [ROLES.PUPIL, ROLES.GUARDIAN],
   'my-progress': [ROLES.PUPIL, ROLES.GUARDIAN],
-  'my-mock-tests': [ROLES.PUPIL, ROLES.GUARDIAN]
+  'my-mock-tests': [ROLES.PUPIL, ROLES.GUARDIAN],
+  settings: [ROLES.INSTRUCTOR],
+  reminders: [ROLES.INSTRUCTOR],
+  'send-log': [ROLES.INSTRUCTOR]
 };
 
 // Pages anyone may open; they still receive the session for the nav.

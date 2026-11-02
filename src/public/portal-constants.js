@@ -31,7 +31,10 @@ export const PORTAL_PATHS = {
   progress: '/progress',
   myLessons: '/my-lessons',
   myProgress: '/my-progress',
-  myMockTests: '/my-mock-tests'
+  myMockTests: '/my-mock-tests',
+  settings: '/settings',
+  reminders: '/reminders',
+  sendLog: '/send-log'
 };
 
 // Text navigation shown under the wordmark on every portal page.
@@ -40,7 +43,9 @@ export const NAV_BY_ROLE = {
     { label: 'Today', path: PORTAL_PATHS.instructorHome },
     { label: 'Lessons', path: PORTAL_PATHS.lessons },
     { label: 'Pupils', path: PORTAL_PATHS.pupils },
-    { label: 'Enquiries', path: PORTAL_PATHS.enquiries }
+    { label: 'Enquiries', path: PORTAL_PATHS.enquiries },
+    { label: 'Reminders', path: PORTAL_PATHS.reminders },
+    { label: 'Settings', path: PORTAL_PATHS.settings }
   ],
   pupil: [
     { label: 'Home', path: PORTAL_PATHS.pupilHome },
@@ -80,10 +85,12 @@ export const ENQUIRY_LIMIT = { perWindow: 5, windowMs: 60 * 60 * 1000 };
 // enquiryConfirmation: firstName, preferredContact
 // enquiryAlert: name, summary, link
 // enquiryReply: firstName, p1, p2, p3, p4 (one paragraph each)
+// lessonReminder: firstName, transmission, dateWords, slotTime, pickup, link
 export const EMAIL_TEMPLATES = {
   enquiryConfirmation: 'VZpOgVC',
   enquiryAlert: 'VZpQOuG',
-  enquiryReply: 'VZpRqqd'
+  enquiryReply: 'VZpRqqd',
+  lessonReminder: 'REPLACE_WHEN_CREATED'
 };
 
 export const WHATSAPP_CONSENT_WORDING =

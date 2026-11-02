@@ -44,10 +44,25 @@ class KleInstructorDashboard extends PortalElement {
           '<a class="lesson" href="/pupil-record?id=' + esc(m.pupilId) + '"><div class="lesson-who">' + esc(m.pupilName) + '</div><div class="lesson-meta">' + esc(m.body) + '</div></a>'
         ).join('')
         : this.empty('No unread messages.')) +
-      '<h2>Reminders for tomorrow</h2>' +
-      this.empty('Sent and failed counts will show here once reminders are switched on.')
+      '<h2>Reminders</h2>' +
+      this.reminderWords(dash.reminders) +
+      '<div class="actions" style="margin-top:8px"><a class="btn btn-text" href="/reminders">Tomorrow’s reminders</a><a class="btn btn-text" href="/send-log">Send log</a></div>'
     );
     if (needsSetup) this.wireSetup(setup);
+  }
+
+  reminderWords(r) {
+    if (!r || !r.today) return this.empty('Sent and failed counts will show here once reminders are switched on.');
+    const line = (label, c) => {
+      const parts = [];
+      if (c.email.sent || c.email.failed) parts.push(c.email.sent + ' email' + (c.email.sent === 1 ? '' : 's') + ' sent' + (c.email.failed ? ', ' + c.email.failed + ' failed' : ''));
+      if (c.whatsapp.sent || c.whatsapp.failed) parts.push(c.whatsapp.sent + ' WhatsApp sent' + (c.whatsapp.failed ? ', ' + c.whatsapp.failed + ' failed' : ''));
+      return '<p>' + label + ': ' + (parts.length ? esc(parts.join('; ')) : 'nothing sent') + '.</p>';
+    };
+    const off = [];
+    if (!r.emailOn) off.push('email');
+    if (!r.whatsAppOn) off.push('WhatsApp');
+    return line('Today', r.today) + line('Yesterday', r.yesterday) + (off.length ? '<p class="muted">' + esc(off.join(' and ')) + ' reminders are off.</p>' : '');
   }
 
   setupPanel(setup) {

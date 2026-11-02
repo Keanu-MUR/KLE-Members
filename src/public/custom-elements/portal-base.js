@@ -87,7 +87,9 @@ const NAV_BY_ROLE = {
     { label: 'Today', path: '/instructor' },
     { label: 'Lessons', path: '/lessons' },
     { label: 'Pupils', path: '/pupils' },
-    { label: 'Enquiries', path: '/enquiries' }
+    { label: 'Enquiries', path: '/enquiries' },
+    { label: 'Reminders', path: '/reminders' },
+    { label: 'Settings', path: '/settings' }
   ],
   pupil: [
     { label: 'Home', path: '/pupil-home' },
