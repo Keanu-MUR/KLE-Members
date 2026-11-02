@@ -27,7 +27,7 @@ A small text navigation row is added to the shared element header, under the wor
 | File | Functions | Who may call |
 |---|---|---|
 | `backend/http-functions.js` | `post_enquire` | anyone (public HTTP function at `/_functions/enquire`) |
-| `backend/enquiries.js` | `validateEnquiry`, `recordEnquiry`, rate-limit check against `RateLimit` | internal |
+| `backend/enquiry-pipeline.js` | `validateEnquiry`, `recordEnquiry`, rate-limit check against `RateLimit` | internal |
 | `backend/enquiries.jsw` | `listEnquiries(status)`, `getEnquiry(id)`, `replyToEnquiry(id, body)`, `convertEnquiry(id, overrides)`, `closeEnquiry(id)` | instructor |
 | `backend/pupils.jsw` | existing `findMemberByEmail`, `createPupil`, plus `listPupils(filter)`, `getPupil(id)`, `updatePupil(id, fields)`, `setPupilStatus(id, status)`, `sendLoginLink(id)` | instructor |
 | `backend/me.jsw` | `getMyDetails()`, `updateMyDetails(fields)` | the pupil (guardian read only) |

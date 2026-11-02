@@ -4,7 +4,7 @@
 // backend/enquiries.js.
 
 import { ok } from 'wix-http-functions';
-import { handleEnquiry } from 'backend/enquiries';
+import { handleEnquiry } from 'backend/enquiry-pipeline';
 
 const MAX_BODY_BYTES = 8000;
 
