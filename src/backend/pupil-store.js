@@ -1,6 +1,7 @@
 // Shared pupil and member helpers used by more than one web module.
 
 import wixData from 'wix-data';
+import { authentication } from 'wix-members-backend';
 import { loadSettings } from 'backend/settings';
 import { PUPIL_STATUS, TRANSMISSION } from 'public/portal-constants';
 import { trimTo } from 'public/portal-utils';
@@ -62,6 +63,38 @@ export async function insertPupil(fields, memberId) {
     instructorNotes: '',
     lessonHistory: {}
   }, { suppressAuth: true });
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Creates the Wix member for a new pupil and returns its member ID. The
+// register() result carries the member itself, so the ID is read from it
+// rather than from the members collection, which lags a little after a
+// registration. A site set to approve members by hand answers PENDING with
+// an approval token; the pupil is approved at once, because the instructor
+// creating them is the approval.
+export async function registerMember(email, fields) {
+  const contactInfo = { firstName: fields.firstName || '', lastName: fields.lastName || '' };
+  if (fields.phone) contactInfo.phones = [fields.phone];
+  const result = await authentication.register(email, throwawayPassword(), { contactInfo });
+  if (result && result.status === 'PENDING' && result.approvalToken) {
+    try {
+      await authentication.approveByToken(result.approvalToken);
+    } catch (error) {
+      console.warn('[portal] approveByToken failed', error && error.message ? error.message : error);
+    }
+  }
+  const member = result && result.member;
+  if (member && member._id) return member._id;
+  // Fall back to the members collection, allowing it a moment to catch up.
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const found = await lookupMemberByEmail(email);
+    if (found) return found.memberId;
+    await wait(1500);
+  }
+  return null;
 }
 
 // A short random password for members created from an enquiry. It is

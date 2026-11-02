@@ -5,7 +5,7 @@ import wixData from 'wix-data';
 import { authentication } from 'wix-members-backend';
 import { requireInstructor, run, PortalError } from 'backend/access';
 import { sendEmail } from 'backend/messaging';
-import { lookupMemberByEmail, pupilByEmail, insertPupil, throwawayPassword } from 'backend/pupil-store';
+import { lookupMemberByEmail, pupilByEmail, insertPupil, registerMember } from 'backend/pupil-store';
 import { ENQUIRY_STATUS, TEMPLATES } from 'public/portal-constants';
 import { trimTo, fillTemplate } from 'public/portal-utils';
 
@@ -120,16 +120,14 @@ export async function convertEnquiry(id, overrides) {
       transmission: item.transmission
     }, overrides || {});
 
-    let member = await lookupMemberByEmail(email);
+    const existing = await lookupMemberByEmail(email);
+    let memberId = existing ? existing.memberId : null;
     let created = false;
-    if (!member) {
-      await authentication.register(email, throwawayPassword(), {
-        contactInfo: { firstName: fields.firstName, lastName: fields.lastName, phones: fields.phone ? [fields.phone] : [] }
-      });
-      member = await lookupMemberByEmail(email);
+    if (!memberId) {
+      memberId = await registerMember(email, fields);
       created = true;
     }
-    if (!member) throw new PortalError('Wix did not create the member account. Try again in a moment.');
+    if (!memberId) throw new PortalError('Wix did not create the member account. Try again in a moment.');
 
     let loginEmailSent = true;
     try {
@@ -139,13 +137,13 @@ export async function convertEnquiry(id, overrides) {
       console.warn('[portal] set-password email did not send for a converted enquiry');
     }
 
-    const pupil = await insertPupil(fields, member.memberId);
+    const pupil = await insertPupil(fields, memberId);
     await wixData.update('Enquiries', Object.assign({}, item, {
       status: ENQUIRY_STATUS.CONVERTED,
       convertedPupilId: pupil._id
     }), { suppressAuth: true });
 
-    return { pupilId: pupil._id, memberId: member.memberId, memberCreated: created, loginEmailSent };
+    return { pupilId: pupil._id, memberId, memberCreated: created, loginEmailSent };
   });
 }
 
