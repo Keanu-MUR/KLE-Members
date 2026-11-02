@@ -1,6 +1,6 @@
 # Phase 3 plan — mock tests and messages
 
-Status: approved 2 Nov 2026 with decisions A to D as recommended, after two changes of scope: first the card link was dropped, then payments as a whole.
+Status: approved 2 Nov 2026 with decisions A to D as recommended, after two changes of scope: first the card link was dropped, then payments as a whole. Built, published and tested the same evening (section 7); the pupil-side steps await a pupil login.
 
 Outcome: mock tests are recorded and shown to the pupil; the pupil's change requests get a reply.
 
@@ -74,6 +74,20 @@ Pure helpers in `public/portal-utils.js`, with tests in `tests/phase3.test.mjs`:
 Code built, checked in the local harness at 375px (add, edit, two-tap delete and reply all work against stubs), committed and pushed; 41 tests pass. The page code file `pages/My mock tests.qwgun.js` is pushed for the Editor page created that evening.
 
 Blocked on the Editor: while the My mock tests page was being created, the Editor reported changes from another browser and, after the refresh it asked for, the new page was no longer in the site pages list (the ID cduqk was read before the refresh). Nothing is published for Phase 3 yet. Next: once the Editor is free, duplicate My progress again as My mock tests (slug my-mock-tests, element my-mock-tests.js, tag kle-my-mock-tests), read the new ID, rename the page code file to match, push, publish from the Editor, then run the test script in section 4.
+
+## 7. Results, 2 Nov 2026 (evening)
+
+With the Editor free, the My mock tests page was recreated (new ID qwgun; the page code file was renamed to match), the tag typed by hand and verified, and the site published from the Editor. The first publish attempt failed with "Errors occurred during code build": the build log named a duplicate `trimTo` import in `backend/portal.jsw` left by a patch script that ran twice. Fixed, pushed, published. The lint script now covers `.jsw` files so this is caught locally next time.
+
+| Step | Result |
+|---|---|
+| 1 | Pass. Mock test added on Test Pupil's record (28 October, fail, 5 minors, 1 serious, two faults, feedback); Edit changed the minors to 6 and saved; a throwaway test was added and deleted with the two-tap confirmation; the MockTests collection holds the one item. |
+| 2 | Pass. A test message was inserted for Test Pupil through the Data Items API (no pupil login to hand); the reply from the record saved, the Unread flag went, and the dashboard shows "No unread messages". |
+| 3 | Not run: needs the pupil's login. /my-mock-tests as the instructor redirects to /instructor, as designed. |
+| 4 | Not run: needs the pupil's login. |
+| 5 | Pass, 41 tests. |
+
+Test data left in place: the mock test and the message with its reply, both for Test Pupil.
 
 ## 5. Order of work
 
