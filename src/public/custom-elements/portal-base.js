@@ -251,8 +251,10 @@ export class PortalElement extends HTMLElement {
     event.preventDefault();
     let done = false;
     this.request('navigate', { path: href }).then(() => { done = true; });
-    // No page code answered (the harness, or the bridge not wired yet).
-    setTimeout(() => { if (!done) location.assign(href); }, 1200);
+    // No answer and this element is still on the page: page code did not
+    // take the navigation (the harness, or the bridge not wired yet). An
+    // element Wix has already removed means the page swap is under way.
+    setTimeout(() => { if (!done && this.isConnected) location.assign(href); }, 1200);
   }
 
   // Resolves with { ok, data } or { ok: false, error } from page code.

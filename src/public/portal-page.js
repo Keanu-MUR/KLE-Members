@@ -125,7 +125,9 @@ function builtInActions(config, reroute) {
     navigate: (payload) => {
       const path = String(payload.path || '');
       if (!path.startsWith('/') || path.startsWith('//')) return { ok: false, error: 'Not a page on this site.' };
-      wixLocation.to(path);
+      // Answer first, then move, so the element hears back before Wix
+      // takes it off the page.
+      setTimeout(() => wixLocation.to(path), 0);
       return { ok: true, data: null };
     },
 
