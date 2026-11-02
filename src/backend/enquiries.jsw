@@ -70,12 +70,23 @@ export async function replyToEnquiry(id, body) {
     const text = trimTo(body, 4000);
     if (text.length < 10) throw new PortalError('Write a reply first.');
     const firstName = (item.name || '').split(/\s+/)[0] || '';
+    // Triggered-email variables are plain text, so paragraph breaks only
+    // survive as separate variables: the reply is split into up to four
+    // paragraphs that the template lays out one under the other.
+    const paragraphs = text.split(/\n\s*\n/).map((part) => part.replace(/\s*\n\s*/g, ' ').trim()).filter(Boolean);
+    const vars = {
+      firstName,
+      p1: paragraphs[0] || '',
+      p2: paragraphs[1] || '',
+      p3: paragraphs[2] || '',
+      p4: paragraphs.slice(3).join(' ')
+    };
     const sent = await sendEmail('enquiryReply', {
       email: item.email,
       firstName,
       lastName: (item.name || '').split(/\s+/).slice(1).join(' '),
       phone: item.phone
-    }, { firstName, body: text }, { pupilId: item.convertedPupilId || '', lessonId: '' });
+    }, vars, { pupilId: item.convertedPupilId || '', lessonId: '' });
     if (!sent.ok) throw new PortalError('The email did not send. Try again in a moment; the attempt is in the send log.');
     const updated = await wixData.update('Enquiries', Object.assign({}, item, {
       status: item.status === ENQUIRY_STATUS.NEW ? ENQUIRY_STATUS.REPLIED : item.status,

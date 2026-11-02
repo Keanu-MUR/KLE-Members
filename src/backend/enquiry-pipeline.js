@@ -67,15 +67,20 @@ export async function notifyEnquiry(enquiry, data) {
   if (settings.enquiryAlertEmailOn) {
     const instructor = await lookupMemberByEmail(settings.instructorEmail);
     const to = instructor ? { memberId: instructor.memberId } : { email: settings.instructorEmail, firstName: 'Instructor', lastName: '' };
+    // The template carries three variables; the detail lines are built
+    // here so the template never needs editing when a field changes.
+    const summary = [
+      data.postcode + (data.outsideArea ? ' (outside the usual area)' : ''),
+      data.transmission + ' lessons',
+      'prefers ' + data.preferredContact,
+      data.phone,
+      data.email,
+      data.dateOfBirth ? 'born ' + data.dateOfBirth : '',
+      data.message ? 'Message: ' + data.message : 'No message'
+    ].filter(Boolean).join('. ');
     alert = await sendEmail('enquiryAlert', to, {
       name: data.name,
-      postcode: data.postcode,
-      transmission: data.transmission,
-      preferredContact: data.preferredContact,
-      phone: data.phone,
-      email: data.email,
-      message: data.message || '(no message)',
-      outsideArea: data.outsideArea ? 'Outside the usual area.' : '',
+      summary,
       link: SCHOOL.siteUrl + PORTAL_PATHS.enquiries
     }, context);
   }
