@@ -1,5 +1,5 @@
 # Phase 2 plan — lessons and progress
-Status: approved 2 Nov 2026 with decisions A to E as recommended.
+Status: approved 2 Nov 2026 with decisions A to E as recommended. Built, published and tested the same day (results in section 9); the pupil-side steps await a pupil login.
 
 Outcome (from SPEC.md): the instructor adds and edits lessons and sets progress; pupils see both. Pupil Home and the Instructor Dashboard show real data.
 
@@ -91,6 +91,22 @@ Both work one column at 375px; the grid blocks stay tappable size (44px high) in
 5. As the pupil, send a change request. On the instructor side it appears on the pupil record and the dashboard count; Mark read clears the count.
 6. As the pupil, open `/lessons` and `/progress?id=`: both redirect to `/pupil-home`; direct calls to the instructor functions return `{ ok: false }`.
 7. `npm test` passes with the new tests.
+
+## 9. Results, 2 Nov 2026
+
+Pages created in the Editor by duplicating My details: My progress (dtn1j), My lessons (tuwz2), Lessons (oce21), Progress editor (zqvgw). Two things went wrong on the way and are now in docs/pages.md: the custom element tag name set programmatically was not saved (retyped with real keystrokes and verified), and two page IDs were misread from screenshots (now read from the Editor DOM). A third finding changed the deploy routine: the API publish only publishes the Editor's last saved revision, so after a code push the publish must come from the Editor's own button (or follow an autosaved Editor change); see docs/pages.md.
+
+| Step | Result |
+|---|---|
+| 1 | Pass. Five lessons added for Test Pupil across this week and next (one custom 11:15 for 90 minutes); the sixth, a custom 11:00 on 3 November, was refused with "That clashes with Test’s lesson at 10:00." /lessons groups them under This week and Next week; /instructor shows today's and tomorrow's. |
+| 2 | Pass. 3 November marked completed with a summary and a private note; 4 November cancelled; both show their status word in the list and on the pupil record. |
+| 3 | Pass. Ten skills set on /progress with two notes; the single Progress item holds all ten as JSON; a reload shows the same grid and "4 of 21 skills at level 4 or above". |
+| 4 | Not run: needs the pupil's login. The summary and the progress link also appear on the pupil record. |
+| 5 | Not run: needs the pupil's login (Request a change). |
+| 6 | Partly: /my-lessons as the instructor redirects to /instructor, as designed. The pupil-side bounce needs the pupil's login. |
+| 7 | Pass, 37 tests. |
+
+Test data left in place: the five lessons and the Progress item for Test Pupil.
 
 ## 8. Order of work
 
