@@ -1,7 +1,7 @@
 // Public HTTP endpoint for the enquiry form: POST /_functions/enquire.
 // It exists because web modules cannot see the caller's IP address, which
 // the rate limit needs. Everything else about the enquiry lives in
-// backend/enquiries.js.
+// backend/enquiry-pipeline.js.
 
 import { ok } from 'wix-http-functions';
 import { handleEnquiry } from 'backend/enquiry-pipeline';

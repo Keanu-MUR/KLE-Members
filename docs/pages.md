@@ -10,6 +10,18 @@ Wix only pushes page code files to GitHub through the Wix CLI local editor, so w
 | Pupil home | `pupil-home` | `kle-pupil-home` | `public/custom-elements/pupil-home.js` | `public/portal-pages/home` |
 | Instructor dashboard | `instructor` | `kle-instructor-dashboard` | `public/custom-elements/instructor-dashboard.js` | `public/portal-pages/instructor` |
 
+## Phase 1 pages
+
+| Editor page name | URL slug | Custom element tag | Velo file | Page code file |
+|---|---|---|---|---|
+| Enquire | `enquire` | `kle-enquire` | `public/custom-elements/enquire.js` | `pages/Enquire.p9xvw.js` |
+| Enquiries | `enquiries` | `kle-enquiries` | `public/custom-elements/enquiries.js` | `pages/Enquiries.ym88x.js` |
+| Pupils | `pupils` | `kle-pupils` | `public/custom-elements/pupils.js` | `pages/Pupils.fmpye.js` |
+| Pupil record | `pupil-record` | `kle-pupil-record` | `public/custom-elements/pupil-record.js` | `pages/Pupil record.w7oqk.js` |
+| My details | `my-details` | `kle-my-details` | `public/custom-elements/my-details.js` | `pages/My details.cvhkb.js` |
+
+All five were created on 2 Nov 2026 by duplicating the first (Duplicate copies the element, the caching setting and the menu and index flags), then renaming, changing the slug, and repointing the element to its own file and tag. A backend `.js` and `.jsw` must not share a base name: `backend/enquiries.js` next to `backend/enquiries.jsw` broke the code build, hence `enquiry-pipeline.js`.
+
 ## Creating a page
 
 1. Pages & Menu > Add Page > Blank page. Name it as in the table.
