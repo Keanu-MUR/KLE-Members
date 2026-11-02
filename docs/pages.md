@@ -81,6 +81,39 @@ $w.onReady(() => init($w, { getSession, listMyMockTests }));
 
 The Pupil record and My lessons page code files also gained imports in Phase 3 (mock tests, replies, the pupil's own messages); both are pushed.
 
+## Phase 4 pages (code pushed 2 Nov 2026; Editor pages still to create)
+
+| Editor page name | URL slug | Custom element tag | Velo file | Page code file |
+|---|---|---|---|---|
+| Settings | `settings` | `kle-settings` | `public/custom-elements/settings.js` | `pages/Settings.<id>.js` |
+| Tomorrow's reminders | `reminders` | `kle-reminders` | `public/custom-elements/reminders.js` | `pages/Tomorrow's reminders.<id>.js` |
+| Send log | `send-log` | `kle-send-log` | `public/custom-elements/send-log.js` | `pages/Send log.<id>.js` |
+
+Duplicate Pupils for each (instructor pages). Page code:
+
+```js
+// Settings
+import { init } from 'public/portal-pages/settings';
+import { getSession } from 'backend/session';
+import { getSettings, updateSettings } from 'backend/portal-settings';
+import { upcomingForTest, testReminder, runPrune } from 'backend/reminders';
+$w.onReady(() => init($w, { getSession, getSettings, updateSettings, upcomingForTest, testReminder, runPrune }));
+
+// Tomorrow's reminders
+import { init } from 'public/portal-pages/reminders';
+import { getSession } from 'backend/session';
+import { getTomorrow, resendReminder } from 'backend/reminders';
+$w.onReady(() => init($w, { getSession, getTomorrow, resendReminder }));
+
+// Send log
+import { init } from 'public/portal-pages/send-log';
+import { getSession } from 'backend/session';
+import { listSendLog } from 'backend/send-log';
+$w.onReady(() => init($w, { getSession, listSendLog }));
+```
+
+Scheduled jobs live in `backend/jobs.config` (three: `sendReminders` hourly, `pruneLogs` nightly at 03:00 UTC, `probeJobEmail` hourly at half past, temporary). Jobs only run on the published site, so a publish is needed after any change to them.
+
 ## Creating a page
 
 1. Pages & Menu > Add Page > Blank page. Name it as in the table.
