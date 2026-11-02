@@ -6,7 +6,8 @@
 import wixLocation from 'wix-location';
 import wixWindow from 'wix-window-frontend';
 import { authentication } from 'wix-members-frontend';
-import { PORTAL_PATHS, ROLES } from 'public/portal-constants';
+import wixSiteFrontend from 'wix-site-frontend';
+import { PORTAL_PATHS, ROLES, NAV_BY_ROLE } from 'public/portal-constants';
 
 const HOME_BY_ROLE = {};
 HOME_BY_ROLE[ROLES.INSTRUCTOR] = PORTAL_PATHS.instructorHome;
@@ -113,7 +114,27 @@ async function route(element, config) {
     }
   }
   element.setAttribute('session', JSON.stringify(session));
+  prefetchNav(session.role);
   return true;
+}
+
+// Asks Wix to fetch the other portal pages for this role in the
+// background, once this page's own load has had a moment, so the next
+// section opens faster. Best effort: a failure changes nothing.
+let prefetched = false;
+function prefetchNav(role) {
+  if (prefetched) return;
+  prefetched = true;
+  const pages = (NAV_BY_ROLE[role] || []).map((l) => l.path).filter((p) => p !== wixLocation.path.join('/') && p !== '/' + wixLocation.path.join('/'));
+  if (!pages.length) return;
+  setTimeout(() => {
+    try {
+      const result = wixSiteFrontend.prefetchPageResources({ pages });
+      if (result && result.errors) console.warn('[portal] prefetch', result.errors);
+    } catch (error) {
+      console.warn('[portal] prefetch failed', error && error.message ? error.message : error);
+    }
+  }, 2000);
 }
 
 function builtInActions(config, reroute) {
