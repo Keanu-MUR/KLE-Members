@@ -81,13 +81,13 @@ $w.onReady(() => init($w, { getSession, listMyMockTests }));
 
 The Pupil record and My lessons page code files also gained imports in Phase 3 (mock tests, replies, the pupil's own messages); both are pushed.
 
-## Phase 4 pages (code pushed 2 Nov 2026; Editor pages still to create)
+## Phase 4 pages (created 2 Nov 2026 by duplicating Pupils)
 
 | Editor page name | URL slug | Custom element tag | Velo file | Page code file |
 |---|---|---|---|---|
-| Settings | `settings` | `kle-settings` | `public/custom-elements/settings.js` | `pages/Settings.<id>.js` |
-| Tomorrow's reminders | `reminders` | `kle-reminders` | `public/custom-elements/reminders.js` | `pages/Tomorrow's reminders.<id>.js` |
-| Send log | `send-log` | `kle-send-log` | `public/custom-elements/send-log.js` | `pages/Send log.<id>.js` |
+| Settings | `settings` | `kle-settings` | `public/custom-elements/settings.js` | `pages/Settings.uf14x.js` |
+| Tomorrow's reminders | `reminders` | `kle-reminders` | `public/custom-elements/reminders.js` | `pages/Tomorrow's reminders.gc84f.js` |
+| Send log | `send-log` | `kle-send-log` | `public/custom-elements/send-log.js` | `pages/Send log.llr3n.js` |
 
 Duplicate Pupils for each (instructor pages). Page code:
 
