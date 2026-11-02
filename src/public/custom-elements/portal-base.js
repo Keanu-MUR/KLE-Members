@@ -106,6 +106,7 @@ export class PortalElement extends HTMLElement {
     } else if (name === 'response') {
       const message = safeParse(value);
       if (message && message.id && this._pending.has(message.id)) {
+        this._bridgeReady = true;
         const resolve = this._pending.get(message.id);
         this._pending.delete(message.id);
         resolve(message);
@@ -117,9 +118,18 @@ export class PortalElement extends HTMLElement {
   call(action, payload) {
     this._seq += 1;
     const id = this._seq + '-' + Date.now().toString(36);
+    const detail = { id, action, payload: payload || {} };
     return new Promise((resolve) => {
       this._pending.set(id, resolve);
-      this.dispatchEvent(new CustomEvent('portal-request', { detail: { id, action, payload: payload || {} } }));
+      // Wix wires its event forwarding a moment after it applies attributes,
+      // so a request fired straight from attributeChangedCallback is lost.
+      // Send on a fresh task, and until the first reply has proven the
+      // bridge, send the same request once more after a short wait.
+      const send = () => this.dispatchEvent(new CustomEvent('portal-request', { detail }));
+      setTimeout(send, 0);
+      setTimeout(() => {
+        if (!this._bridgeReady && this._pending.has(id)) send();
+      }, 1500);
     });
   }
 
