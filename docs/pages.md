@@ -22,14 +22,14 @@ Wix only pushes page code files to GitHub through the Wix CLI local editor, so w
 
 All five were created on 2 Nov 2026 by duplicating the first (Duplicate copies the element, the caching setting and the menu and index flags), then renaming, changing the slug, and repointing the element to its own file and tag. A backend `.js` and `.jsw` must not share a base name: `backend/enquiries.js` next to `backend/enquiries.jsw` broke the code build, hence `enquiry-pipeline.js`.
 
-## Phase 2 pages (code pushed 2 Nov 2026; Editor pages still to create)
+## Phase 2 pages (created 2 Nov 2026 by duplicating My details)
 
 | Editor page name | URL slug | Custom element tag | Velo file | Page code file |
 |---|---|---|---|---|
-| Lessons | `lessons` | `kle-lessons` | `public/custom-elements/lessons.js` | `pages/Lessons.<id>.js` |
-| Progress editor | `progress` | `kle-progress-editor` | `public/custom-elements/progress-editor.js` | `pages/Progress editor.<id>.js` |
-| My lessons | `my-lessons` | `kle-my-lessons` | `public/custom-elements/my-lessons.js` | `pages/My lessons.<id>.js` |
-| My progress | `my-progress` | `kle-my-progress` | `public/custom-elements/my-progress.js` | `pages/My progress.<id>.js` |
+| Lessons | `lessons` | `kle-lessons` | `public/custom-elements/lessons.js` | `pages/Lessons.ooc21.js` |
+| Progress editor | `progress` | `kle-progress-editor` | `public/custom-elements/progress-editor.js` | `pages/Progress editor.zqvgw.js` |
+| My lessons | `my-lessons` | `kle-my-lessons` | `public/custom-elements/my-lessons.js` | `pages/My lessons.tuwz2.js` |
+| My progress | `my-progress` | `kle-my-progress` | `public/custom-elements/my-progress.js` | `pages/My progress.dtmlj.js` |
 
 Create each by duplicating an existing portal page (same settings: hidden from menu and search, access Everyone, caching Never, element ID `portal`), then rename, set the slug and repoint the element to its file and tag. Page code for each:
 
