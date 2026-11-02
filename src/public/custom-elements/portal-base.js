@@ -80,17 +80,26 @@ a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 `;
 
+// Mirrors NAV_BY_ROLE in public/portal-constants.js (custom elements do
+// not import it, so the two lists are kept in step by hand).
 const NAV_BY_ROLE = {
   instructor: [
     { label: 'Today', path: '/instructor' },
+    { label: 'Lessons', path: '/lessons' },
     { label: 'Pupils', path: '/pupils' },
     { label: 'Enquiries', path: '/enquiries' }
   ],
   pupil: [
     { label: 'Home', path: '/pupil-home' },
+    { label: 'Lessons', path: '/my-lessons' },
+    { label: 'Progress', path: '/my-progress' },
     { label: 'My details', path: '/my-details' }
   ],
-  guardian: [{ label: 'Home', path: '/pupil-home' }]
+  guardian: [
+    { label: 'Home', path: '/pupil-home' },
+    { label: 'Lessons', path: '/my-lessons' },
+    { label: 'Progress', path: '/my-progress' }
+  ]
 };
 
 function safeParse(value) {
