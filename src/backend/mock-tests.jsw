@@ -1,0 +1,83 @@
+// Mock tests: instructor adds, edits and deletes; pupil and guardian read
+// their own. Members may call (see permissions.json); the role checks
+// inside are the real guard.
+
+import wixData from 'wix-data';
+import { requireInstructor, requireOwnPupil, run, PortalError, getPupilById } from 'backend/access';
+import { validateMockTest, mockTestWords, skillName } from 'public/portal-utils';
+import { SKILLS } from 'public/portal-constants';
+
+function shape(item) {
+  const faults = Array.isArray(item.faults) ? item.faults : [];
+  return {
+    _id: item._id,
+    pupilId: item.pupilId || '',
+    date: item.date || '',
+    result: item.result || '',
+    minors: Number(item.minors) || 0,
+    serious: Number(item.serious) || 0,
+    dangerous: Number(item.dangerous) || 0,
+    countsWords: mockTestWords(item),
+    faults: faults.map((f) => ({ category: f.category || '', categoryName: skillName(f.category || ''), note: f.note || '' })),
+    feedback: item.feedback || ''
+  };
+}
+
+const CATEGORIES = SKILLS.map((s) => ({ key: s.key, name: s.name }));
+
+async function listFor(pupilId) {
+  const result = await wixData.query('MockTests').eq('pupilId', pupilId).descending('date').limit(100).find({ suppressAuth: true });
+  return result.items.map(shape);
+}
+
+export async function listMockTests(pupilId) {
+  return run(async () => {
+    await requireInstructor();
+    const pupil = await getPupilById(pupilId);
+    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    return { items: await listFor(pupil._id), categories: CATEGORIES };
+  });
+}
+
+// id null creates; otherwise updates that test. Returns { saved, errors,
+// test } like the other forms.
+export async function saveMockTest(id, fields) {
+  return run(async () => {
+    await requireInstructor();
+    const input = fields || {};
+    const pupil = await getPupilById(input.pupilId);
+    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    const checked = validateMockTest(input);
+    if (!checked.ok) return { saved: false, errors: checked.errors };
+    const data = Object.assign({ pupilId: pupil._id }, checked.data);
+    let item;
+    if (id) {
+      const existing = await wixData.get('MockTests', id, { suppressAuth: true });
+      if (!existing || existing.pupilId !== pupil._id) throw new PortalError('That mock test was not found.', 'not-found');
+      item = await wixData.update('MockTests', Object.assign({}, existing, data), { suppressAuth: true });
+    } else {
+      item = await wixData.insert('MockTests', data, { suppressAuth: true });
+    }
+    return { saved: true, errors: {}, test: shape(item) };
+  });
+}
+
+export async function deleteMockTest(id) {
+  return run(async () => {
+    await requireInstructor();
+    if (!id || typeof id !== 'string') throw new PortalError('Which mock test?');
+    await wixData.remove('MockTests', id, { suppressAuth: true });
+    return { deleted: true };
+  });
+}
+
+export async function listMyMockTests() {
+  return run(async () => {
+    const { caller, pupil } = await requireOwnPupil();
+    return {
+      viewerRole: caller.role,
+      pupil: { firstName: pupil.firstName || '', lastName: pupil.lastName || '' },
+      items: await listFor(pupil._id)
+    };
+  });
+}

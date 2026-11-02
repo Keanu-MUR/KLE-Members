@@ -1,10 +1,11 @@
-// Pupil-to-instructor notes ("Request a change"). Pupils write their own;
-// the instructor reads and marks them read. Replies arrive in Phase 3.
+// Pupil-to-instructor notes ("Request a change"). Pupils write their own
+// and read the replies; the instructor reads, replies and marks them read.
 // Members may call (see permissions.json); the role checks are the guard.
 
 import wixData from 'wix-data';
 import { requireInstructor, requireOwnPupil, run, PortalError } from 'backend/access';
-import { trimTo } from 'public/portal-utils';
+import { pupilNames, fullName } from 'backend/lesson-store';
+import { trimTo, validateReply } from 'public/portal-utils';
 
 function shape(item) {
   return {
@@ -13,7 +14,8 @@ function shape(item) {
     body: item.body || '',
     createdAt: item.createdAt || (item._createdDate ? new Date(item._createdDate).toISOString() : ''),
     readAt: item.readAt || '',
-    reply: item.reply || ''
+    reply: item.reply || '',
+    repliedAt: item.repliedAt || ''
   };
 }
 
@@ -33,12 +35,33 @@ export async function createMessage(body) {
   });
 }
 
+// The pupil's own messages, newest first, with any replies.
+export async function listMyMessages() {
+  return run(async () => {
+    const { pupil } = await requireOwnPupil();
+    const result = await wixData.query('Messages').eq('pupilId', pupil._id).descending('createdAt').limit(50).find({ suppressAuth: true });
+    return { items: result.items.map(shape) };
+  });
+}
+
 export async function listPupilMessages(pupilId) {
   return run(async () => {
     await requireInstructor();
     if (!pupilId || typeof pupilId !== 'string') throw new PortalError('Which pupil?');
     const result = await wixData.query('Messages').eq('pupilId', pupilId).descending('createdAt').limit(50).find({ suppressAuth: true });
     return { items: result.items.map(shape) };
+  });
+}
+
+// Unread messages across all pupils, for the dashboard.
+export async function listUnreadMessages() {
+  return run(async () => {
+    await requireInstructor();
+    const result = await wixData.query('Messages').isEmpty('readAt').descending('createdAt').limit(20).find({ suppressAuth: true });
+    const names = await pupilNames(result.items.map((m) => m.pupilId));
+    return {
+      items: result.items.map((m) => Object.assign(shape(m), { pupilName: fullName(names[m.pupilId]) || 'Unknown pupil' }))
+    };
   });
 }
 
@@ -50,5 +73,23 @@ export async function markMessageRead(id) {
     const readAt = new Date().toISOString();
     await wixData.update('Messages', Object.assign({}, item, { readAt }), { suppressAuth: true });
     return { readAt };
+  });
+}
+
+// A reply also marks the message read. The pupil sees it on My lessons.
+export async function replyToMessage(id, reply) {
+  return run(async () => {
+    await requireInstructor();
+    const checked = validateReply(reply);
+    if (!checked.ok) throw new PortalError(checked.error);
+    const item = await wixData.get('Messages', id, { suppressAuth: true });
+    if (!item) throw new PortalError('That message was not found.', 'not-found');
+    const now = new Date().toISOString();
+    const updated = await wixData.update('Messages', Object.assign({}, item, {
+      reply: checked.reply,
+      repliedAt: now,
+      readAt: item.readAt || now
+    }), { suppressAuth: true });
+    return { message: shape(updated) };
   });
 }
