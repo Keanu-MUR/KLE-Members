@@ -8,7 +8,7 @@
   "scripts": {
     "postinstall": "wix sync-types",
     "dev": "wix dev",
-    "lint": "eslint .",
+    "lint": "eslint . --ext .js,.jsw,.mjs",
     "test": "node --test tests/"
   }
 }
