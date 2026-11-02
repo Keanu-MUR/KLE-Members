@@ -86,7 +86,7 @@ export function parseSlot(slotKey, startTime, durationMins) {
       slot: slot.key,
       startTime: slot.start,
       durationMins: minutesBetween(slot.start, slot.end),
-      label: slot.name + ', ' + slot.start + '–' + slot.end
+      label: slot.start + '–' + slot.end
     };
   }
   if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(String(startTime || ''))) return null;
@@ -348,7 +348,7 @@ export function lessonsOverlap(a, b) {
   return aStart < bEnd && bStart < aEnd;
 }
 
-// "Early morning, 07:30–09:30" or "11:15–12:45" for a custom time.
+// "07:30–09:30" for a fixed slot or "11:15–12:45" for a custom time.
 export function lessonTimeLabel(lesson) {
   if (!lesson) return '';
   return slotTimeWords(lesson.slot, lesson.startTime, lesson.durationMins);

@@ -38,11 +38,14 @@ class KleEnquiries extends PortalElement {
       esc(s.label) + ' (' + (counts[s.key] || 0) + ')</button>'
     ).join('');
     const rows = data.items.length
-      ? data.items.map((e) =>
-        '<div class="row"><div><a href="#" data-open="' + esc(e._id) + '"><strong>' + esc(e.name) + '</strong></a><br>' +
-        '<span class="muted">' + esc(e.postcode) + ', ' + esc(e.transmission) + ', prefers ' + esc(CONTACT[e.preferredContact] || e.preferredContact) + '</span></div>' +
-        '<span class="meta">' + esc(this.dateWords(e.createdAt)) + '</span></div>'
-      ).join('')
+      ? '<table class="table"><thead><tr><th>Name</th><th>Postcode</th><th>Car</th><th>Prefers</th><th>Received</th></tr></thead><tbody>' +
+        data.items.map((e) =>
+          '<tr><td><a href="#" data-open="' + esc(e._id) + '">' + esc(e.name) + '</a></td>' +
+          '<td data-label="Postcode">' + esc(e.postcode) + '</td>' +
+          '<td data-label="Car">' + esc(e.transmission) + '</td>' +
+          '<td data-label="Prefers">' + esc(CONTACT[e.preferredContact] || e.preferredContact) + '</td>' +
+          '<td data-label="Received">' + esc(this.dateWords(e.createdAt)) + '</td></tr>'
+        ).join('') + '</tbody></table>'
       : this.empty(this.filter === 'new' ? 'No new enquiries. New ones arrive here the moment someone sends the form.' : 'Nothing here.');
 
     this.setMain('<h1>Enquiries</h1><div class="filters">' + filters + '</div>' + rows);
@@ -71,7 +74,7 @@ class KleEnquiries extends PortalElement {
     this.setMain(
       '<p><button class="btn btn-text" type="button" id="back">All enquiries</button></p>' +
       '<h1>' + esc(e.name) + '</h1>' +
-      '<p class="status">' + esc(e.status) + '</p>' +
+      '<p><span class="pill pill-' + esc(e.status) + '">' + esc(e.status) + '</span></p>' +
       '<p>' + esc(e.email) + '<br>' + esc(e.phone) + '<br>' + esc(e.addressLine1) + ', ' + esc(e.postcode) + '</p>' +
       '<p>' + esc(e.transmission) + ' lessons, prefers ' + esc(CONTACT[e.preferredContact] || e.preferredContact) +
       (e.dateOfBirth ? ', born ' + esc(this.longDate(e.dateOfBirth)) : '') + '</p>' +

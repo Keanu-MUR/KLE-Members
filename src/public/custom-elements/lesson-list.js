@@ -1,25 +1,40 @@
-// Lesson rows shared by the instructor's lists and the pupil's My lessons:
-// date in small caps above, the slot as the strongest line, pick-up below.
+// Lesson cards shared by the instructor's lists and the pupil's My lessons:
+// a white card with a 2px black border, the time big in the left column
+// with the date above it, the pupil, a pick-up chip and a status pill on
+// the right.
 
 import { esc } from './portal-base.js';
 
 export const LESSON_STYLE = `
 .day { margin: 20px 0 0; }
-.day-name { display: block; font-variant-caps: all-small-caps; letter-spacing: 0.08em; color: var(--kle-muted); margin: 0 0 2px; }
-.lesson { display: block; padding: 10px 0; text-decoration: none; }
-.lesson + .lesson { border-top: 1px solid #e3ded6; }
-.lesson-time { font-family: var(--kle-font-heading); font-size: 18px; line-height: 1.2; }
+.day-name { display: block; font-family: var(--font-head); font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; font-size: 15px; color: var(--ink); border-bottom: 2px dashed var(--ink); padding: 0 0 4px; margin: 0 0 12px; }
+.lesson { display: flex; gap: 16px; align-items: flex-start; background: var(--paper); border: 2px solid var(--ink); padding: 12px 14px; margin: 0 0 12px; text-decoration: none; color: inherit; }
+a.lesson:hover { border-color: var(--accent); }
+.lesson-when { flex: 0 0 auto; min-width: 104px; }
+.lesson-date { display: block; color: var(--muted); margin: 0 0 2px; }
+.lesson-time { font-family: var(--font-head); font-weight: 700; font-size: 26px; line-height: 1; letter-spacing: 0.01em; }
+.lesson-body { flex: 1 1 auto; min-width: 0; }
+.lesson-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
 .lesson-who { font-weight: 600; }
-.lesson-meta { color: var(--kle-muted); }
-.lesson-status { font-variant-caps: all-small-caps; letter-spacing: 0.08em; color: var(--kle-red); margin-left: 8px; }
-.lesson-summary { margin: 6px 0 0; white-space: pre-line; }
-.week { margin: 28px 0 0; }
+.lesson-meta { color: var(--muted); }
+.lesson-summary { margin: 8px 0 0; white-space: pre-line; }
+.week { margin: 32px 0 12px; }
+@media (max-width: 599px) {
+  .lesson { gap: 12px; padding: 10px 12px; }
+  .lesson-when { min-width: 92px; }
+  .lesson-time { font-size: 22px; }
+}
 `;
 
-const STATUS_WORDS = { planned: '', completed: 'Completed', cancelled: 'Cancelled', 'no-show': 'No show' };
+const STATUS_WORDS = { planned: 'Upcoming', completed: 'Completed', cancelled: 'Cancelled', 'no-show': 'No show' };
 
 export function statusWord(status) {
   return STATUS_WORDS[status] == null ? status : STATUS_WORDS[status];
+}
+
+export function statusPill(status) {
+  const key = status || 'planned';
+  return '<span class="pill pill-' + esc(key) + '">' + esc(statusWord(key)) + '</span>';
 }
 
 // "Tuesday 4 November" in Europe/London from YYYY-MM-DD.
@@ -32,19 +47,42 @@ export function dayWords(isoDate, withYear) {
   return new Intl.DateTimeFormat('en-GB', o).format(d);
 }
 
-// options: { href, who, showDate, summary }
+// "Tue 4 Nov" for the card's date line.
+export function shortDay(isoDate, withYear) {
+  if (!isoDate) return '';
+  const d = new Date(isoDate + 'T12:00:00Z');
+  if (Number.isNaN(d.getTime())) return '';
+  const o = { timeZone: 'Europe/London', weekday: 'short', day: 'numeric', month: 'short' };
+  if (withYear) o.year = 'numeric';
+  return new Intl.DateTimeFormat('en-GB', o).format(d);
+}
+
+// The postcode at the end of a pick-up address, or the address itself.
+export function pickupChip(pickup) {
+  const text = String(pickup || '').trim();
+  if (!text) return '';
+  const m = text.match(/([A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2})\s*$/i);
+  const label = m ? m[1].toUpperCase().replace(/\s+/, ' ') : text.length > 36 ? text.slice(0, 35) + '…' : text;
+  return '<span class="chip" title="Pick-up: ' + esc(text) + '">' + esc(label) + '</span>';
+}
+
+// options: { href, who, showDate, withYear, summary, status }
 export function renderLessonRow(lesson, options) {
   const o = options || {};
   const tag = o.href ? 'a' : 'div';
   const open = '<' + tag + ' class="lesson"' + (o.href ? ' href="' + esc(o.href) + '"' : '') + '>';
-  const status = lesson.status && lesson.status !== 'planned' ? '<span class="lesson-status">' + esc(statusWord(lesson.status)) + '</span>' : '';
+  const pill = o.status === false ? '' : statusPill(lesson.status);
   return (
     open +
-    (o.showDate ? '<span class="day-name">' + esc(dayWords(lesson.date, o.withYear)) + '</span>' : '') +
-    '<div class="lesson-time">' + esc(lesson.timeLabel || '') + status + '</div>' +
-    (o.who ? '<div class="lesson-who">' + esc(o.who) + '</div>' : '') +
-    (lesson.pickupLocation ? '<div class="lesson-meta">Pick-up: ' + esc(lesson.pickupLocation) + '</div>' : '') +
+    '<div class="lesson-when">' +
+    (o.showDate ? '<span class="lesson-date">' + esc(shortDay(lesson.date, o.withYear)) + '</span>' : '') +
+    '<div class="lesson-time">' + esc(lesson.timeLabel || '') + '</div>' +
+    '</div>' +
+    '<div class="lesson-body">' +
+    '<div class="lesson-top">' + (o.who ? '<span class="lesson-who">' + esc(o.who) + '</span>' : '<span></span>') + pill + '</div>' +
+    pickupChip(lesson.pickupLocation) +
     (o.summary && lesson.pupilSummary ? '<p class="lesson-summary">' + esc(lesson.pupilSummary) + '</p>' : '') +
+    '</div>' +
     '</' + tag + '>'
   );
 }
@@ -62,7 +100,7 @@ export function groupByDay(lessons) {
 
 export function renderDays(lessons, rowOptions) {
   return groupByDay(lessons).map((day) =>
-    '<div class="day"><span class="day-name">' + esc(dayWords(day.date)) + '</span>' +
+    '<div class="day"><h3 class="day-name">' + esc(dayWords(day.date)) + '</h3>' +
     day.lessons.map((lesson) => renderLessonRow(lesson, typeof rowOptions === 'function' ? rowOptions(lesson) : rowOptions)).join('') +
     '</div>'
   ).join('');

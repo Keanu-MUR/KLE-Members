@@ -38,8 +38,8 @@ test('reminderDecision skips with a reason for each rule', () => {
 test('reminderVars and reminderText fill the agreed wording', () => {
   const vars = reminderVars(lesson, pupil);
   assert.equal(vars.dateWords, 'Tuesday 3 November');
-  assert.equal(vars.slotTime, 'Late morning, 10:00–12:00');
-  assert.equal(reminderText(lesson, pupil), 'Hi Jamie, reminder: your manual driving lesson is tomorrow, Tuesday 3 November, Late morning, 10:00–12:00. Pick-up: 12 Rye Lane. Reply here if anything has changed.');
+  assert.equal(vars.slotTime, '10:00–12:00');
+  assert.equal(reminderText(lesson, pupil), 'Hi Jamie, reminder: your manual driving lesson is tomorrow, Tuesday 3 November, 10:00–12:00. Pick-up: 12 Rye Lane. Reply here if anything has changed.');
 });
 
 test('waMeLink strips the plus and encodes the text', () => {

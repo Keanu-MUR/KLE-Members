@@ -17,27 +17,46 @@ import { esc } from './portal-base.js';
 export const GRID_STYLE = `
 .record { list-style: none; margin: 0; padding: 0; }
 .record-group { margin: 0; padding: 0; list-style: none; }
-.record-group-wrap + .record-group-wrap { border-top: 1px dashed var(--kle-line); margin-top: 18px; padding-top: 10px; }
-.record-group-name { display: block; font-variant-caps: all-small-caps; letter-spacing: 0.08em; color: var(--kle-muted); margin: 8px 0 2px; }
-.skill { padding: 12px 0 10px; }
-.skill-head { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
-.skill-name { font-weight: 600; }
-.skill-level { color: var(--kle-muted); white-space: nowrap; }
-.blocks { display: flex; gap: 4px; margin: 8px 0 0; }
-.block { flex: 1 1 0; position: relative; height: 14px; border: 1px solid var(--kle-ink); border-radius: 2px; background: transparent; padding: 0; margin: 0; font: inherit; }
-.block.filled { background: var(--kle-primary); border-color: var(--kle-primary); }
-.blocks.editable .block { height: 44px; cursor: pointer; }
-.blocks.editable .block:hover { border-color: var(--kle-primary-dark); }
-.lplate { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center; width: 12px; height: 12px; background: var(--kle-red); color: #fff; font-family: Arial, Helvetica, sans-serif; font-weight: 700; font-size: 9px; line-height: 1; border-radius: 1px; pointer-events: none; }
-.blocks.editable .lplate { width: 22px; height: 22px; font-size: 15px; }
-.skill-note { margin: 8px 0 0; color: var(--kle-muted); white-space: pre-line; }
-.skill-updated { margin: 4px 0 0; font-variant-caps: all-small-caps; letter-spacing: 0.08em; color: var(--kle-muted); }
-.skill-tools { margin: 6px 0 0; }
+.record-group-wrap + .record-group-wrap { margin-top: 20px; }
+.record-group-name { display: block; font-family: var(--font-head); font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; font-size: 15px; border-bottom: 2px dashed var(--ink); padding: 0 0 4px; margin: 0 0 8px; }
+.skill { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; background: var(--paper); border: 1px solid var(--line); padding: 10px 12px; margin: 0 0 8px; }
+.skill-name { flex: 1 1 160px; font-weight: 600; }
+.sq { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 2px solid var(--ink); font-family: var(--font-head); font-weight: 700; font-size: 16px; background: var(--line); color: var(--ink); flex: 0 0 auto; }
+.sq.l1, .sq.l2 { background: var(--plate); }
+.sq.l3, .sq.l4 { background: var(--accent); }
+.sq.l5 { background: var(--ink); color: #fff; }
+.blocks { display: flex; gap: 6px; flex: 0 0 auto; }
+.blocks .sq { width: 44px; height: 44px; cursor: pointer; padding: 0; font: inherit; font-family: var(--font-head); font-weight: 700; font-size: 16px; border-radius: 0; }
+.blocks .sq:not(.on) { background: var(--paper); color: var(--muted); border-color: var(--line); }
+.blocks .sq.current { outline: 3px solid var(--ink); outline-offset: 2px; }
+.blocks .sq:hover { border-color: var(--accent); }
+.skill-extra { flex: 1 1 100%; }
+.skill-note { margin: 4px 0 0; color: var(--muted); white-space: pre-line; }
+.skill-updated { margin: 2px 0 0; font-variant-caps: all-small-caps; letter-spacing: 0.08em; color: var(--muted); }
+.skill-tools { margin: 4px 0 0; }
 .skill-tools .btn-text { min-height: 36px; padding-top: 4px; padding-bottom: 4px; margin-right: 16px; }
 .note-form textarea { min-height: 80px; margin-top: 6px; }
 .note-form .actions { margin-top: 8px; }
 .record-summary { margin: 0 0 4px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; list-style: none; margin: 0 0 16px; padding: 0; }
+.legend li { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
+.legend .sq { width: 18px; height: 18px; font-size: 11px; border-width: 1px; }
+@media (max-width: 599px) { .blocks { width: 100%; justify-content: space-between; } .blocks .sq { width: 40px; height: 40px; } }
 `;
+
+// One coloured square for a level: grey for nothing yet, yellow for 1 and
+// 2, orange for 3 and 4, black for 5.
+export function levelSquare(level, extra) {
+  const n = Number(level) || 0;
+  return '<span class="sq l' + n + (extra ? ' ' + extra : '') + '" aria-hidden="true">' + (n || '–') + '</span>';
+}
+
+export function renderLegend(levels) {
+  const items = [{ level: 0, name: 'Not started' }].concat(levels || []);
+  return '<ul class="legend" aria-label="Levels">' + items.map((l) =>
+    '<li>' + levelSquare(l.level) + '<span>' + esc(l.level ? l.level + ' ' + l.name : l.name) + '</span></li>'
+  ).join('') + '</ul>';
+}
 
 export function levelName(levels, level) {
   const found = (levels || []).find((l) => l.level === level);
@@ -61,26 +80,24 @@ function renderSkill(skill, entry, levels, editable) {
   const level = entry && entry.level ? Number(entry.level) : 0;
   const name = level ? levelName(levels, level) : '';
   const summary = skill.name + ', ' + (level ? 'level ' + level + ' of ' + levels.length + ', ' + name.toLowerCase() : 'not started yet');
-  const blocks = levels.map((l) => {
-    const filled = l.level <= level;
-    const current = l.level === level;
-    const label = editable ? 'Set ' + skill.name + ' to level ' + l.level + ', ' + l.name.toLowerCase() : '';
-    const inner = current ? '<span class="lplate" aria-hidden="true">L</span>' : '';
-    return editable
-      ? '<button type="button" class="block' + (filled ? ' filled' : '') + '" data-skill="' + esc(skill.key) + '" data-level="' + l.level + '" aria-label="' + esc(label) + '" aria-pressed="' + current + '">' + inner + '</button>'
-      : '<span class="block' + (filled ? ' filled' : '') + '">' + inner + '</span>';
-  }).join('');
+  const squares = editable
+    ? '<div class="blocks" role="group" aria-label="' + esc(summary) + '">' + levels.map((l) => {
+      const on = l.level <= level;
+      const current = l.level === level;
+      return '<button type="button" class="sq l' + l.level + (on ? ' on' : '') + (current ? ' current' : '') + '" data-skill="' + esc(skill.key) + '" data-level="' + l.level + '" aria-label="' + esc('Set ' + skill.name + ' to level ' + l.level + ', ' + l.name.toLowerCase()) + '" aria-pressed="' + current + '">' + l.level + '</button>';
+    }).join('') + '</div>'
+    : levelSquare(level) + '<span class="sr-only">' + esc(summary) + '</span>';
   const note = entry && entry.note ? '<p class="skill-note">' + esc(entry.note) + '</p>' : '';
   const updated = entry && entry.updatedAt ? '<p class="skill-updated">' + esc(updatedWords(entry.updatedAt)) + '</p>' : '';
   const tools = editable
     ? '<div class="skill-tools"><button type="button" class="btn btn-text" data-note="' + esc(skill.key) + '">' + (entry && entry.note ? 'Edit note' : 'Add note') + '</button></div>' +
       '<div class="note-form" id="note-' + esc(skill.key) + '" hidden></div>'
     : '';
+  const extra = note || updated || tools ? '<div class="skill-extra">' + note + updated + tools + '</div>' : '';
   return (
     '<li class="skill" id="skill-' + esc(skill.key) + '">' +
-    '<div class="skill-head"><span class="skill-name" aria-hidden="true">' + esc(skill.name) + '</span><span class="skill-level" aria-hidden="true">' + esc(name || 'Not started') + '</span></div>' +
-    '<div class="blocks' + (editable ? ' editable' : '') + '" role="group" aria-label="' + esc(summary) + '">' + blocks + '</div>' +
-    note + updated + tools +
+    '<span class="skill-name"' + (editable ? '' : ' aria-hidden="true"') + '>' + esc(skill.name) + '</span>' +
+    squares + extra +
     '</li>'
   );
 }

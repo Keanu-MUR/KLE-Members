@@ -158,6 +158,8 @@ Email: nil within quota. WhatsApp: about £0.016 per message, roughly £2 a mont
 
 ## Design brief
 
+**Restyled 2 Nov 2026 to match the new homepage.** Tokens in `public/custom-elements/portal-base.js`: ink #0B0B0B, paper #FFFFFF, soft #F4F2EE (page background), line #E2DED6, accent #FF5F2E, plate #F5C443, ok #1F8A4C, bad #D2303C. Headings Oswald 700 uppercase (tight tracking), body Barlow 400/600; both come from the site theme (Wix loads them as `oswald` and `barlow-v2`), so the elements name them with no font import. Square corners, 2px ink borders on interactive cards and 1px line borders on passive ones, dashed 2px rules under section headings. Black header bar with tab nav (orange underline for the active tab; scrollable pills under 600px). Lessons are cards with the time big in a left column, the date above it, pupil, a pick-up postcode chip and a status pill (Upcoming yellow, Completed green, Cancelled or No show red). Counts are stat cards in a two-column grid. Slots show their times only. The progress grid uses one coloured square per skill (grey none, yellow 1 to 2, orange 3 to 4, black 5) with a legend; the editor keeps five numbered squares. Login is one centred card under a yellow "Pupil login" plate. The older brief below is kept for the voice and the content rules.
+
 The portal should feel like it belongs to KLE Driving School specifically: one instructor, one car, south-east London, a decade of passes. The reference is the DVSA paper driver's record and UK road furniture, not a SaaS dashboard. Specific decisions below; where a brand asset is missing it is marked as a placeholder to fill.
 
 ### Brand inputs

@@ -7,8 +7,7 @@ import { LESSON_STYLE, renderLessonRow } from './lesson-list.js';
 class KleMyLessons extends PortalElement {
   extraStyle() {
     return LESSON_STYLE + `
-.message { padding: 12px 0; }
-.message + .message { border-top: 1px solid #e3ded6; }
+.message { margin: 0 0 12px; }
 .message-body { margin: 2px 0 6px; white-space: pre-line; }
 .reply { border-left: 3px solid var(--kle-primary); padding: 4px 12px; margin: 8px 0 0; }
 `;
@@ -107,10 +106,10 @@ class KleMyLessons extends PortalElement {
     const items = result.data.items;
     box.innerHTML = items.length
       ? items.map((m) =>
-        '<div class="message"><div class="day-name">' + esc(this.dateWords(m.createdAt, true)) + '</div>' +
+        '<div class="message card"><span class="when">' + esc(this.dateWords(m.createdAt, true)) + '</span>' +
         '<p class="message-body">' + esc(m.body) + '</p>' +
         (m.reply
-          ? '<div class="reply"><div class="day-name">Reply' + (m.repliedAt ? ', ' + esc(this.dateWords(m.repliedAt, true)) : '') + '</div><p class="message-body">' + esc(m.reply) + '</p></div>'
+          ? '<div class="reply"><span class="when">Reply' + (m.repliedAt ? ', ' + esc(this.dateWords(m.repliedAt, true)) : '') + '</span><p class="message-body">' + esc(m.reply) + '</p></div>'
           : '<p class="muted">No reply yet.</p>') +
         '</div>'
       ).join('')

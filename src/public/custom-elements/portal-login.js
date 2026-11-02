@@ -9,24 +9,26 @@ const ENQUIRE_PATH = '/enquire';
 class KleLogin extends PortalElement {
   extraStyle() {
     return `
-.login { display: grid; grid-template-columns: 1fr; min-height: 100%; }
-.banner { padding: 28px 16px; }
-.banner .brand-tag { margin-top: 8px; }
-.panel { padding: 8px 16px 56px; max-width: 480px; }
-@media (min-width: 900px) {
-  .login { grid-template-columns: minmax(280px, 2fr) 3fr; min-height: 80vh; }
-  .banner { padding: 48px 40px; }
-  .panel { padding: 48px 40px; }
-}
+.login { padding: 24px 16px 56px; }
+.login-card { max-width: 420px; margin: 0 auto; background: var(--paper); border: 2px solid var(--ink); }
+.plate { background: var(--plate); color: var(--ink); border-bottom: 2px solid var(--ink); padding: 12px 20px; font-family: var(--font-head); font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: 0.02em; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.plate .brand { color: var(--ink); }
+.plate .brand .kle, .plate .brand .driving { font-size: 16px; }
+.panel { padding: 20px 20px 24px; }
+.panel h1 { font-size: 24px; margin: 0 0 12px; }
+.panel .actions { flex-direction: column; align-items: stretch; gap: 8px; }
+.panel .actions .btn-primary { width: 100%; }
+@media (min-width: 600px) { .login { padding: 48px 24px 72px; } }
 `;
   }
 
   shell() {
     return (
       '<div class="login">' +
-      '<aside class="banner dark">' + WORDMARK + '<p class="brand-tag">Drive confidently.</p></aside>' +
+      '<div class="login-card">' +
+      '<div class="plate"><span>Pupil login</span>' + WORDMARK + '</div>' +
       '<main class="panel" id="main"></main>' +
-      '</div>'
+      '</div></div>'
     );
   }
 

@@ -23,6 +23,15 @@ class KlePupilHome extends PortalElement {
     this.render(result.data);
   }
 
+  // "14 of 21 skills at level 4 or above" as a big number with its label.
+  progressStat(summary) {
+    const m = String(summary).match(/^(\d+)\s+(.*)$/);
+    const n = m ? m[1] : '';
+    const label = m ? m[2] : summary;
+    return '<div class="stats"><a class="stat" href="/my-progress">' +
+      (n ? '<span class="stat-n">' + esc(n) + '</span>' : '') + '<span class="stat-l">' + esc(label) + '. See the driver’s record</span></a></div>';
+  }
+
   render(home) {
     const pupil = home.pupil || {};
     const name = [pupil.firstName, pupil.lastName].filter(Boolean).join(' ');
@@ -36,11 +45,11 @@ class KlePupilHome extends PortalElement {
         : this.empty('Your next lesson will show here once it’s booked.')) +
       '<h2>Progress</h2>' +
       (home.progressSummary
-        ? '<p>' + esc(home.progressSummary) + '. <a href="/my-progress">See the driver’s record</a></p>'
+        ? this.progressStat(home.progressSummary)
         : this.empty('Your driver’s record will appear here after your first lesson.')) +
       '<h2>Latest note</h2>' +
       (latest
-        ? '<p class="smallcaps muted">' + esc(dayWords(latest.date, true)) + '</p><p class="lesson-summary">' + esc(latest.pupilSummary) + '</p>'
+        ? '<div class="card"><span class="when">' + esc(dayWords(latest.date, true)) + '</span><p class="lesson-summary">' + esc(latest.pupilSummary) + '</p></div>'
         : this.empty('My notes from your lessons will appear here.'))
     );
   }

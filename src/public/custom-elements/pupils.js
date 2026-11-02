@@ -63,11 +63,13 @@ class KlePupils extends PortalElement {
       this.load(false);
     }));
     this.$('#rows').innerHTML = data.items.length
-      ? data.items.map((p) =>
-        '<div class="row"><div><a href="/pupil-record?id=' + esc(p._id) + '"><strong>' + esc(p.firstName + ' ' + p.lastName) + '</strong></a><br>' +
-        '<span class="muted">' + esc(p.transmission) + (p.postcode ? ', ' + esc(p.postcode) : '') + (p.linked ? '' : ', no login yet') + '</span></div>' +
-        '<span class="status">' + esc(p.status) + '</span></div>'
-      ).join('')
+      ? '<table class="table"><thead><tr><th>Pupil</th><th>Car</th><th>Postcode</th><th>Status</th></tr></thead><tbody>' +
+        data.items.map((p) =>
+          '<tr><td><a href="/pupil-record?id=' + esc(p._id) + '">' + esc(p.firstName + ' ' + p.lastName) + '</a>' + (p.linked ? '' : ' <span class="chip">no login yet</span>') + '</td>' +
+          '<td data-label="Car">' + esc(p.transmission) + '</td>' +
+          '<td data-label="Postcode">' + esc(p.postcode || '') + '</td>' +
+          '<td data-label="Status"><span class="pill pill-' + esc(p.status) + '">' + esc(p.status) + '</span></td></tr>'
+        ).join('') + '</tbody></table>'
       : this.empty(this.search ? 'No pupils match that.' : 'Pupils appear here when you convert an enquiry.');
   }
 }

@@ -38,31 +38,36 @@ class KleInstructorDashboard extends PortalElement {
       '<h2>Tomorrow</h2>' +
       (dash.tomorrow.length ? rows(dash.tomorrow) : this.empty('Nothing booked for tomorrow yet.')) +
       '<h2>Enquiries and messages</h2>' +
-      (dash.unreadEnquiries ? '<p><a href="/enquiries">' + esc(enquiryWords) + '</a></p>' : this.empty('No new enquiries.')) +
-      (dash.unreadMessages
-        ? '<p>' + esc(messageWords) + '.</p>' + (dash.unread || []).map((m) =>
-          '<a class="lesson" href="/pupil-record?id=' + esc(m.pupilId) + '"><div class="lesson-who">' + esc(m.pupilName) + '</div><div class="lesson-meta">' + esc(m.body) + '</div></a>'
-        ).join('')
-        : this.empty('No unread messages.')) +
+      '<div class="stats">' +
+      '<a class="stat" href="/enquiries"><span class="stat-n">' + (dash.unreadEnquiries || 0) + '</span><span class="stat-l">' + (dash.unreadEnquiries === 1 ? 'New enquiry' : 'New enquiries') + '</span></a>' +
+      '<div class="stat"><span class="stat-n">' + (dash.unreadMessages || 0) + '</span><span class="stat-l">' + (dash.unreadMessages === 1 ? 'Unread message' : 'Unread messages') + '</span></div>' +
+      '</div>' +
+      (dash.unread || []).map((m) =>
+        '<a class="card" href="/pupil-record?id=' + esc(m.pupilId) + '"><div class="lesson-who">' + esc(m.pupilName) + '</div><div class="lesson-meta">' + esc(m.body) + '</div></a>'
+      ).join('') +
       '<h2>Reminders</h2>' +
       this.reminderWords(dash.reminders) +
-      '<div class="actions" style="margin-top:8px"><a class="btn btn-text" href="/reminders">Tomorrow’s reminders</a><a class="btn btn-text" href="/send-log">Send log</a></div>'
+      '<div class="actions" style="margin-top:12px"><a class="btn" href="/reminders">Tomorrow’s reminders</a><a class="btn btn-text" href="/send-log">Send log</a></div>'
     );
     if (needsSetup) this.wireSetup(setup);
   }
 
   reminderWords(r) {
     if (!r || !r.today) return this.empty('Sent and failed counts will show here once reminders are switched on.');
-    const line = (label, c) => {
-      const parts = [];
-      if (c.email.sent || c.email.failed) parts.push(c.email.sent + ' email' + (c.email.sent === 1 ? '' : 's') + ' sent' + (c.email.failed ? ', ' + c.email.failed + ' failed' : ''));
-      if (c.whatsapp.sent || c.whatsapp.failed) parts.push(c.whatsapp.sent + ' WhatsApp sent' + (c.whatsapp.failed ? ', ' + c.whatsapp.failed + ' failed' : ''));
-      return '<p>' + label + ': ' + (parts.length ? esc(parts.join('; ')) : 'nothing sent') + '.</p>';
-    };
+    const sent = (r.today.email.sent || 0) + (r.today.whatsapp.sent || 0);
+    const failed = (r.today.email.failed || 0) + (r.today.whatsapp.failed || 0);
+    const yesterday = (r.yesterday.email.sent || 0) + (r.yesterday.whatsapp.sent || 0);
+    const stat = (n, label, cls, href) => (href ? '<a class="stat" href="' + href + '">' : '<div class="stat">') +
+      '<span class="stat-n' + (cls ? ' ' + cls : '') + '">' + n + '</span><span class="stat-l">' + label + '</span>' + (href ? '</a>' : '</div>');
     const off = [];
     if (!r.emailOn) off.push('email');
     if (!r.whatsAppOn) off.push('WhatsApp');
-    return line('Today', r.today) + line('Yesterday', r.yesterday) + (off.length ? '<p class="muted">' + esc(off.join(' and ')) + ' reminders are off.</p>' : '');
+    return '<div class="stats">' +
+      stat(sent, 'Sent today', '', '') +
+      stat(failed, 'Failed today', failed ? 'bad' : '', failed ? '/send-log' : '') +
+      stat(yesterday, 'Sent yesterday', '', '') +
+      stat(r.today.whatsapp.skipped || 0, 'WhatsApp skipped today', '', '') +
+      '</div>' + (off.length ? '<p class="muted">' + esc(off.join(' and ')) + ' reminders are off.</p>' : '');
   }
 
   setupPanel(setup) {

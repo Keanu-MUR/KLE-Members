@@ -1,7 +1,7 @@
 // <kle-my-progress>: the pupil's (or guardian's) driver's record, read only.
 
 import { PortalElement, esc } from './portal-base.js';
-import { GRID_STYLE, renderGrid, updatedWords } from './progress-grid.js';
+import { GRID_STYLE, renderGrid, renderLegend, updatedWords } from './progress-grid.js';
 
 class KleMyProgress extends PortalElement {
   extraStyle() {
@@ -38,7 +38,7 @@ class KleMyProgress extends PortalElement {
       '<p class="muted">' + esc(theory + ' ' + practical) + '</p>' +
       (s.summary ? '<p class="record-summary">' + esc(s.summary) + '</p>' : '') +
       (hasData
-        ? renderGrid({ skills: s.skills, groups: s.groups, levels: s.levels, data: s.data, transmission: pupil.transmission, editable: false }) +
+        ? renderLegend(s.levels) + renderGrid({ skills: s.skills, groups: s.groups, levels: s.levels, data: s.data, transmission: pupil.transmission, editable: false }) +
           (s.updatedAt ? '<p class="skill-updated">' + esc(updatedWords(s.updatedAt)) + '</p>' : '')
         : this.empty('Your driver’s record will appear here after your first lesson.'))
     );

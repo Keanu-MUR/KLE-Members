@@ -38,7 +38,7 @@ test('lessonsOverlap only clashes on the same day with shared minutes', () => {
 });
 
 test('lessonTimeLabel names the slot or shows the custom range', () => {
-  assert.equal(lessonTimeLabel({ slot: 'early-morning', startTime: '07:30', durationMins: 120 }), 'Early morning, 07:30–09:30');
+  assert.equal(lessonTimeLabel({ slot: 'early-morning', startTime: '07:30', durationMins: 120 }), '07:30–09:30');
   assert.equal(lessonTimeLabel({ slot: 'custom', startTime: '11:15', durationMins: 90 }), '11:15–12:45');
 });
 

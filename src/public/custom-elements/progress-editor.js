@@ -3,7 +3,7 @@
 // own button.
 
 import { PortalElement, esc } from './portal-base.js';
-import { GRID_STYLE, renderGrid } from './progress-grid.js';
+import { GRID_STYLE, renderGrid, renderLegend } from './progress-grid.js';
 
 class KleProgressEditor extends PortalElement {
   extraStyle() {
@@ -39,6 +39,7 @@ class KleProgressEditor extends PortalElement {
       '<p class="muted">' + esc(pupil.transmission === 'automatic' ? 'Automatic. ' : 'Manual. ') + 'Tap a block to set the level; it saves straight away.</p>' +
       '<p class="record-summary" id="summary">' + esc(s.summary || 'Nothing set yet.') + '</p>' +
       '<div class="save-status" id="save-status" aria-live="polite"></div>' +
+      renderLegend(s.levels) +
       '<div id="grid">' + renderGrid({ skills: s.skills, groups: s.groups, levels: s.levels, data: s.data, transmission: pupil.transmission, editable: true }) + '</div>'
     );
     this.$('#grid').addEventListener('click', (event) => this.onClick(event));

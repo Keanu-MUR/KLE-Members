@@ -44,7 +44,7 @@ test('fixed slots resolve to their times and custom slots are validated', () => 
     slot: 'early-morning',
     startTime: '07:30',
     durationMins: 120,
-    label: 'Early morning, 07:30–09:30'
+    label: '07:30–09:30'
   });
   assert.equal(parseSlot('late-afternoon').durationMins, 120);
   assert.deepEqual(parseSlot('custom', '09:00', 90), {

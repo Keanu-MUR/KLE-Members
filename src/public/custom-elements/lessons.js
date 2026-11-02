@@ -6,11 +6,12 @@
 import { PortalElement, esc } from './portal-base.js';
 import { LESSON_STYLE, renderDays, dayWords } from './lesson-list.js';
 
+// The four fixed slots, shown by their times only (2 Nov 2026).
 const SLOTS = [
-  { key: 'early-morning', name: 'Early morning', times: '07:30–09:30' },
-  { key: 'late-morning', name: 'Late morning', times: '10:00–12:00' },
-  { key: 'early-afternoon', name: 'Early afternoon', times: '12:45–14:45' },
-  { key: 'late-afternoon', name: 'Late afternoon', times: '15:15–17:15' }
+  { key: 'early-morning', times: '07:30–09:30' },
+  { key: 'late-morning', times: '10:00–12:00' },
+  { key: 'early-afternoon', times: '12:45–14:45' },
+  { key: 'late-afternoon', times: '15:15–17:15' }
 ];
 const STATUSES = [
   { value: 'planned', label: 'Planned' },
@@ -97,7 +98,7 @@ select { appearance: auto; }
       (!isNew && !pupils.some((p) => p._id === l.pupilId) ? '<option value="' + esc(l.pupilId) + '" selected>' + esc(l.pupilName || 'Current pupil') + '</option>' : '') +
       '</select></div>' +
       this.field({ id: 'date', label: 'Date', type: 'date', value: l.date, required: true }) +
-      this.radios({ name: 'slot', legend: 'Time', value: l.slot, options: SLOTS.map((s) => ({ value: s.key, label: s.name + ', ' + s.times })).concat([{ value: 'custom', label: 'Another time' }]) }) +
+      this.radios({ name: 'slot', legend: 'Time', value: l.slot, options: SLOTS.map((s) => ({ value: s.key, label: s.times })).concat([{ value: 'custom', label: 'Another time' }]) }) +
       '<div class="custom-time" id="custom-time"' + (custom ? '' : ' hidden') + '>' +
       this.field({ id: 'startTime', label: 'Start', type: 'time', value: custom ? l.startTime : '' }) +
       this.field({ id: 'durationMins', label: 'Minutes', type: 'number', inputmode: 'numeric', value: custom ? l.durationMins : '120' }) +

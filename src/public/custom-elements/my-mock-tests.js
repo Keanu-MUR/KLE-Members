@@ -4,10 +4,10 @@ import { PortalElement, esc } from './portal-base.js';
 import { LESSON_STYLE, dayWords } from './lesson-list.js';
 
 export const MOCK_STYLE = `
-.mock { padding: 14px 0; }
-.mock + .mock { border-top: 1px solid #e3ded6; }
-.mock-result { font-family: var(--kle-font-heading); font-size: 20px; line-height: 1.2; }
-.mock-result.fail { color: var(--kle-red); }
+.mock { background: var(--paper); border: 2px solid var(--ink); padding: 12px 14px; margin: 0 0 12px; }
+.mock-result { font-family: var(--font-head); font-weight: 700; text-transform: uppercase; font-size: 22px; line-height: 1.1; }
+.mock-result.fail { color: var(--bad); }
+.mock-result.pass { color: var(--ok); }
 .mock-counts { color: var(--kle-muted); }
 ul.faults { margin: 8px 0 0; padding-left: 18px; }
 ul.faults li { padding: 2px 0; }
@@ -17,7 +17,7 @@ ul.faults li { padding: 2px 0; }
 export function renderMockTest(t) {
   return (
     '<div class="mock" id="mt-' + esc(t._id) + '">' +
-    '<span class="day-name">' + esc(dayWords(t.date, true)) + '</span>' +
+    '<span class="when">' + esc(dayWords(t.date, true)) + '</span>' +
     '<div class="mock-result ' + (t.result === 'fail' ? 'fail' : 'pass') + '">' + (t.result === 'pass' ? 'Pass' : 'Fail') + '</div>' +
     '<div class="mock-counts">' + esc(t.countsWords) + '</div>' +
     (t.faults.length
