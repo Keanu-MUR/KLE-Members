@@ -2,7 +2,9 @@
 // requireInstructor() is the real guard.
 
 import wixData from 'wix-data';
-import { authentication } from 'wix-members-backend';
+import { authentication, members } from 'wix-members-backend';
+import { contacts } from 'wix-crm-backend';
+import { pupilCsv } from 'backend/export';
 import { requireInstructor, run, PortalError, getPupilById } from 'backend/access';
 import { lookupMemberByEmail, pupilByEmail, insertPupil, registerMember } from 'backend/pupil-store';
 import { isValidEmail, toE164, trimTo, isValidIsoDate, isValidPostcode } from 'public/portal-utils';
@@ -264,5 +266,88 @@ export async function sendGuardianLoginLink(id) {
     if (!pupil.guardianMemberId || !isValidEmail(pupil.guardianEmail)) throw new PortalError('Link a guardian login first.');
     await authentication.sendSetPasswordEmail(pupil.guardianEmail);
     return { sent: true, email: pupil.guardianEmail };
+  });
+}
+
+// ---- Export and GDPR delete ------------------------------------------
+
+// One CSV with the record and everything linked to it.
+export async function exportPupil(id) {
+  return run(async () => {
+    await requireInstructor();
+    const pupil = await getPupilById(id);
+    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    const csv = await pupilCsv(pupil);
+    return { name: [pupil.firstName, pupil.lastName].filter(Boolean).join('-') || 'pupil', csv };
+  });
+}
+
+async function removeWhere(collection, pupilId) {
+  let removed = 0;
+  for (let round = 0; round < 20; round += 1) {
+    const result = await wixData.query(collection).eq('pupilId', pupilId).limit(100).find({ suppressAuth: true });
+    if (!result.items.length) break;
+    await wixData.bulkRemove(collection, result.items.map((item) => item._id), { suppressAuth: true });
+    removed += result.items.length;
+    if (result.items.length < 100) break;
+  }
+  return removed;
+}
+
+// Deletes a member account and its contact; returns what could not be done.
+async function removeLogin(memberId, label) {
+  const left = [];
+  if (!memberId) return left;
+  let contactId = '';
+  try {
+    const member = await members.getMember(memberId, { fieldsets: ['FULL'] });
+    contactId = member && member.contactId ? member.contactId : '';
+  } catch (error) {
+    left.push(label + ' member lookup failed: ' + (error && error.message ? error.message : error));
+  }
+  try {
+    await members.deleteMember(memberId);
+  } catch (error) {
+    left.push(label + ' member account (delete it under Site Members): ' + (error && error.message ? error.message : error));
+  }
+  if (contactId) {
+    try {
+      await contacts.deleteContact(contactId);
+    } catch (error) {
+      left.push(label + ' contact (delete it under Contacts): ' + (error && error.message ? error.message : error));
+    }
+  }
+  return left;
+}
+
+// The GDPR delete: the record, every linked item, the send log rows, the
+// converted enquiry, and the pupil's (and sole guardian's) login and
+// contact. The typed name is the confirmation.
+export async function deletePupil(id, confirmName) {
+  return run(async () => {
+    await requireInstructor();
+    const pupil = await getPupilById(id);
+    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    const fullName = [pupil.firstName, pupil.lastName].filter(Boolean).join(' ');
+    if (String(confirmName || '').trim().toLowerCase() !== fullName.toLowerCase()) {
+      throw new PortalError('Type the pupil’s full name exactly, ' + fullName + ', to confirm.');
+    }
+    const removed = {};
+    for (const collection of ['Lessons', 'Progress', 'MockTests', 'Messages', 'SendLog']) {
+      removed[collection] = await removeWhere(collection, pupil._id);
+    }
+    const enquiries = await wixData.query('Enquiries').eq('convertedPupilId', pupil._id).limit(50).find({ suppressAuth: true });
+    if (enquiries.items.length) {
+      await wixData.bulkRemove('Enquiries', enquiries.items.map((item) => item._id), { suppressAuth: true });
+    }
+    removed.Enquiries = enquiries.items.length;
+    await wixData.remove('Pupils', pupil._id, { suppressAuth: true });
+    removed.Pupils = 1;
+
+    let left = await removeLogin(pupil.memberId, 'Pupil');
+    if (pupil.guardianMemberId && !(await guardianOfAnotherPupil(pupil.guardianMemberId, pupil._id))) {
+      left = left.concat(await removeLogin(pupil.guardianMemberId, 'Guardian'));
+    }
+    return { deleted: true, name: fullName, removed, left };
   });
 }

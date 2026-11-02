@@ -28,6 +28,8 @@ export function init($w, backend) {
       linkGuardian: (p) => backend.linkGuardian(p.id, p.email),
       unlinkGuardian: (p) => backend.unlinkGuardian(p.id),
       sendGuardianLoginLink: (p) => backend.sendGuardianLoginLink(p.id),
+      exportPupil: (p) => backend.exportPupil(p.id),
+      deletePupil: (p) => backend.deletePupil(p.id, p.confirmName),
       listPupilMessages: (p) => backend.listPupilMessages(p.id),
       markMessageRead: (p) => backend.markMessageRead(p.id),
       replyToMessage: (p) => backend.replyToMessage(p.id, p.reply),

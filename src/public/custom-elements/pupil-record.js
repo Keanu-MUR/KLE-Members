@@ -83,7 +83,11 @@ class KlePupilRecord extends PortalElement {
       '<h2>Lessons</h2><div id="lessons"><p class="muted">Loading.</p></div>' +
       '<h2>Progress</h2><div id="progress"><p class="muted">Loading.</p></div>' +
       '<h2>Mock tests</h2><div id="mock-tests"><p class="muted">Loading.</p></div>' +
-      '<h2>Messages</h2><div id="messages"><p class="muted">Loading.</p></div>'
+      '<h2>Messages</h2><div id="messages"><p class="muted">Loading.</p></div>' +
+      '<hr class="road">' +
+      '<h2>This record</h2>' +
+      '<div class="actions"><button class="btn btn-text" type="button" id="export-pupil">Export this pupil (CSV)</button><button class="btn btn-text" type="button" id="delete-pupil">Delete pupil (GDPR)</button></div>' +
+      '<div id="danger"></div>'
     );
     this.loadLessons(p);
     this.loadProgress(p);
@@ -96,6 +100,8 @@ class KlePupilRecord extends PortalElement {
     });
     this.$('#login-link').addEventListener('click', () => this.loginLink(p, form));
     this.bindGuardian(p, form);
+    this.$('#export-pupil').addEventListener('click', () => this.exportPupil(p));
+    this.$('#delete-pupil').addEventListener('click', () => this.confirmDelete(p));
   }
 
   async loadLessons(p) {
@@ -415,6 +421,47 @@ class KlePupilRecord extends PortalElement {
       this.bindGuardian(p, form);
       this.$('#guardian-status').innerHTML = '<div class="notice" role="status">Guardian login removed.</div>';
     });
+  }
+
+  async exportPupil(p) {
+    const button = this.$('#export-pupil');
+    button.disabled = true;
+    const result = await this.call('exportPupil', { id: p._id });
+    button.disabled = false;
+    if (!result.ok) { this.$('#danger').innerHTML = this.failure(result); return; }
+    const blob = new Blob([result.data.csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = result.data.name + '-' + new Date().toISOString().slice(0, 10) + '.csv';
+    this.shadowRoot.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    this.$('#danger').innerHTML = '<div class="notice" role="status">Downloaded.</div>';
+  }
+
+  confirmDelete(p) {
+    const fullName = [p.firstName, p.lastName].filter(Boolean).join(' ');
+    this.$('#danger').innerHTML =
+      '<form id="delete-form" novalidate><p>This removes the record, lessons, progress, mock tests, messages, send log rows, the enquiry and the login. There is no undo. Export first if you need a copy.</p>' +
+      this.field({ id: 'confirmName', label: 'Type the pupil’s full name to confirm', value: '', autocomplete: 'off', hint: fullName }) +
+      '<div id="delete-status" aria-live="polite"></div>' +
+      '<div class="actions"><button class="btn btn-primary" type="submit">Delete everything</button><button class="btn btn-text" type="button" id="delete-cancel">Keep the record</button></div></form>';
+    const form = this.$('#delete-form');
+    this.$('#delete-cancel').addEventListener('click', () => { this.$('#danger').innerHTML = ''; });
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      this.setBusy(form, true);
+      const result = await this.call('deletePupil', { id: p._id, confirmName: this.readForm(form).confirmName });
+      this.setBusy(form, false);
+      if (!result.ok) { this.$('#delete-status').innerHTML = this.failure(result); return; }
+      const left = result.data.left || [];
+      this.setMain('<h1>Deleted</h1><p>' + esc(result.data.name) + ' is gone: ' +
+        esc(Object.keys(result.data.removed).map((k) => result.data.removed[k] + ' ' + k).join(', ')) + '.</p>' +
+        (left.length ? '<p class="error">Still to do by hand in the Wix dashboard:</p><ul class="plain">' + left.map((l) => '<li>' + esc(l) + '</li>').join('') + '</ul>' : '') +
+        '<p><a href="/pupils">All pupils</a></p>');
+    });
+    this.$('#confirmName').focus();
   }
 
   async loginLink(p, form) {
