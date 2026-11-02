@@ -26,10 +26,10 @@ All five were created on 2 Nov 2026 by duplicating the first (Duplicate copies t
 
 | Editor page name | URL slug | Custom element tag | Velo file | Page code file |
 |---|---|---|---|---|
-| Lessons | `lessons` | `kle-lessons` | `public/custom-elements/lessons.js` | `pages/Lessons.ooc21.js` |
+| Lessons | `lessons` | `kle-lessons` | `public/custom-elements/lessons.js` | `pages/Lessons.oce21.js` |
 | Progress editor | `progress` | `kle-progress-editor` | `public/custom-elements/progress-editor.js` | `pages/Progress editor.zqvgw.js` |
 | My lessons | `my-lessons` | `kle-my-lessons` | `public/custom-elements/my-lessons.js` | `pages/My lessons.tuwz2.js` |
-| My progress | `my-progress` | `kle-my-progress` | `public/custom-elements/my-progress.js` | `pages/My progress.dtmlj.js` |
+| My progress | `my-progress` | `kle-my-progress` | `public/custom-elements/my-progress.js` | `pages/My progress.dtn1j.js` |
 
 Create each by duplicating an existing portal page (same settings: hidden from menu and search, access Everyone, caching Never, element ID `portal`), then rename, set the slug and repoint the element to its file and tag. Page code for each:
 
@@ -59,6 +59,8 @@ import { getSession } from 'backend/session';
 import { getMyProgress } from 'backend/progress';
 $w.onReady(() => init($w, { getSession, getMyProgress }));
 ```
+
+Two lessons from creating these (2 Nov 2026): read the page ID from the Editor DOM rather than a screenshot (in the browser console, search document.body.innerText for /Name.[A-Za-z0-9]+.js/; dtn1j and oce21 were misread from zoomed images as dtmlj and ooc21, and the page then showed the default template). And type the custom element tag name with real keystrokes (click the field, select all, type, then click elsewhere in the dialog): a value set programmatically shows in the field but is not saved, so the published page kept the duplicated page's tag.
 
 The Pupil record page code (`pages/Pupil record.w7oqk.js`) now also imports `listLessons`, `getProgress`, `listPupilMessages` and `markMessageRead`; it is already pushed.
 
