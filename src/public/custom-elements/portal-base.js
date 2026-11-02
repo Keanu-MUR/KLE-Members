@@ -115,6 +115,51 @@ function safeParse(value) {
   }
 }
 
+// A small browser-side cache so a page paints at once with the session and
+// data it showed last time, then refreshes from the backend. Lives in
+// sessionStorage: it goes when the tab closes, and every access is wrapped
+// because private windows and strict settings can refuse it.
+const CACHE_PREFIX = 'kle.';
+const SESSION_KEY = CACHE_PREFIX + 'session';
+const DATA_PREFIX = CACHE_PREFIX + 'data.';
+const DATA_TTL_MS = 30 * 60 * 1000;
+// Actions that only read; their results may be shown from the cache.
+const CACHEABLE = /^(get|list)[A-Z]/;
+
+function cacheRead(key) {
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+    const entry = JSON.parse(raw);
+    if (!entry || typeof entry !== 'object' || !entry.at || Date.now() - entry.at > DATA_TTL_MS) return null;
+    return entry.value;
+  } catch (error) {
+    return null;
+  }
+}
+
+function cacheWrite(key, value) {
+  try {
+    sessionStorage.setItem(key, JSON.stringify({ at: Date.now(), value }));
+  } catch (error) {
+    // Storage full or refused: the page just loads from the backend.
+  }
+}
+
+// Drops the data entries (after a change) or everything (after a logout).
+function cacheClear(all) {
+  try {
+    const keys = [];
+    for (let i = 0; i < sessionStorage.length; i += 1) {
+      const key = sessionStorage.key(i);
+      if (key && (all ? key.startsWith(CACHE_PREFIX) : key.startsWith(DATA_PREFIX))) keys.push(key);
+    }
+    keys.forEach((key) => sessionStorage.removeItem(key));
+  } catch (error) {
+    // Nothing to clear.
+  }
+}
+
 export function esc(value) {
   return String(value == null ? '' : value)
     .replace(/&/g, '&amp;')
@@ -132,6 +177,10 @@ export class PortalElement extends HTMLElement {
     this._pending = new Map();
     this._seq = 0;
     this.session = null;
+    // True while the session on show came from the cache rather than page code.
+    this._provisional = false;
+    // Cache keys already refreshed from the backend on this page view.
+    this._fresh = new Set();
   }
 
   static get observedAttributes() {
@@ -145,12 +194,32 @@ export class PortalElement extends HTMLElement {
       this.renderNav();
       this.afterShell();
     }
-    if (this.session) this.onSession(this.session);
+    if (this.session) {
+      this.onSession(this.session);
+      return;
+    }
+    // No session from page code yet: show the one from the last page so the
+    // nav and content do not appear to sign the visitor out on every page.
+    const cached = cacheRead(SESSION_KEY);
+    if (cached && cached.loggedIn) {
+      this.session = cached;
+      this._provisional = true;
+      this.renderNav();
+      this.onSession(cached);
+    }
   }
 
   attributeChangedCallback(name, oldValue, value) {
     if (name === 'session') {
-      this.session = safeParse(value);
+      const next = safeParse(value);
+      const same = this._provisional && JSON.stringify(next) === JSON.stringify(this.session);
+      this._provisional = false;
+      if (next && next.loggedIn) cacheWrite(SESSION_KEY, next);
+      else cacheClear(true);
+      // The real session matching the cached one means the page is already
+      // showing the right thing; loading it again would only flicker.
+      if (same) return;
+      this.session = next;
       if (this._rendered) this.renderNav();
       if (this._rendered && this.session) this.onSession(this.session);
     } else if (name === 'params') {
@@ -161,13 +230,46 @@ export class PortalElement extends HTMLElement {
         this._bridgeReady = true;
         const resolve = this._pending.get(message.id);
         this._pending.delete(message.id);
+        // Without the id, so two answers to the same read compare equal.
+        delete message.id;
         resolve(message);
       }
     }
   }
 
   // Resolves with { ok, data } or { ok: false, error } from page code.
+  // A read (get*/list*) answered on an earlier view resolves at once from
+  // the cache while the real answer is fetched; if that differs, the page
+  // loads again from onSession() with the fresh data. Any other action is
+  // a change, so it empties the data cache first.
   call(action, payload) {
+    const key = CACHEABLE.test(action) && action !== 'getSession'
+      ? DATA_PREFIX + location.pathname + '.' + action + '.' + JSON.stringify(payload || {})
+      : null;
+    if (!key) {
+      cacheClear(false);
+      this._fresh.clear();
+      if (action === 'logout') cacheClear(true);
+      return this.request(action, payload);
+    }
+    const cached = cacheRead(key);
+    // Already refreshed on this view (the page is loading again after a
+    // change in the data): the cache is the fresh answer.
+    if (cached && this._fresh.has(key)) return Promise.resolve(cached);
+    const fetched = this.request(action, payload).then((result) => {
+      if (result && result.ok) cacheWrite(key, result);
+      this._fresh.add(key);
+      return result;
+    });
+    if (!cached) return fetched;
+    fetched.then((result) => {
+      if (result && result.ok && JSON.stringify(result) !== JSON.stringify(cached) && this.session) this.onSession(this.session);
+    });
+    return Promise.resolve(cached);
+  }
+
+  // The round trip itself.
+  request(action, payload) {
     this._seq += 1;
     const id = this._seq + '-' + Date.now().toString(36);
     const detail = { id, action, payload: payload || {} };
@@ -176,18 +278,24 @@ export class PortalElement extends HTMLElement {
       // Wix wires its event forwarding a moment after it applies attributes,
       // so a request fired straight from attributeChangedCallback is lost.
       // Send on a fresh task, and until the first reply has proven the
-      // bridge, send the same request once more after a short wait.
+      // bridge, keep sending the same request every half second for a
+      // while (page code ignores the copies it has already seen).
       const send = () => this.dispatchEvent(new CustomEvent('portal-request', { detail }));
       setTimeout(send, 0);
-      setTimeout(() => {
-        if (!this._bridgeReady && this._pending.has(id)) send();
-      }, 1500);
+      let tries = 0;
+      const again = () => {
+        tries += 1;
+        if (this._bridgeReady || !this._pending.has(id) || tries > 8) return;
+        send();
+        setTimeout(again, 500);
+      };
+      setTimeout(again, 500);
     });
   }
 
   // Subclasses override these.
   shell() {
-    return '<div class="portal"><header>' + WORDMARK + '<nav class="portal-nav" id="nav" aria-label="Portal"></nav></header><main id="main"></main></div>';
+    return '<div class="portal"><header>' + WORDMARK + '<nav class="portal-nav" id="nav" aria-label="Portal"></nav></header><main id="main"><p class="muted">Loading.</p></main></div>';
   }
 
   // Text links for the current role, with the current page marked.

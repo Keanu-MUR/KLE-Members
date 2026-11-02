@@ -114,6 +114,17 @@ $w.onReady(() => init($w, { getSession, listSendLog }));
 
 Scheduled jobs live in `backend/jobs.config` (three: `sendReminders` hourly, `pruneLogs` nightly at 03:00 UTC, `probeJobEmail` hourly at half past, temporary). Jobs only run on the published site, so a publish is needed after any change to them.
 
+## What the browser keeps between pages (added 2 Nov 2026)
+
+Every portal page is a full Wix page load, and the session and the page's data each take a round trip to the backend, so a page used to open as a bare wordmark with no nav (looking signed out) until the session arrived, then load its data. `PortalElement` in `public/custom-elements/portal-base.js` now keeps two things in the tab's `sessionStorage`:
+
+- the last session page code handed any element (`kle.session`), applied the moment the next element connects so the nav and the role are right at once; page code's real session replaces it and, when it is identical, nothing re-renders;
+- the last answer to each read action (`kle.data.<path>.<action>.<payload>`, actions named `get*` or `list*`, 30-minute limit), returned at once while the real answer is fetched; if the real answer differs the element runs `onSession()` again with it.
+
+Any other action (a save, send, create or delete) empties the data cache first, and `logout` empties everything, so a change is never followed by a stale list. Routing and security are unchanged: page code still verifies the session on every page and the backend checks every call. A visitor whose login has expired may see the cached nav for a moment before page code sends them to the login page.
+
+The element also re-sends an unanswered first request every half second (up to eight times) until page code has answered once, instead of once after 1.5 seconds, because Wix wires the event bridge a moment after the element appears.
+
 ## Creating a page
 
 1. Pages & Menu > Add Page > Blank page. Name it as in the table.
