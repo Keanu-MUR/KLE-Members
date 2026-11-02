@@ -176,12 +176,14 @@ export async function tomorrowOverview() {
   };
 }
 
-// Yesterday's and today's counts for the dashboard.
+// Yesterday's and today's reminder counts for the dashboard: rows tied to
+// a lesson, so enquiry emails and the probe stay out of the numbers.
 export async function recentCounts() {
   const today = londonDate();
   const yesterday = addDays(today, -1);
   const result = await wixData.query('SendLog')
     .ge('createdAt', yesterday + 'T00:00:00.000Z')
+    .isNotEmpty('lessonId')
     .ne('lessonId', PROBE_LESSON_ID)
     .limit(1000)
     .find({ suppressAuth: true });
