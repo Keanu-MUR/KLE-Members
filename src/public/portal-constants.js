@@ -19,10 +19,10 @@ export const SCHOOL = {
 };
 
 export const PORTAL_PATHS = {
-  login: '/pupils/login',
-  enquire: '/pupils/enquire',
-  pupilHome: '/pupils/home',
-  instructorHome: '/pupils/instructor'
+  login: '/pupil-login',
+  enquire: '/enquire',
+  pupilHome: '/pupil-home',
+  instructorHome: '/instructor'
 };
 
 export const ROLES = {

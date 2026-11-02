@@ -78,20 +78,20 @@ Secrets, held in the Wix Secrets Manager and read only in backend code: WHATSAPP
 
 ## Pages and features by role
 
-All portal pages live under /pupils/... on the existing site, use the same header and footer, and are built as custom elements. Public pages are /pupils/enquire and /pupils/login; everything else requires login and is routed by role.
+Portal pages are top-level pages on the existing site (Wix Editor page slugs cannot contain a slash, so the planned /pupils/... prefix became /pupil-login, /pupil-home, /instructor and /enquire; changed 2 Nov 2026), use the same header and footer, and are built as custom elements. Public pages are /enquire and /pupil-login; everything else requires login and is routed by role.
 
 ### Public
 
 | Page | What it does |
 |---|---|
-| Enquire (/pupils/enquire) | Form: full name, email, phone, date of birth, address line 1, postcode, manual or automatic, preferred contact (phone / email / WhatsApp), message. Postcode is checked against the taught areas (SE1, SE4, SE8, SE10, SE14, SE15, SE16) and a soft note shown if outside. Submits to the backend, which writes Enquiries and alerts the instructor by email and WhatsApp at once. Confirmation on screen; confirmation email to the enquirer. Honeypot field and a simple rate limit against spam |
-| Login (/pupils/login) | Own-styled form calling Wix Members login; email + password, plus "email me a login link" (for now this sends Wix's set-password email, since Wix Members has no passwordless login; a true one-time link is a possible later upgrade). Redirects by role. "Not a pupil yet? Enquire" link |
+| Enquire (/enquire) | Form: full name, email, phone, date of birth, address line 1, postcode, manual or automatic, preferred contact (phone / email / WhatsApp), message. Postcode is checked against the taught areas (SE1, SE4, SE8, SE10, SE14, SE15, SE16) and a soft note shown if outside. Submits to the backend, which writes Enquiries and alerts the instructor by email and WhatsApp at once. Confirmation on screen; confirmation email to the enquirer. Honeypot field and a simple rate limit against spam |
+| Login (/pupil-login) | Own-styled form calling Wix Members login; email + password, plus "email me a login link" (for now this sends Wix's set-password email, since Wix Members has no passwordless login; a true one-time link is a possible later upgrade). Redirects by role. "Not a pupil yet? Enquire" link |
 
 ### Pupil
 
 | Page | What it does |
 |---|---|
-| Home (/pupils/home) | Next lesson (date, slot, pick-up), a one-line progress summary ("14 of 21 skills at level 4+"), balance, and the latest instructor summary |
+| Home (/pupil-home) | Next lesson (date, slot, pick-up), a one-line progress summary ("14 of 21 skills at level 4+"), balance, and the latest instructor summary |
 | My lessons | Upcoming and past lessons; each past lesson shows the instructor's summary. No booking controls anywhere. A "Request a change" button opens a short message form to the instructor (Messages) |
 | My progress | The skills grid: every skill with its level 1–5 as a filled track, the instructor's note per skill, and date last updated. Manual-only skills hidden for automatic pupils. Theory status and practical test date at the top |
 | Mock tests | Each mock test: date, result, minors/serious/dangerous counts, fault list, feedback |

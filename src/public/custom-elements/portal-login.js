@@ -4,7 +4,7 @@
 
 import { PortalElement, esc, WORDMARK } from './portal-base.js';
 
-const ENQUIRE_PATH = '/pupils/enquire';
+const ENQUIRE_PATH = '/enquire';
 
 class KleLogin extends PortalElement {
   extraStyle() {

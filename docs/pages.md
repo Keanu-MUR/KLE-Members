@@ -6,9 +6,9 @@ Page code files cannot be created from the repo. Create each page in the Editor,
 
 | Editor page name | URL slug | Custom element tag | Velo file | Page code module |
 |---|---|---|---|---|
-| Pupil login | `pupils/login` | `kle-login` | `public/custom-elements/portal-login.js` | `public/portal-pages/login` |
-| Pupil home | `pupils/home` | `kle-pupil-home` | `public/custom-elements/pupil-home.js` | `public/portal-pages/home` |
-| Instructor dashboard | `pupils/instructor` | `kle-instructor-dashboard` | `public/custom-elements/instructor-dashboard.js` | `public/portal-pages/instructor` |
+| Pupil login | `pupil-login` | `kle-login` | `public/custom-elements/portal-login.js` | `public/portal-pages/login` |
+| Pupil home | `pupil-home` | `kle-pupil-home` | `public/custom-elements/pupil-home.js` | `public/portal-pages/home` |
+| Instructor dashboard | `instructor` | `kle-instructor-dashboard` | `public/custom-elements/instructor-dashboard.js` | `public/portal-pages/instructor` |
 
 ## Creating a page
 
@@ -46,7 +46,7 @@ $w.onReady(() => init($w));
 ## First run
 
 1. Give the instructor's member account the **Instructor** role (Dashboard > Site Members > Roles).
-2. Log in at `/pupils/login` as the instructor. The dashboard shows a setup panel because the collections do not exist yet. Press **Create collections**. It creates the ten collections with admin-only permissions and the single Settings item, then the panel disappears.
+2. Log in at `/pupil-login` as the instructor. The dashboard shows a setup panel because the collections do not exist yet. Press **Create collections**. It creates the ten collections with admin-only permissions and the single Settings item, then the panel disappears.
 3. If that step fails on this plan, follow `docs/collections.md` to create them by hand, then press **Create settings**.
 4. Create a test pupil member in the dashboard, and in the Pupils collection add an item whose `memberId` is that member's ID and whose `firstName`, `lastName`, `transmission` and `status` are filled. (Phase 1 adds the instructor's own Pupils screen for this.)
-5. Log in as the pupil: `/pupils/home` shows their name and the four empty states. Opening `/pupils/instructor` sends them back to `/pupils/home`.
+5. Log in as the pupil: `/pupil-home` shows their name and the four empty states. Opening `/instructor` sends them back to `/pupil-home`.

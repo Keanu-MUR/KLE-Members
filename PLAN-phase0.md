@@ -61,8 +61,8 @@ The backend shapes every response for the caller's role. The element never filte
 
 ## 4. Login and routing
 
-- Login runs in page code using the Wix Members frontend `authentication.login(email, password)`. On success it calls `getSession()` and redirects: instructor to `/pupils/instructor`, pupil to `/pupils/home`, guardian to `/pupils/home` (read-only, Phase 5), `none` to a plain "This account isn't linked to a pupil yet" message.
-- Every portal page (except login and enquire) calls `getSession()` on load. Not logged in: redirect to `/pupils/login`. Wrong role for the page: redirect to the right home. Backend functions re-check on every call, so a pupil opening an instructor URL gets both a redirect and `{ ok: false, error }` from any call they try.
+- Login runs in page code using the Wix Members frontend `authentication.login(email, password)`. On success it calls `getSession()` and redirects: instructor to `/instructor`, pupil to `/pupil-home`, guardian to `/pupil-home` (read-only, Phase 5), `none` to a plain "This account isn't linked to a pupil yet" message.
+- Every portal page (except login and enquire) calls `getSession()` on load. Not logged in: redirect to `/pupil-login`. Wrong role for the page: redirect to the right home. Backend functions re-check on every call, so a pupil opening an instructor URL gets both a redirect and `{ ok: false, error }` from any call they try.
 - Pages stay public at the Wix level. Setting them "Members only" would trigger Wix's own login popup and defeat the own-styled form. Security is the backend check, as CLAUDE.md rule 2 says.
 - "Email me a login link": see decision B below.
 
@@ -70,9 +70,9 @@ The backend shapes every response for the caller's role. The element never filte
 
 | Editor page name | URL | Custom element tag | Velo file |
 |---|---|---|---|
-| Pupil login | /pupils/login | `kle-login` | public/custom-elements/portal-login.js |
-| Pupil home | /pupils/home | `kle-pupil-home` | public/custom-elements/pupil-home.js |
-| Instructor dashboard | /pupils/instructor | `kle-instructor-dashboard` | public/custom-elements/instructor-dashboard.js |
+| Pupil login | /pupil-login | `kle-login` | public/custom-elements/portal-login.js |
+| Pupil home | /pupil-home | `kle-pupil-home` | public/custom-elements/pupil-home.js |
+| Instructor dashboard | /instructor | `kle-instructor-dashboard` | public/custom-elements/instructor-dashboard.js |
 
 For each: add one Custom Element (Add > Embed Code > Custom Element), source "Velo file", the tag above, stretch to full width, element id `#portal`. Hide from search engines and from the site menu until item 12 of the checklist. Later phases add the remaining pages the same way.
 
@@ -111,8 +111,8 @@ Two facts from the Wix docs that shape setup: once the site is connected to GitH
 2. Run `createCollections()` once from the instructor account (or follow docs/collections.md); confirm all collections and permissions in the dashboard.
 3. Run `ensureSettings()`; confirm one Settings item.
 4. Give the instructor's member account the Instructor role; create a test pupil member and a Pupils item with its memberId.
-5. Log in as the instructor at /pupils/login: lands on /pupils/instructor with the empty dashboard.
-6. Log in as the pupil: lands on /pupils/home with the empty home.
-7. As the pupil, open /pupils/instructor: redirected to /pupils/home; any instructor backend call returns `{ ok: false }`.
-8. Logged out, open /pupils/home: redirected to /pupils/login.
+5. Log in as the instructor at /pupil-login: lands on /instructor with the empty dashboard.
+6. Log in as the pupil: lands on /pupil-home with the empty home.
+7. As the pupil, open /instructor: redirected to /pupil-home; any instructor backend call returns `{ ok: false }`.
+8. Logged out, open /pupil-home: redirected to /pupil-login.
 9. `node --test tests/` passes locally.
