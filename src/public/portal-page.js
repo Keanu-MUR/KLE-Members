@@ -35,8 +35,17 @@ export async function mountPortal($w, selector, config) {
   const element = $w(selector);
   const actions = Object.assign(builtInActions(config, () => route(element, config)), config.actions || {});
 
+  // The element re-sends its first request if no reply has arrived after a
+  // moment (see call() in portal-base.js). When both copies get through,
+  // the second must not run the action again: a slow email send would
+  // otherwise be answered by its own duplicate's failure.
+  const seen = new Set();
   element.on('portal-request', async (event) => {
     const detail = (event && event.detail) || {};
+    if (detail.id) {
+      if (seen.has(detail.id)) return;
+      seen.add(detail.id);
+    }
     let result;
     const handler = actions[detail.action];
     if (!handler) {
