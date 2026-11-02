@@ -30,16 +30,17 @@ export function friendlyError(error) {
   return 'Something went wrong on my side. Try again, and tell me if it keeps happening.';
 }
 
-// Wraps a web method body so callers always get { ok, data } or
-// { ok: false, error } and never an unhandled rejection.
-export function guarded(fn) {
-  return async function guardedCall() {
-    try {
-      return ok(await fn.apply(null, arguments));
-    } catch (error) {
-      return fail(friendlyError(error));
-    }
-  };
+// Runs a web method body so callers always get { ok, data } or
+// { ok: false, error } and never an unhandled rejection. Web module
+// exports must be declared functions (Wix builds the browser stubs by
+// static analysis), so each one is `export async function x() { return
+// run(() => ...); }` rather than a wrapped constant.
+export async function run(fn) {
+  try {
+    return ok(await fn());
+  } catch (error) {
+    return fail(friendlyError(error));
+  }
 }
 
 async function findPupilBy(field, value) {

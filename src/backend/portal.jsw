@@ -3,32 +3,36 @@
 // now so the elements can be built against them. Members only (see
 // permissions.json); the role check inside is the real guard.
 
-import { requireInstructor, requireOwnPupil, guarded, publicPupil } from 'backend/access';
+import { requireInstructor, requireOwnPupil, run, publicPupil } from 'backend/access';
 import { checkSetup } from 'backend/setup';
 import { loadSettings } from 'backend/settings';
 
-export const getPupilHome = guarded(async () => {
-  const { caller, pupil } = await requireOwnPupil();
-  return {
-    viewerRole: caller.role,
-    pupil: publicPupil(pupil),
-    nextLesson: null,
-    progressSummary: null,
-    balance: null,
-    latestSummary: null
-  };
-});
+export async function getPupilHome() {
+  return run(async () => {
+    const { caller, pupil } = await requireOwnPupil();
+    return {
+      viewerRole: caller.role,
+      pupil: publicPupil(pupil),
+      nextLesson: null,
+      progressSummary: null,
+      balance: null,
+      latestSummary: null
+    };
+  });
+}
 
-export const getInstructorDashboard = guarded(async () => {
-  await requireInstructor();
-  const setup = await checkSetup();
-  const { item } = setup.missing.includes('Settings') ? { item: null } : await loadSettings();
-  return {
-    setup: Object.assign({}, setup, { settingsExists: Boolean(item) }),
-    today: [],
-    tomorrow: [],
-    unreadEnquiries: 0,
-    unreadMessages: 0,
-    reminders: { sent: 0, failed: 0 }
-  };
-});
+export async function getInstructorDashboard() {
+  return run(async () => {
+    await requireInstructor();
+    const setup = await checkSetup();
+    const { item } = setup.missing.includes('Settings') ? { item: null } : await loadSettings();
+    return {
+      setup: Object.assign({}, setup, { settingsExists: Boolean(item) }),
+      today: [],
+      tomorrow: [],
+      unreadEnquiries: 0,
+      unreadMessages: 0,
+      reminders: { sent: 0, failed: 0 }
+    };
+  });
+}
