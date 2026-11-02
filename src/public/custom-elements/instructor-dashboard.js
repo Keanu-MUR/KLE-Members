@@ -40,7 +40,9 @@ class KleInstructorDashboard extends PortalElement {
       '<h2>Enquiries and messages</h2>' +
       (dash.unreadEnquiries ? '<p><a href="/enquiries">' + esc(enquiryWords) + '</a></p>' : this.empty('No new enquiries.')) +
       (dash.unreadMessages
-        ? '<p>' + esc(messageWords) + ' from pupils. <a href="/pupils">Open the pupil’s record</a> to read them.</p>'
+        ? '<p>' + esc(messageWords) + '.</p>' + (dash.unread || []).map((m) =>
+          '<a class="lesson" href="/pupil-record?id=' + esc(m.pupilId) + '"><div class="lesson-who">' + esc(m.pupilName) + '</div><div class="lesson-meta">' + esc(m.body) + '</div></a>'
+        ).join('')
         : this.empty('No unread messages.')) +
       '<h2>Reminders for tomorrow</h2>' +
       this.empty('Sent and failed counts will show here once reminders are switched on.')

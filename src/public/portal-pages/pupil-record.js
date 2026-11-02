@@ -14,7 +14,19 @@ export function init($w, backend) {
       listLessons: (p) => backend.listLessons(p),
       getProgress: (p) => backend.getProgress(p.id),
       listPupilMessages: (p) => backend.listPupilMessages(p.id),
-      markMessageRead: (p) => backend.markMessageRead(p.id)
+      markMessageRead: (p) => backend.markMessageRead(p.id),
+      replyToMessage: (p) => backend.replyToMessage(p.id, p.reply),
+      listMockTests: (p) => backend.listMockTests(p.id),
+      saveMockTest: (p) => backend.saveMockTest(p.id, p.fields),
+      deleteMockTest: (p) => backend.deleteMockTest(p.id),
+      replyToMessage: (p) => backend.replyToMessage(p.id, p.reply),
+      listMockTests: (p) => backend.listMockTests(p.id),
+      saveMockTest: (p) => backend.saveMockTest(p.id, p.fields),
+      deleteMockTest: (p) => backend.deleteMockTest(p.id),
+      replyToMessage: (p) => backend.replyToMessage(p.id, p.reply),
+      listMockTests: (p) => backend.listMockTests(p.id),
+      saveMockTest: (p) => backend.saveMockTest(p.id, p.fields),
+      deleteMockTest: (p) => backend.deleteMockTest(p.id)
     }
   });
 }

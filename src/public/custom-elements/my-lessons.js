@@ -6,7 +6,12 @@ import { LESSON_STYLE, renderLessonRow } from './lesson-list.js';
 
 class KleMyLessons extends PortalElement {
   extraStyle() {
-    return LESSON_STYLE;
+    return LESSON_STYLE + `
+.message { padding: 12px 0; }
+.message + .message { border-top: 1px solid #e3ded6; }
+.message-body { margin: 2px 0 6px; white-space: pre-line; }
+.reply { border-left: 3px solid var(--kle-primary); padding: 4px 12px; margin: 8px 0 0; }
+`;
   }
 
   onSession() {
@@ -51,9 +56,11 @@ class KleMyLessons extends PortalElement {
       (data.past.length
         ? data.past.map((l) => renderLessonRow(l, { showDate: true, withYear: true, summary: true })).join('')
         : this.empty('Past lessons and my notes on them will appear here.')) +
-      historyLines
+      historyLines +
+      (guardian ? '' : '<h2>Messages</h2><div id="messages"><p class="muted">Loading.</p></div>')
     );
     if (guardian) return;
+    this.loadMessages();
     const button = this.$('#change');
     const form = this.$('#change-form');
     button.addEventListener('click', () => {
@@ -85,7 +92,29 @@ class KleMyLessons extends PortalElement {
       this.$('#change-status').innerHTML = this.failure(result);
       return;
     }
-    form.innerHTML = '<div class="notice" role="status">Sent. I’ll reply by email or WhatsApp.</div>';
+    form.innerHTML = '<div class="notice" role="status">Sent. My reply will show here.</div>';
+    this.loadMessages();
+  }
+
+  async loadMessages() {
+    const box = this.$('#messages');
+    if (!box) return;
+    const result = await this.call('listMyMessages');
+    if (!result.ok) {
+      box.innerHTML = this.failure(result);
+      return;
+    }
+    const items = result.data.items;
+    box.innerHTML = items.length
+      ? items.map((m) =>
+        '<div class="message"><div class="day-name">' + esc(this.dateWords(m.createdAt, true)) + '</div>' +
+        '<p class="message-body">' + esc(m.body) + '</p>' +
+        (m.reply
+          ? '<div class="reply"><div class="day-name">Reply' + (m.repliedAt ? ', ' + esc(this.dateWords(m.repliedAt, true)) : '') + '</div><p class="message-body">' + esc(m.reply) + '</p></div>'
+          : '<p class="muted">No reply yet.</p>') +
+        '</div>'
+      ).join('')
+      : this.empty('Messages you send me, and my replies, will show here.');
   }
 }
 

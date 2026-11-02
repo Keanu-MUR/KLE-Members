@@ -8,7 +8,10 @@ export function init($w, backend) {
     getSession: backend.getSession,
     actions: {
       listMyLessons: () => backend.listMyLessons(),
-      createMessage: (p) => backend.createMessage(p.body)
+      createMessage: (p) => backend.createMessage(p.body),
+      listMyMessages: () => backend.listMyMessages(),
+      listMyMessages: () => backend.listMyMessages(),
+      listMyMessages: () => backend.listMyMessages()
     }
   });
 }
