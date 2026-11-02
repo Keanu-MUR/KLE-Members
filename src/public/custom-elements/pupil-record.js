@@ -56,16 +56,16 @@ class KlePupilRecord extends PortalElement {
       '<h2>Contact</h2>' +
       f('firstName', 'First name', { required: true }) + f('lastName', 'Last name', { required: true }) +
       f('email', 'Email', { type: 'email', hint: 'Also the login email once they have an account.' }) +
-      f('phone', 'Phone', { type: 'tel' }) + f('dateOfBirth', 'Date of birth', { type: 'date' }) +
+      f('phone', 'Phone', { type: 'tel' }) + f('dateOfBirth', 'Date of birth (optional)', { type: 'date' }) +
       '<h2>Address</h2>' +
-      f('addressLine1', 'Address line 1') + f('addressLine2', 'Address line 2') + f('town', 'Town') + f('postcode', 'Postcode') +
+      f('addressLine1', 'Address line 1') + f('addressLine2', 'Address line 2') + f('postcode', 'Postcode') +
       '<h2>Lessons and tests</h2>' +
       this.radios({ name: 'transmission', legend: 'Transmission', value: p.transmission, options: [{ value: 'manual', label: 'Manual' }, { value: 'automatic', label: 'Automatic' }] }) +
       this.field({ id: 'hourlyRatePounds', label: 'Hourly rate (£)', type: 'number', value: p.hourlyRatePence != null ? (p.hourlyRatePence / 100).toFixed(2) : '', inputmode: 'decimal' }) +
-      f('licenceNumber', 'Licence number') +
+      f('licenceNumber', 'Licence number (optional)') +
       this.checkbox({ id: 'theoryPassed', label: 'Theory test passed', checked: p.theoryPassed }) +
       f('theoryPassDate', 'Theory pass date', { type: 'date' }) + f('practicalTestDate', 'Practical test date', { type: 'date' }) +
-      '<h2>Emergency contact</h2>' +
+      '<h2>Emergency contact (optional)</h2>' +
       f('emergencyContactName', 'Name') + f('emergencyContactPhone', 'Phone', { type: 'tel' }) +
       '<h2>Guardian</h2>' +
       f('guardianName', 'Guardian name') + f('guardianEmail', 'Guardian email', { type: 'email', hint: 'Gets the lesson reminder too while the pupil is under 18. Linking a guardian login comes later.' }) +

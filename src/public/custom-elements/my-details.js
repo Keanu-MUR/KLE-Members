@@ -25,21 +25,20 @@ class KleMyDetails extends PortalElement {
       (readOnly ? '<p class="viewer">Viewing as guardian, read only</p>' : '') +
       '<form id="form" novalidate>' +
       '<h2>Contact</h2>' +
-      f('email', 'Email', { type: 'email', autocomplete: 'email', hint: 'You log in with this address. Change it here and you’ll log in with the new one from then on.' }) +
+      f('email', 'Email', { type: 'email', autocomplete: 'email', hint: 'You log in with this address. Change it here.' }) +
       f('phone', 'Phone', { type: 'tel', autocomplete: 'tel' }) +
       '<h2>Address</h2>' +
       f('addressLine1', 'Address line 1', { autocomplete: 'address-line1' }) +
       f('addressLine2', 'Address line 2', { autocomplete: 'address-line2' }) +
-      f('town', 'Town', { autocomplete: 'address-level2' }) +
       f('postcode', 'Postcode', { autocomplete: 'postal-code' }) +
-      '<h2>Emergency contact</h2>' +
+      '<h2>Emergency contact (optional)</h2>' +
       f('emergencyContactName', 'Name') + f('emergencyContactPhone', 'Phone', { type: 'tel' }) +
       '<h2>Reminders</h2>' +
       this.checkbox({ id: 'reminderEmail', label: 'Email me the day before each lesson', checked: d.reminderEmail }) +
       this.checkbox({ id: 'reminderWhatsApp', label: 'WhatsApp me the day before each lesson', checked: d.reminderWhatsApp }) +
       '<h2>Licence</h2>' +
-      this.field({ id: 'licenceNumber', label: 'Licence number', value: d.licenceNumber, readOnly: true, hint: 'Ask me if this needs changing.' }) +
-      this.field({ id: 'dateOfBirth', label: 'Date of birth', value: d.dateOfBirth, readOnly: true }) +
+      this.field({ id: 'licenceNumber', label: 'Licence number (optional)', value: d.licenceNumber, readOnly: true, hint: 'Ask me if this needs changing.' }) +
+      this.field({ id: 'dateOfBirth', label: 'Date of birth (optional)', value: d.dateOfBirth, readOnly: true }) +
       '<div id="status" aria-live="polite"></div>' +
       (readOnly ? '' : '<div class="actions"><button class="btn btn-primary" type="submit">Save</button></div>') +
       '</form>'
