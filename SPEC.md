@@ -102,7 +102,7 @@ Portal pages are top-level pages on the existing site (Wix Editor page slugs can
 
 ### Guardian
 
-The same Home, Lessons, Progress and Mock tests pages as their pupil, read-only, with the pupil's name in the header. No details editing, no messages.
+The same Home, Lessons, Progress and Mock tests pages as their pupil, read-only, with the pupil's name in the header. No details editing, no messages. Linked from the pupil record (Link guardian login: an existing member by email or a new one sent the set-password email; one login per pupil and one pupil per login; Remove guardian login clears it). Built 2 Nov 2026.
 
 ### Instructor
 
@@ -115,7 +115,7 @@ The same Home, Lessons, Progress and Mock tests pages as their pupil, read-only,
 | Enquiries | New / replied / converted / closed. Reply by email from the page (template with the instructor's standard first-lesson info). "Convert to pupil" creates the Pupils item from the enquiry and sends the signup link |
 | Tomorrow's reminders | List of tomorrow's lessons with per-pupil status for each channel; "Resend" per row; one-tap wa.me button per row as a manual fallback |
 | Send log | Last 90 days of send attempts with filters |
-| Settings | The reminder toggles, enquiry alert toggles, email provider switch, instructor contact details, Stripe link, bank details text shown to pupils, hourly rate default. "Export all data (CSV)" button and the weekly export status |
+| Settings | The reminder toggles, enquiry alert toggles, email provider switch, instructor contact details, hourly rate default, retention windows with the item count. Backups: last run, Download latest backup (60-minute links), Back up now, Compact old lessons now. Export all data: one CSV per collection (Stripe link and bank details removed with payments, 2 Nov 2026) |
 
 Mobile first: the instructor uses this from a phone between lessons, so every instructor page must work one-handed at 375px wide.
 
@@ -346,6 +346,8 @@ Plan first. Before enabling the job, give me a backend function I can run manual
 Test: run the manual function against the instructor's own details on both channels; switch WhatsApp off and confirm a skipped row is logged; schedule a test lesson for tomorrow and confirm the 08:00 run sends and logs; break the WhatsApp token deliberately and confirm email still sends and the failure appears on the dashboard.
 
 ### Phase 5 — Guardian, backups, GDPR, polish
+
+Built and tested 2 Nov 2026; see PLAN-phase5.md for what was built and the results. Decisions: backups are private CSV files in the Media Manager (newest four kept) with a Wix email notice and 60-minute download links on Settings, not attachments; the GDPR delete also removes the Wix member and contact; payments were never built, so only lessons compact.
 
 Outcome: feature-complete and ready to hand over.
 

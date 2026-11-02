@@ -131,6 +131,10 @@ How it works (`public/custom-elements/portal-shell.js`):
 - The old one-section pages (Pupil home, My lessons, My progress, My mock tests, My details, Lessons, Pupils, Pupil record, Enquiries, Progress editor, Settings, Tomorrow's reminders, Send log) were deleted from the Editor on 2 Nov 2026 and their page code files removed; their old URLs now 404. `PORTAL_PATHS` points at the new locations. `public/portal-redirect.js` stays for any page that needs to send visitors into the portal (`/instructor?s=lessons&id=abc`, because `wixLocation.to()` drops a hash; the shell folds `?s=` into the hash on mount).
 - Every element file guards its `customElements.define`, because an old page's bundle defines its element before the redirect and the shell's bundle then loads the same file again on the next page.
 
+## Phase 5 actions (2 Nov 2026)
+
+Settings section: `latestBackupLinks`, `runExport`, `exportCollection(name)`, `runCompactionNow` in `backend/portal-settings.jsw`. Pupil record: `linkGuardian(id, email)`, `unlinkGuardian(id)`, `sendGuardianLoginLink(id)`, `exportPupil(id)`, `deletePupil(id, confirmName)` in `backend/pupils.jsw`. Jobs: `exportBackup` weekly (Monday 02:00 UTC), compaction inside the nightly `pruneLogs`. Backup files live in the Media Manager under `/portal-backups/<date>/` as private documents; the list is `Settings.backups`. See PLAN-phase5.md and HANDOVER.md.
+
 ## What the browser keeps between pages (added 2 Nov 2026)
 
 Every portal page is a full Wix page load, and the session and the page's data each take a round trip to the backend, so a page used to open as a bare wordmark with no nav (looking signed out) until the session arrived, then load its data. `PortalElement` in `public/custom-elements/portal-base.js` now keeps two things in the tab's `sessionStorage`:
