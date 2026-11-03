@@ -216,7 +216,7 @@ export const SETTINGS_DEFAULTS = {
   instructorWhatsApp: '',
   enquiryAlertEmailOn: true,
   enquiryAlertWhatsAppOn: false,
-  reminderSendHour: 8,
+  reminderSendHour: 7,
   defaultHourlyRatePence: SCHOOL.defaultHourlyRatePence,
   lastExportAt: null,
   lastExportStatus: '',

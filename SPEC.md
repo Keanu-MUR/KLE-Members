@@ -125,7 +125,7 @@ Two channels, email and WhatsApp, each with a master switch the instructor contr
 
 ### Lesson reminders
 
-- The scheduled job sendReminders runs every day at Settings.reminderSendHour (default 08:00 Europe/London; jobs run hourly at most, so the job fires hourly and exits unless the hour matches).
+- The scheduled job sendReminders runs every day at Settings.reminderSendHour (default 07:00 Europe/London since 3 Nov 2026; the hour is compared in Europe/London time, so it follows GMT and BST by itself; jobs run hourly at most, so the job fires hourly and exits unless the hour matches).
 - It loads every Lessons item with status = planned and date = tomorrow.
 - For each lesson it loads the pupil and, for each channel, checks: master switch on, pupil preference on, no SendLog row already sent for this lesson and channel today (idempotent: safe to re-run).
 - Email: sends the "lesson reminder" template with first name, date in words, slot time, pick-up location, transmission, and a link to the portal. Provider = Wix Triggered Emails, or Resend when Settings.emailProvider = "resend".
