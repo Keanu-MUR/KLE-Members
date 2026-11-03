@@ -72,6 +72,21 @@ export class PortalShell extends PortalElement {
   afterShell() {
     this._onHash = () => this.mount();
     window.addEventListener('hashchange', this._onHash);
+    this.hideSiteHeader();
+  }
+
+  // The shell is the page's header, so the Wix site header (with its Pupil
+  // login button) goes, along with the gap the Editor leaves above the
+  // element. Page code's $w('#SITE_HEADER').collapse() did not take on the
+  // live site (3 Nov 2026), so this is done in the page DOM here.
+  hideSiteHeader() {
+    try {
+      const header = document.getElementById('SITE_HEADER');
+      if (header) header.style.display = 'none';
+      if (this.parentElement) this.parentElement.style.marginTop = '0';
+    } catch (error) {
+      // Not on a Wix page (the harness); nothing to hide.
+    }
   }
 
   disconnectedCallback() {

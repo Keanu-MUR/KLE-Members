@@ -133,7 +133,7 @@ How it works (`public/custom-elements/portal-shell.js`):
 
 ## Site header on the portal pages (3 Nov 2026)
 
-The two portal pages collapse the Wix site header (`$w('#SITE_HEADER').collapse()` in `mountPortal`, `hideSiteHeader: true` in their page modules) because the shell draws its own KLE Driving header and the site header's Pupil login button made no sense to someone already logged in. The site footer stays. Login and Enquire keep the site header.
+The two portal pages hide the Wix site header: the shell element sets `display: none` on `#SITE_HEADER` and removes the Editor's gap above itself (`hideSiteHeader()` in `portal-shell.js`), because page code's `$w('#SITE_HEADER').collapse()` (still called from `mountPortal` with `hideSiteHeader: true`) did not take on the live site. The reason is that the shell draws its own KLE Driving header and the site header's Pupil login button made no sense to someone already logged in. The site footer stays. Login and Enquire keep the site header.
 
 ## Phase 5 actions (2 Nov 2026)
 
