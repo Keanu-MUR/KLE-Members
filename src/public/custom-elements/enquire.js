@@ -16,6 +16,12 @@ function outward(postcode) {
 }
 
 class KleEnquire extends PortalElement {
+  // The Editor's mobile layout gives the element 280px of a 320px screen;
+  // take the full width there so the form reaches both edges (3 Nov 2026).
+  extraStyle() {
+    return '@media (max-width: 767px) { :host { display: block; width: 100vw !important; } }';
+  }
+
   afterShell() {
     this.renderForm();
   }
