@@ -678,6 +678,19 @@
           "invoke": false
         }
       }
+    },
+    "backend/passPhotos.jsw": {
+      "getPassPhotos": {
+        "siteOwner": {
+          "invoke": true
+        },
+        "siteMember": {
+          "invoke": true
+        },
+        "anonymous": {
+          "invoke": true
+        }
+      }
     }
   }
 }

@@ -1,0 +1,34 @@
+// The "Recent passes" photos on the home page hero: the public images in the
+// Media Manager folder named below, in whatever order the page shuffles them.
+// Anyone may call it (see permissions.json); it only ever returns public
+// image URLs, nothing from the portal collections.
+
+import { mediaManager } from 'wix-media-backend';
+
+const FOLDER_NAME = 'car photos'; // compared case-insensitively
+
+// Search every level of folders, in case the folder sits inside another one.
+async function findFolder(parentFolderId) {
+  const filters = parentFolderId ? { parentFolderId } : {};
+  const folders = await mediaManager.listFolders(filters, null, { limit: 100 });
+  for (const f of folders) {
+    if ((f.folderName || '').trim().toLowerCase() === FOLDER_NAME) return f;
+  }
+  for (const f of folders) {
+    const found = await findFolder(f.folderId);
+    if (found) return found;
+  }
+  return null;
+}
+
+export async function getPassPhotos() {
+  try {
+    const folder = await findFolder();
+    if (!folder) return [];
+    const files = await mediaManager.listFiles({ parentFolderId: folder.folderId }, null, { limit: 100 });
+    return files.filter((f) => f.mediaType === 'image' && !f.isPrivate).map((f) => f.fileUrl);
+  } catch (error) {
+    console.error('[home] getPassPhotos', error && error.message ? error.message : error);
+    return [];
+  }
+}
