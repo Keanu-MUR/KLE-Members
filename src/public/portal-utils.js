@@ -100,6 +100,14 @@ export function parseSlot(slotKey, startTime, durationMins) {
   };
 }
 
+// The hour (0-23) a lesson starts, from its slot or custom time; null when
+// the timing is not valid.
+export function lessonStartHour(lesson) {
+  const l = lesson || {};
+  const parsed = parseSlot(l.slot, l.startTime, l.durationMins);
+  return parsed ? Number(parsed.startTime.slice(0, 2)) : null;
+}
+
 export function slotTimeWords(slotKey, startTime, durationMins) {
   const parsed = parseSlot(slotKey, startTime, durationMins);
   return parsed ? parsed.label : '';

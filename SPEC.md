@@ -125,7 +125,7 @@ Two channels, email and WhatsApp, each with a master switch the instructor contr
 
 ### Lesson reminders
 
-- The scheduled job sendReminders runs every day at Settings.reminderSendHour (default 20:00 the evening before, Europe/London, since 3 Nov 2026; the hour is compared in Europe/London time, so it follows GMT and BST by itself; jobs run hourly at most, so the job fires hourly and exits unless the hour matches).
+- The scheduled job sendReminders runs every hour and, since 3 Nov 2026, sends each reminder 24 hours before the lesson: on every run it takes tomorrow's planned lessons whose start hour (from the slot or custom time, Europe/London) is at or before the current London hour and sends any that have no sent row today, so a lesson booked late still gets its reminder on the next run. Wix fires the job a few minutes past the hour, so a 10:00 lesson is reminded at about 10:03 the day before. Skips are recorded once a day per lesson and channel. Settings.reminderSendHour is kept in the data but no longer used.
 - It loads every Lessons item with status = planned and date = tomorrow.
 - For each lesson it loads the pupil and, for each channel, checks: master switch on, pupil preference on, no SendLog row already sent for this lesson and channel today (idempotent: safe to re-run).
 - Email: sends the "lesson reminder" template with first name, date in words, slot time, pick-up location, transmission, and a link to the portal. Provider = Wix Triggered Emails, or Resend when Settings.emailProvider = "resend".

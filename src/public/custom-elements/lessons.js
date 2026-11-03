@@ -26,6 +26,10 @@ class KleLessons extends PortalElement {
 .custom-time { display: flex; gap: 12px; }
 .custom-time .field { flex: 1 1 0; }
 select { appearance: auto; }
+#f-slot .choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+#f-slot .choices label { border: 2px solid var(--ink); padding: 10px 12px; background: var(--paper); }
+#f-slot .choices label:has(input:checked) { border-color: var(--accent); background: var(--soft); }
+#f-slot .choices label:last-child { grid-column: 1 / -1; }
 `;
   }
 

@@ -12,16 +12,14 @@ import { lookupMemberByEmail } from 'backend/pupil-store';
 import { londonDate, londonHour, addDays, pruneCutoff } from 'public/portal-utils';
 import { EMAIL_PROVIDER } from 'public/portal-constants';
 
-// Hourly. Acts only in the hour Settings.reminderSendHour names (London
-// time) and sends tomorrow's reminders. Safe to re-run: sent rows for the
-// day stop a second send.
+// Hourly. Each run sends the reminders for tomorrow's lessons that start in
+// this hour (London time), so a reminder goes out 24 hours before the
+// lesson. Lessons booked late (start hour already past) are picked up on
+// the next run. Safe to re-run: sent rows for the day stop a second send.
 export async function sendReminders() {
-  const { settings } = await loadSettings();
-  const hour = Number(settings.reminderSendHour);
-  if (londonHour() !== hour) return { ran: false, reason: 'Not the send hour' };
   const tomorrow = addDays(londonDate(), 1);
   try {
-    const summary = await remindersFor(tomorrow);
+    const summary = await remindersFor(tomorrow, { untilHour: londonHour() });
     console.log('[portal] reminders', JSON.stringify(summary));
     return summary;
   } catch (error) {

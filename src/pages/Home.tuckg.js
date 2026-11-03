@@ -45,6 +45,9 @@ $w.onReady(async function () {
 
     await slots[i].hide('fade', { duration: 400 });
     slots[i].src = next;
+    // Give the new picture time to arrive while the slot is hidden, so it
+    // never fades back in showing the old one.
+    await new Promise((resolve) => setTimeout(resolve, 900));
     await slots[i].show('fade', { duration: 400 });
   }, 4000);
 });

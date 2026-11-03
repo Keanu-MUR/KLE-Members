@@ -8,21 +8,24 @@ import { esc } from './portal-base.js';
 export const LESSON_STYLE = `
 .day { margin: 20px 0 0; }
 .day-name { display: block; font-family: var(--font-head); font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; font-size: 15px; color: var(--ink); border-bottom: 2px dashed var(--ink); padding: 0 0 4px; margin: 0 0 12px; }
-.lesson { display: flex; gap: 16px; align-items: flex-start; background: var(--paper); border: 2px solid var(--ink); padding: 12px 14px; margin: 0 0 12px; text-decoration: none; color: inherit; }
+.lesson { display: grid; grid-template-columns: auto 1fr; column-gap: 16px; row-gap: 6px; align-items: start; background: var(--paper); border: 2px solid var(--ink); padding: 12px 14px; margin: 0 0 12px; text-decoration: none; color: inherit; }
 a.lesson:hover { border-color: var(--accent); }
 .lesson-when { flex: 0 0 auto; min-width: 104px; }
 .lesson-date { display: block; color: var(--muted); margin: 0 0 2px; }
 .lesson-time { font-family: var(--font-head); font-weight: 700; font-size: 26px; line-height: 1; letter-spacing: 0.01em; }
-.lesson-body { flex: 1 1 auto; min-width: 0; }
+.lesson-body { min-width: 0; }
+.lesson-more { grid-column: 2; min-width: 0; }
+.lesson-more:empty { display: none; }
 .lesson-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
 .lesson-who { font-weight: 600; }
 .lesson-meta { color: var(--muted); }
-.lesson-summary { margin: 8px 0 0; white-space: pre-line; }
+.lesson-summary { margin: 6px 0 0; white-space: pre-line; }
 .week { margin: 32px 0 12px; }
 @media (max-width: 599px) {
-  .lesson { gap: 12px; padding: 10px 12px; }
-  .lesson-when { min-width: 92px; }
+  .lesson { column-gap: 12px; padding: 10px 12px; }
+  .lesson-when { min-width: 0; }
   .lesson-time { font-size: 22px; }
+  .lesson-more { grid-column: 1 / -1; }
 }
 `;
 
@@ -80,6 +83,8 @@ export function renderLessonRow(lesson, options) {
     '</div>' +
     '<div class="lesson-body">' +
     '<div class="lesson-top">' + (o.who ? '<span class="lesson-who">' + esc(o.who) + '</span>' : '<span></span>') + pill + '</div>' +
+    '</div>' +
+    '<div class="lesson-more">' +
     pickupChip(lesson.pickupLocation) +
     (o.summary && lesson.pupilSummary ? '<p class="lesson-summary">' + esc(lesson.pupilSummary) + '</p>' : '') +
     '</div>' +

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  lessonStartHour,
   reminderDecision,
   reminderVars,
   reminderText,
@@ -71,4 +72,12 @@ test('sendCounts tallies per channel and status', () => {
   ]);
   assert.deepEqual(counts.email, { sent: 2, failed: 1, skipped: 0 });
   assert.deepEqual(counts.whatsapp, { sent: 0, failed: 0, skipped: 1 });
+});
+
+test('lessonStartHour reads the slot or the custom time', () => {
+  assert.equal(lessonStartHour({ slot: 'late-morning' }), 10);
+  assert.equal(lessonStartHour({ slot: 'early-afternoon' }), 12);
+  assert.equal(lessonStartHour({ slot: 'custom', startTime: '18:45', durationMins: 60 }), 18);
+  assert.equal(lessonStartHour({ slot: 'custom', startTime: '', durationMins: 60 }), null);
+  assert.equal(lessonStartHour({}), null);
 });

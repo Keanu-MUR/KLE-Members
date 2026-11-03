@@ -7,7 +7,7 @@ import wixData from 'wix-data';
 import { loadSettings } from 'backend/settings';
 import { queryLessons, shapeLesson, pupilNames, fullName } from 'backend/lesson-store';
 import { sendEmail, sendWhatsApp } from 'backend/messaging';
-import { reminderDecision, reminderVars, reminderText, waMeLink, londonDate, addDays } from 'public/portal-utils';
+import { reminderDecision, reminderVars, reminderText, waMeLink, londonDate, addDays, lessonStartHour } from 'public/portal-utils';
 import { LESSON_STATUS, CHANNEL, SEND_STATUS, EMAIL_PROVIDER, TEMPLATES } from 'public/portal-constants';
 
 // The probe job writes rows with this lessonId; the latest one says whether
@@ -92,10 +92,16 @@ export async function sendLessonReminder(lesson, pupil, settings, channels, over
 
 // The run for one date (normally tomorrow): decides per lesson and channel,
 // sends, and returns a summary. Idempotent through the SendLog rows written
-// since the start of today.
-export async function remindersFor(dateIso) {
+// since the start of today. options.untilHour limits it to lessons that
+// start at or before that hour, which is how the hourly job sends each
+// reminder 24 hours ahead.
+export async function remindersFor(dateIso, options) {
+  const o = options || {};
   const { settings } = await loadSettings();
-  const lessons = await queryLessons({ from: dateIso, to: dateIso, status: LESSON_STATUS.PLANNED, limit: 100 });
+  const all = await queryLessons({ from: dateIso, to: dateIso, status: LESSON_STATUS.PLANNED, limit: 100 });
+  const lessons = Number.isInteger(o.untilHour)
+    ? all.filter((l) => { const h = lessonStartHour(l); return h !== null && h <= o.untilHour; })
+    : all;
   const pupils = await pupilsById(lessons.map((l) => l.pupilId));
   const todayStart = londonDate() + 'T00:00:00.000Z';
   const rows = await sendRowsFor(lessons.map((l) => l._id), todayStart);
@@ -110,11 +116,17 @@ export async function remindersFor(dateIso) {
       email: mine.some((r) => r.channel === CHANNEL.EMAIL && r.status === SEND_STATUS.SENT),
       whatsapp: mine.some((r) => r.channel === CHANNEL.WHATSAPP && r.status === SEND_STATUS.SENT)
     };
+    // The job now runs for the same lesson every hour of the day, so a skip
+    // is recorded once a day, not once an hour.
+    const skippedToday = {
+      email: mine.some((r) => r.channel === CHANNEL.EMAIL && r.status === SEND_STATUS.SKIPPED),
+      whatsapp: mine.some((r) => r.channel === CHANNEL.WHATSAPP && r.status === SEND_STATUS.SKIPPED)
+    };
     const decision = reminderDecision(settings, pupil, lesson, already);
     const context = { pupilId: pupil._id, lessonId: lesson._id };
     // Skips are logged too, so the Tomorrow's reminders page can say why.
     for (const channel of ['email', 'whatsapp']) {
-      if (decision[channel] === 'skip' && decision.reasons[channel] !== 'Already sent today') {
+      if (decision[channel] === 'skip' && decision.reasons[channel] !== 'Already sent today' && !skippedToday[channel]) {
         await writeSkip(context, channel, decision.reasons[channel]);
         summary.skipped += 1;
       }

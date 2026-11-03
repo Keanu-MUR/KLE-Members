@@ -7,9 +7,6 @@ import { PortalElement, esc, FEATURES } from './portal-base.js';
 const RECORD_WORDS = { Pupils: 'Pupils', Lessons: 'Lessons', Progress: 'Progress', MockTests: 'Mock tests', Payments: 'Payments', Enquiries: 'Enquiries', Messages: 'Messages', Settings: 'Settings', SendLog: 'Sent reminders', RateLimit: 'Send limits' };
 const recordWords = (name) => RECORD_WORDS[name] || name;
 
-const HOURS = [];
-for (let h = 6; h <= 20; h += 1) HOURS.push(h);
-
 class KleSettings extends PortalElement {
   extraStyle() {
     return `
@@ -49,11 +46,9 @@ select { appearance: auto; }
       '<h1>Settings</h1>' +
       '<form id="form" novalidate>' +
       '<h2>Reminders</h2>' +
-      this.checkbox({ id: 'emailRemindersOn', label: 'Email reminders the day before a lesson', checked: s.emailRemindersOn }) +
+      this.checkbox({ id: 'emailRemindersOn', label: 'Email reminders 24 hours before each lesson', checked: s.emailRemindersOn }) +
       (FEATURES.whatsApp ? this.checkbox({ id: 'whatsAppRemindersOn', label: 'WhatsApp reminders the day before a lesson', checked: s.whatsAppRemindersOn, consent: 'Needs the Meta token and phone number ID in the Secrets Manager. Until then every WhatsApp reminder is recorded as skipped.' }) : '') +
-      '<div class="field" id="f-reminderSendHour"><label for="reminderSendHour">Send at (London time)</label><select id="reminderSendHour" name="reminderSendHour">' +
-      HOURS.map((h) => '<option value="' + h + '"' + (Number(s.reminderSendHour) === h ? ' selected' : '') + '>' + String(h).padStart(2, '0') + ':00</option>').join('') +
-      '</select><p class="hint">Changes to the send time start from the next hour.</p></div>' +
+      '<p class="hint">Each reminder goes out in the hour the lesson starts, the day before. A lesson booked with less than a day to go gets its reminder within the hour.</p>' +
       '<h2>Enquiry alerts</h2>' +
       this.checkbox({ id: 'enquiryAlertEmailOn', label: 'Email me each new enquiry', checked: s.enquiryAlertEmailOn }) +
       (FEATURES.whatsApp ? this.checkbox({ id: 'enquiryAlertWhatsAppOn', label: 'WhatsApp me each new enquiry', checked: s.enquiryAlertWhatsAppOn }) : '') +

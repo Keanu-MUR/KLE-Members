@@ -68,7 +68,7 @@ class KleReminders extends PortalElement {
     const items = data.items;
     this.setMain(
       '<h1>Tomorrow’s reminders</h1>' +
-      '<p class="muted">' + esc(dayWords(data.tomorrow, true)) + '. Reminders go out at ' + String(data.settings.reminderSendHour).padStart(2, '0') + ':00.' +
+      '<p class="muted">' + esc(dayWords(data.tomorrow, true)) + '. Each reminder goes out 24 hours before the lesson.' +
       (data.settings.emailRemindersOn ? '' : ' Email reminders are off.') + (data.settings.whatsAppRemindersOn || !FEATURES.whatsApp ? '' : ' WhatsApp reminders are off.') + '</p>' +
       '<div id="status" aria-live="polite"></div>' +
       (items.length ? items.map((item) =>

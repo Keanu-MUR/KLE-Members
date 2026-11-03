@@ -6,7 +6,7 @@ import { PortalElement, esc, FEATURES } from './portal-base.js';
 
 const ENDPOINT = '/_functions/enquire';
 const TAUGHT = ['SE1', 'SE4', 'SE8', 'SE10', 'SE14', 'SE15', 'SE16'];
-const CONTACT_NOTE = 'I’ll reply by email within a day. Once your lessons are booked, you’ll get an email the day before each one.';
+const CONTACT_NOTE = 'I’ll reply by email within a day. Once your lessons are booked, you’ll get an email 24 hours before each one.';
 const AREA_NOTE = 'I mostly teach in SE1, SE4, SE8, SE10, SE14, SE15 and SE16. Send it anyway and I’ll let you know.';
 
 function outward(postcode) {
