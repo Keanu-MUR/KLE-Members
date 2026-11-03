@@ -131,6 +131,10 @@ How it works (`public/custom-elements/portal-shell.js`):
 - The old one-section pages (Pupil home, My lessons, My progress, My mock tests, My details, Lessons, Pupils, Pupil record, Enquiries, Progress editor, Settings, Tomorrow's reminders, Send log) were deleted from the Editor on 2 Nov 2026 and their page code files removed; their old URLs now 404. `PORTAL_PATHS` points at the new locations. `public/portal-redirect.js` stays for any page that needs to send visitors into the portal (`/instructor?s=lessons&id=abc`, because `wixLocation.to()` drops a hash; the shell folds `?s=` into the hash on mount).
 - Every element file guards its `customElements.define`, because an old page's bundle defines its element before the redirect and the shell's bundle then loads the same file again on the next page.
 
+## Site header on the portal pages (3 Nov 2026)
+
+The two portal pages collapse the Wix site header (`$w('#SITE_HEADER').collapse()` in `mountPortal`, `hideSiteHeader: true` in their page modules) because the shell draws its own KLE Driving header and the site header's Pupil login button made no sense to someone already logged in. The site footer stays. Login and Enquire keep the site header.
+
 ## Phase 5 actions (2 Nov 2026)
 
 Settings section: `latestBackupLinks`, `runExport`, `exportCollection(name)`, `runCompactionNow` in `backend/portal-settings.jsw`. Pupil record: `linkGuardian(id, email)`, `unlinkGuardian(id)`, `sendGuardianLoginLink(id)`, `exportPupil(id)`, `deletePupil(id, confirmName)` in `backend/pupils.jsw`. Jobs: `exportBackup` weekly (Monday 02:00 UTC), compaction inside the nightly `pruneLogs`. Backup files live in the Media Manager under `/portal-backups/<date>/` as private documents; the list is `Settings.backups`. See PLAN-phase5.md and HANDOVER.md.

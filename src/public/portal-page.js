@@ -43,6 +43,16 @@ const LOGGED_OUT = { loggedIn: false, role: ROLES.NONE, pupilId: null, firstName
 
 export async function mountPortal($w, selector, config) {
   const element = $w(selector);
+  // The portal pages draw their own KLE Driving header, so the site's
+  // header (with its Pupil login button) is collapsed there. Done on the
+  // server render too, so it never flashes.
+  if (config.hideSiteHeader) {
+    try {
+      $w('#SITE_HEADER').collapse();
+    } catch (error) {
+      console.warn('[portal] could not collapse the site header', error && error.message ? error.message : error);
+    }
+  }
   const actions = Object.assign(builtInActions(config, () => route(element, config)), config.actions || {});
 
   // The element re-sends its first request if no reply has arrived after a

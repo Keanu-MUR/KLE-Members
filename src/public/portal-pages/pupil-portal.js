@@ -6,6 +6,7 @@ import { mountPortal } from 'public/portal-page';
 export function init($w, backend) {
   return mountPortal($w, '#portal', {
     page: 'pupil-portal',
+    hideSiteHeader: true,
     getSession: backend.getSession,
     actions: {
       getPupilHome: () => backend.getPupilHome(),
