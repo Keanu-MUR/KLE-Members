@@ -1,7 +1,7 @@
 // <kle-settings>: the instructor's switches, contact details, reminder
 // hour, retention windows with the item counts, and the reminder test.
 
-import { PortalElement, esc } from './portal-base.js';
+import { PortalElement, esc, FEATURES } from './portal-base.js';
 
 const HOURS = [];
 for (let h = 6; h <= 20; h += 1) HOURS.push(h);
@@ -46,19 +46,19 @@ select { appearance: auto; }
       '<form id="form" novalidate>' +
       '<h2>Reminders</h2>' +
       this.checkbox({ id: 'emailRemindersOn', label: 'Email reminders the day before a lesson', checked: s.emailRemindersOn }) +
-      this.checkbox({ id: 'whatsAppRemindersOn', label: 'WhatsApp reminders the day before a lesson', checked: s.whatsAppRemindersOn, consent: 'Needs the Meta token and phone number ID in the Secrets Manager; until then every WhatsApp send is logged as skipped.' }) +
+      (FEATURES.whatsApp ? this.checkbox({ id: 'whatsAppRemindersOn', label: 'WhatsApp reminders the day before a lesson', checked: s.whatsAppRemindersOn, consent: 'Needs the Meta token and phone number ID in the Secrets Manager; until then every WhatsApp send is logged as skipped.' }) : '') +
       '<div class="field" id="f-reminderSendHour"><label for="reminderSendHour">Send at (London time)</label><select id="reminderSendHour" name="reminderSendHour">' +
       HOURS.map((h) => '<option value="' + h + '"' + (Number(s.reminderSendHour) === h ? ' selected' : '') + '>' + String(h).padStart(2, '0') + ':00</option>').join('') +
       '</select><p class="hint">The job checks once an hour, so a new hour takes effect from its next pass.</p></div>' +
       '<h2>Enquiry alerts</h2>' +
       this.checkbox({ id: 'enquiryAlertEmailOn', label: 'Email me each new enquiry', checked: s.enquiryAlertEmailOn }) +
-      this.checkbox({ id: 'enquiryAlertWhatsAppOn', label: 'WhatsApp me each new enquiry', checked: s.enquiryAlertWhatsAppOn }) +
+      (FEATURES.whatsApp ? this.checkbox({ id: 'enquiryAlertWhatsAppOn', label: 'WhatsApp me each new enquiry', checked: s.enquiryAlertWhatsAppOn }) : '') +
       '<h2>Email</h2>' +
       this.radios({ name: 'emailProvider', legend: 'Send emails with', value: s.emailProvider, options: [{ value: 'wix', label: 'Wix (default)' }, { value: 'resend', label: 'Resend' }] }) +
       '<p class="hint">' + probeLine + '</p>' +
       '<h2>My contact details</h2>' +
       this.field({ id: 'instructorEmail', label: 'Email for alerts', type: 'email', value: s.instructorEmail, autocomplete: 'email' }) +
-      this.field({ id: 'instructorWhatsApp', label: 'WhatsApp number', type: 'tel', value: s.instructorWhatsApp, hint: 'For enquiry alerts and the reminder test. Leave empty to skip WhatsApp.' }) +
+      (FEATURES.whatsApp ? this.field({ id: 'instructorWhatsApp', label: 'WhatsApp number', type: 'tel', value: s.instructorWhatsApp, hint: 'For enquiry alerts and the reminder test. Leave empty to skip WhatsApp.' }) : '') +
       '<h2>Lessons</h2>' +
       this.field({ id: 'hourlyRatePounds', label: 'Default hourly rate for new pupils (£)', type: 'number', inputmode: 'decimal', value: (Number(s.defaultHourlyRatePence) / 100).toFixed(2) }) +
       '<h2>Data</h2>' +
@@ -84,13 +84,13 @@ select { appearance: auto; }
       '<div id="export-status" aria-live="polite"></div>' +
       '<hr class="road">' +
       '<h2>Test a reminder</h2>' +
-      '<p class="muted">Sends tomorrow-style reminders for one lesson to the email and phone below, logged like any other send. Reminders from the job currently use ' + esc(upcoming.provider === 'resend' ? 'Resend' : 'Wix emails') + '.</p>' +
+      '<p class="muted">Sends tomorrow-style reminders for one lesson to the ' + (FEATURES.whatsApp ? 'email and phone' : 'email') + ' below, logged like any other send. Reminders from the job currently use ' + esc(upcoming.provider === 'resend' ? 'Resend' : 'Wix emails') + '.</p>' +
       '<form id="test" novalidate>' +
       '<div class="field" id="f-lessonId"><label for="lessonId">Lesson</label><select id="lessonId" name="lessonId">' +
       (upcoming.lessons.length ? upcoming.lessons.map((l) => '<option value="' + esc(l._id) + '">' + esc(l.label) + '</option>').join('') : '<option value="">No planned lessons to test with</option>') +
       '</select></div>' +
       this.field({ id: 'testEmail', name: 'email', label: 'Send the email to', type: 'email', value: upcoming.defaults.email || '' }) +
-      this.field({ id: 'testPhone', name: 'phone', label: 'Send the WhatsApp to', type: 'tel', value: upcoming.defaults.phone || '', hint: 'Leave empty to test email only.' }) +
+      (FEATURES.whatsApp ? this.field({ id: 'testPhone', name: 'phone', label: 'Send the WhatsApp to', type: 'tel', value: upcoming.defaults.phone || '', hint: 'Leave empty to test email only.' }) : '') +
       '<div id="test-status" aria-live="polite"></div>' +
       '<div class="actions"><button class="btn btn-primary" type="submit">Send test</button><button class="btn btn-text" type="button" id="run-prune">Run the clean-up now</button></div>' +
       '</form>'

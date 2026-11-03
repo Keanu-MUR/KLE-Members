@@ -2,7 +2,7 @@
 // also hosts the one-off setup panel that creates the collections and the
 // Settings item, which only appears while something is missing.
 
-import { PortalElement, esc } from './portal-base.js';
+import { PortalElement, esc, FEATURES } from './portal-base.js';
 import { LESSON_STYLE, renderLessonRow } from './lesson-list.js';
 
 class KleInstructorDashboard extends PortalElement {
@@ -61,12 +61,12 @@ class KleInstructorDashboard extends PortalElement {
       '<span class="stat-n' + (cls ? ' ' + cls : '') + '">' + n + '</span><span class="stat-l">' + label + '</span>' + (href ? '</a>' : '</div>');
     const off = [];
     if (!r.emailOn) off.push('email');
-    if (!r.whatsAppOn) off.push('WhatsApp');
+    if (FEATURES.whatsApp && !r.whatsAppOn) off.push('WhatsApp');
     return '<div class="stats">' +
       stat(sent, 'Sent today', '', '') +
       stat(failed, 'Failed today', failed ? 'bad' : '', failed ? '/send-log' : '') +
       stat(yesterday, 'Sent yesterday', '', '') +
-      stat(r.today.whatsapp.skipped || 0, 'WhatsApp skipped today', '', '') +
+      (FEATURES.whatsApp ? stat(r.today.whatsapp.skipped || 0, 'WhatsApp skipped today', '', '') : '') +
       '</div>' + (off.length ? '<p class="muted">' + esc(off.join(' and ')) + ' reminders are off.</p>' : '');
   }
 

@@ -176,6 +176,11 @@ export const PAYMENT_METHOD = {
 export const ENQUIRY_STATUS = { NEW: 'new', REPLIED: 'replied', CONVERTED: 'converted', CLOSED: 'closed' };
 export const PREFERRED_CONTACT = { PHONE: 'phone', EMAIL: 'email', WHATSAPP: 'whatsapp' };
 export const CHANNEL = { EMAIL: 'email', WHATSAPP: 'whatsapp' };
+
+// Feature switches. WhatsApp is built end to end but hidden from every screen
+// and email since 3 Nov 2026 at the owner's request; set to true to show it
+// again. Keep in step with FEATURES in custom-elements/portal-base.js.
+export const FEATURES = { whatsApp: false };
 export const SEND_STATUS = { SENT: 'sent', FAILED: 'failed', SKIPPED: 'skipped' };
 export const EMAIL_PROVIDER = { WIX: 'wix', RESEND: 'resend' };
 
@@ -201,9 +206,9 @@ export const TEMPLATES = {
   newEnquiry:
     'New enquiry from {name}, {postcode}, {transmission}, prefers {preferredContact}. Reply from the portal.',
   enquiryConfirmation:
-    'Thanks {firstName}. I have your enquiry and will be in touch by {preferredContact} within a day. If you need me sooner, message me on WhatsApp.',
+    'Thanks {firstName}. I have your enquiry and will be in touch by {preferredContact} within a day.' + (FEATURES.whatsApp ? ' If you need me sooner, message me on WhatsApp.' : ''),
   enquiryReplyDefault:
-    'Hi {firstName},\n\nThanks for getting in touch about {transmission} lessons. PLACEHOLDER: the instructor’s standard first-lesson paragraph goes here (what to bring, where we meet, the taster lesson and price).\n\nReply to this email or message me on WhatsApp to book a first lesson.',
+    'Hi {firstName},\n\nThanks for getting in touch about {transmission} lessons. PLACEHOLDER: the instructor’s standard first-lesson paragraph goes here (what to bring, where we meet, the taster lesson and price).\n\nReply to this email' + (FEATURES.whatsApp ? ' or message me on WhatsApp' : '') + ' to book a first lesson.',
   enquiryRateLimited: 'That’s enough for now; I’ll be in touch about the ones you’ve sent.',
   whatsAppTemplateNames: { lessonReminder: 'lesson_reminder', newEnquiry: 'new_enquiry' }
 };

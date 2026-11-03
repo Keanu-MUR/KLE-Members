@@ -1,6 +1,6 @@
 // <kle-my-details>: the pupil's own contact details and reminder choices.
 
-import { PortalElement, esc } from './portal-base.js';
+import { PortalElement, esc, FEATURES } from './portal-base.js';
 
 class KleMyDetails extends PortalElement {
   onSession() {
@@ -35,7 +35,7 @@ class KleMyDetails extends PortalElement {
       f('emergencyContactName', 'Name') + f('emergencyContactPhone', 'Phone', { type: 'tel' }) +
       '<h2>Reminders</h2>' +
       this.checkbox({ id: 'reminderEmail', label: 'Email me the day before each lesson', checked: d.reminderEmail }) +
-      this.checkbox({ id: 'reminderWhatsApp', label: 'WhatsApp me the day before each lesson', checked: d.reminderWhatsApp }) +
+      (FEATURES.whatsApp ? this.checkbox({ id: 'reminderWhatsApp', label: 'WhatsApp me the day before each lesson', checked: d.reminderWhatsApp }) : '') +
       '<h2>Licence</h2>' +
       this.field({ id: 'licenceNumber', label: 'Licence number (optional)', value: d.licenceNumber, readOnly: true, hint: 'Ask me if this needs changing.' }) +
       this.field({ id: 'dateOfBirth', label: 'Date of birth (optional)', value: d.dateOfBirth, readOnly: true }) +

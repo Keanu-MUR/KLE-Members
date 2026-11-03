@@ -1,7 +1,7 @@
 // <kle-reminders>: tomorrow's lessons with the reminder status per channel,
 // Resend per channel, and the wa.me link for sending by hand.
 
-import { PortalElement, esc } from './portal-base.js';
+import { PortalElement, esc, FEATURES } from './portal-base.js';
 import { LESSON_STYLE, renderLessonRow, dayWords } from './lesson-list.js';
 
 function timeWords(iso) {
@@ -69,16 +69,16 @@ class KleReminders extends PortalElement {
     this.setMain(
       '<h1>Tomorrow’s reminders</h1>' +
       '<p class="muted">' + esc(dayWords(data.tomorrow, true)) + '. The job sends at ' + String(data.settings.reminderSendHour).padStart(2, '0') + ':00' +
-      (data.settings.emailRemindersOn ? '' : '; email reminders are off') + (data.settings.whatsAppRemindersOn ? '' : '; WhatsApp reminders are off') + '.</p>' +
+      (data.settings.emailRemindersOn ? '' : '; email reminders are off') + (data.settings.whatsAppRemindersOn || !FEATURES.whatsApp ? '' : '; WhatsApp reminders are off') + '.</p>' +
       '<div id="status" aria-live="polite"></div>' +
       (items.length ? items.map((item) =>
         '<div class="item" id="r-' + esc(item._id) + '">' +
         renderLessonRow(item, { href: '/lessons?id=' + item._id, who: item.pupilName }) +
         '<div class="channels">' +
         this.channelLine(item, 'email', 'Email', data.settings.emailRemindersOn) +
-        this.channelLine(item, 'whatsapp', 'WhatsApp', data.settings.whatsAppRemindersOn) +
+        (FEATURES.whatsApp ? this.channelLine(item, 'whatsapp', 'WhatsApp', data.settings.whatsAppRemindersOn) : '') +
         '</div>' +
-        '<div class="row-actions">' + (item.waMe ? '<a class="btn btn-text" href="' + esc(item.waMe) + '" target="_blank" rel="noopener">Send on WhatsApp by hand</a>' : '<span class="muted">No phone number for the WhatsApp fallback.</span>') + '</div>' +
+        (FEATURES.whatsApp ? '<div class="row-actions">' + (item.waMe ? '<a class="btn btn-text" href="' + esc(item.waMe) + '" target="_blank" rel="noopener">Send on WhatsApp by hand</a>' : '<span class="muted">No phone number for the WhatsApp fallback.</span>') + '</div>' : '') +
         '</div>'
       ).join('') : this.empty('Nothing booked for tomorrow.'))
     );

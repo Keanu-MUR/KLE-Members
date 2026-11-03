@@ -15,7 +15,7 @@ import wixData from 'wix-data';
 import { fetch } from 'wix-fetch';
 import { getSecret } from 'wix-secrets-backend';
 import { triggeredEmails, contacts } from 'wix-crm-backend';
-import { CHANNEL, SEND_STATUS, EMAIL_TEMPLATES, EMAIL_PROVIDER, SCHOOL } from 'public/portal-constants';
+import { CHANNEL, SEND_STATUS, EMAIL_TEMPLATES, EMAIL_PROVIDER, SCHOOL, FEATURES, TEMPLATES } from 'public/portal-constants';
 import { fillTemplate } from 'public/portal-utils';
 
 const SEND_TIMEOUT_MS = 10000;
@@ -99,7 +99,7 @@ const RESEND_BODIES = {
       'Hi ' + v.firstName + ',',
       'A reminder that your ' + v.transmission + ' driving lesson is tomorrow, ' + v.dateWords + ', ' + v.slotTime + '.',
       'Pick-up: ' + v.pickup + '.',
-      'Reply to this email or message me on WhatsApp if anything has changed.',
+      'Reply to this email' + (FEATURES.whatsApp ? ' or message me on WhatsApp' : '') + ' if anything has changed.',
       'Your lessons: ' + v.link
     ]
   }),
@@ -107,7 +107,7 @@ const RESEND_BODIES = {
     subject: 'Your enquiry to KLE Driving School',
     lines: [
       'Hi ' + v.firstName + ',',
-      fillTemplate('Thanks {firstName}. I have your enquiry and will be in touch by {preferredContact} within a day. If you need me sooner, message me on WhatsApp.', v)
+      fillTemplate(TEMPLATES.enquiryConfirmation, v)
     ]
   }),
   enquiryAlert: (v) => ({

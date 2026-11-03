@@ -2,7 +2,7 @@
 // with the last lessons, the progress summary, mock tests and the pupil's
 // messages underneath. Payments are deferred (2 Nov 2026).
 
-import { PortalElement, esc } from './portal-base.js';
+import { PortalElement, esc, FEATURES } from './portal-base.js';
 import { LESSON_STYLE, renderLessonRow, dayWords } from './lesson-list.js';
 import { MOCK_STYLE, renderMockTest } from './my-mock-tests.js';
 
@@ -72,7 +72,7 @@ class KlePupilRecord extends PortalElement {
       '<div id="guardian-login">' + this.guardianWords(p) + '</div>' +
       '<h2>Reminders</h2>' +
       this.checkbox({ id: 'reminderEmail', label: 'Email reminders', checked: p.reminderEmail }) +
-      this.checkbox({ id: 'reminderWhatsApp', label: 'WhatsApp reminders', checked: p.reminderWhatsApp, consent: p.whatsAppConsentAt ? 'Consent recorded ' + this.dateWords(p.whatsAppConsentAt, true) + '.' : 'No consent recorded yet.' }) +
+      (FEATURES.whatsApp ? this.checkbox({ id: 'reminderWhatsApp', label: 'WhatsApp reminders', checked: p.reminderWhatsApp, consent: p.whatsAppConsentAt ? 'Consent recorded ' + this.dateWords(p.whatsAppConsentAt, true) + '.' : 'No consent recorded yet.' }) : '') +
       '<h2>My notes</h2>' +
       this.textarea({ id: 'instructorNotes', label: 'Private notes', rows: 5, maxlength: 4000, value: p.instructorNotes, hint: 'Only you see these.' }) +
       '<div id="status" aria-live="polite"></div>' +

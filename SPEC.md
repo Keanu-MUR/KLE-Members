@@ -86,7 +86,7 @@ Portal pages are top-level pages on the existing site (Wix Editor page slugs can
 
 | Page | What it does |
 |---|---|
-| Enquire (/enquire) | Form: full name, email, phone, date of birth, address line 1, postcode, manual or automatic, preferred contact (phone / email / WhatsApp), message. Postcode is checked against the taught areas (SE1, SE4, SE8, SE10, SE14, SE15, SE16) and a soft note shown if outside. Submits to the backend, which writes Enquiries and alerts the instructor by email and WhatsApp at once. Confirmation on screen; confirmation email to the enquirer. Honeypot field and a simple rate limit against spam |
+| Enquire (/enquire) | Form: full name, email, phone, date of birth, address line 1, postcode, manual or automatic, preferred contact (phone / email / WhatsApp; since 3 Nov 2026 the question is replaced by a notice that the reply and lesson reminders come by email, and preferredContact is stored as email), message. Postcode is checked against the taught areas (SE1, SE4, SE8, SE10, SE14, SE15, SE16) and a soft note shown if outside. Submits to the backend, which writes Enquiries and alerts the instructor by email and WhatsApp at once. Confirmation on screen; confirmation email to the enquirer. Honeypot field and a simple rate limit against spam |
 | Login (/pupil-login) | Own-styled form calling Wix Members login; email + password, plus "email me a login link" (for now this sends Wix's set-password email, since Wix Members has no passwordless login; a true one-time link is a possible later upgrade). Redirects by role. "Not a pupil yet? Enquire" link |
 
 ### Pupil
@@ -121,7 +121,7 @@ Mobile first: the instructor uses this from a phone between lessons, so every in
 
 ## Messaging
 
-Two channels, email and WhatsApp, each with a master switch the instructor controls and a per-pupil opt-in. Nothing sends unless both are on; every attempt is logged; a channel failing never stops the other or the job.
+Two channels, email and WhatsApp, each with a master switch the instructor controls and a per-pupil opt-in. WhatsApp is built end to end but hidden from every screen and email since 3 Nov 2026 at the owner's request (FEATURES.whatsApp in public/portal-constants.js and custom-elements/portal-base.js; set both to true to show it again). Nothing sends unless both are on; every attempt is logged; a channel failing never stops the other or the job.
 
 ### Lesson reminders
 

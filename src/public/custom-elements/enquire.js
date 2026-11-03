@@ -2,10 +2,11 @@
 // HTTP function, which validates, rate-limits and stores the enquiry, then
 // asks the page to send the emails for it (one-time token).
 
-import { PortalElement, esc } from './portal-base.js';
+import { PortalElement, esc, FEATURES } from './portal-base.js';
 
 const ENDPOINT = '/_functions/enquire';
 const TAUGHT = ['SE1', 'SE4', 'SE8', 'SE10', 'SE14', 'SE15', 'SE16'];
+const CONTACT_NOTE = 'I’ll reply by email within a day. Once your lessons are booked, you’ll get an email the day before each one.';
 const AREA_NOTE = 'I mostly teach in SE1, SE4, SE8, SE10, SE14, SE15 and SE16. Send it anyway and I’ll let you know.';
 
 function outward(postcode) {
@@ -31,7 +32,9 @@ class KleEnquire extends PortalElement {
       this.field({ id: 'addressLine1', label: 'Address line 1', autocomplete: 'address-line1', required: true, maxlength: 120 }) +
       this.field({ id: 'postcode', label: 'Postcode', autocomplete: 'postal-code', required: true, maxlength: 10 }) +
       this.radios({ name: 'transmission', legend: 'Manual or automatic?', options: [{ value: 'manual', label: 'Manual' }, { value: 'automatic', label: 'Automatic' }] }) +
-      this.radios({ name: 'preferredContact', legend: 'How should I get in touch?', options: [{ value: 'phone', label: 'Phone' }, { value: 'email', label: 'Email' }, { value: 'whatsapp', label: 'WhatsApp' }] }) +
+      (FEATURES.whatsApp
+        ? this.radios({ name: 'preferredContact', legend: 'How should I get in touch?', options: [{ value: 'phone', label: 'Phone' }, { value: 'email', label: 'Email' }, { value: 'whatsapp', label: 'WhatsApp' }] })
+        : '<p class="notice">' + esc(CONTACT_NOTE) + '</p>') +
       this.textarea({ id: 'message', label: 'Anything else?', rows: 4, maxlength: 1000, hint: 'Optional. Days and times that suit you, or where you are with your theory.' }) +
       '<div class="hp" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off"></div>' +
       '<div id="status" aria-live="polite"></div>' +
@@ -73,6 +76,7 @@ class KleEnquire extends PortalElement {
 
   async submit(form) {
     const values = this.readForm(form);
+    if (!FEATURES.whatsApp) values.preferredContact = 'email'; // the form only promises email
     const errors = this.clientErrors(values);
     this.setErrors(form, errors);
     if (Object.keys(errors).length) return;

@@ -1,8 +1,8 @@
 // <kle-send-log>: send attempts with filters, newest first.
 
-import { PortalElement, esc } from './portal-base.js';
+import { PortalElement, esc, FEATURES } from './portal-base.js';
 
-const CHANNELS = [{ key: '', label: 'All channels' }, { key: 'email', label: 'Email' }, { key: 'whatsapp', label: 'WhatsApp' }];
+const CHANNELS = [{ key: '', label: 'All channels' }, { key: 'email', label: 'Email' }].concat(FEATURES.whatsApp ? [{ key: 'whatsapp', label: 'WhatsApp' }] : []);
 const STATUSES = [{ key: '', label: 'All' }, { key: 'sent', label: 'Sent' }, { key: 'failed', label: 'Failed' }, { key: 'skipped', label: 'Skipped' }];
 const DAYS = [7, 30, 90];
 

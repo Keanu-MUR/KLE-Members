@@ -242,6 +242,11 @@ export function esc(value) {
 
 export const WORDMARK = '<span class="brand" aria-label="KLE Driving"><span class="kle">KLE</span><span class="driving">Driving</span></span>';
 
+// Feature switches. WhatsApp is built end to end but hidden from every screen
+// since 3 Nov 2026 at the owner's request; set to true to show it again. Keep
+// in step with FEATURES in public/portal-constants.js.
+export const FEATURES = { whatsApp: false };
+
 export class PortalElement extends HTMLElement {
   constructor() {
     super();
