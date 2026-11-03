@@ -10,7 +10,7 @@ class KlePupilHome extends PortalElement {
   }
 
   onSession() {
-    this.setMain('<p class="muted">Loading your record.</p>');
+    this.setMain('<p class="muted">Loading…</p>');
     this.load();
   }
 
@@ -29,7 +29,7 @@ class KlePupilHome extends PortalElement {
     const n = m ? m[1] : '';
     const label = m ? m[2] : summary;
     return '<div class="stats"><a class="stat" href="/my-progress">' +
-      (n ? '<span class="stat-n">' + esc(n) + '</span>' : '') + '<span class="stat-l">' + esc(label) + '. See the driver’s record</span></a></div>';
+      (n ? '<span class="stat-n">' + esc(n) + '</span>' : '') + '<span class="stat-l">' + esc(label) + '. See your driver’s record</span></a></div>';
   }
 
   render(home) {
@@ -42,15 +42,15 @@ class KlePupilHome extends PortalElement {
       '<h2>Next lesson</h2>' +
       (home.nextLesson
         ? renderLessonRow(home.nextLesson, { showDate: true, href: '/my-lessons' })
-        : this.empty('Your next lesson will show here once it’s booked.')) +
+        : this.empty('No lessons booked yet. Message me to book one.')) +
       '<h2>Progress</h2>' +
       (home.progressSummary
         ? this.progressStat(home.progressSummary)
-        : this.empty('Your driver’s record will appear here after your first lesson.')) +
+        : this.empty('I’ll start your driver’s record after your first lesson.')) +
       '<h2>Latest note</h2>' +
       (latest
         ? '<div class="card"><span class="when">' + esc(dayWords(latest.date, true)) + '</span><p class="lesson-summary">' + esc(latest.pupilSummary) + '</p></div>'
-        : this.empty('My notes from your lessons will appear here.'))
+        : this.empty('After each lesson I’ll leave a note here on what we covered.'))
     );
   }
 }

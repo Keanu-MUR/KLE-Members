@@ -11,7 +11,7 @@ class KleInstructorDashboard extends PortalElement {
   }
 
   onSession() {
-    this.setMain('<p class="muted">Loading today.</p>');
+    this.setMain('<p class="muted">Loading…</p>');
     this.load();
   }
 
@@ -47,13 +47,13 @@ class KleInstructorDashboard extends PortalElement {
       ).join('') +
       '<h2>Reminders</h2>' +
       this.reminderWords(dash.reminders) +
-      '<div class="actions" style="margin-top:12px"><a class="btn" href="/reminders">Tomorrow’s reminders</a><a class="btn btn-text" href="/send-log">Send log</a></div>'
+      '<div class="actions" style="margin-top:12px"><a class="btn" href="/reminders">Tomorrow’s reminders</a><a class="btn btn-text" href="/send-log">Sent reminders</a></div>'
     );
     if (needsSetup) this.wireSetup(setup);
   }
 
   reminderWords(r) {
-    if (!r || !r.today) return this.empty('Sent and failed counts will show here once reminders are switched on.');
+    if (!r || !r.today) return this.empty('Reminder counts will show here once reminders are switched on.');
     const sent = (r.today.email.sent || 0) + (r.today.whatsapp.sent || 0);
     const failed = (r.today.email.failed || 0) + (r.today.whatsapp.failed || 0);
     const yesterday = (r.yesterday.email.sent || 0) + (r.yesterday.whatsapp.sent || 0);
@@ -73,19 +73,19 @@ class KleInstructorDashboard extends PortalElement {
   setupPanel(setup) {
     if (!setup.checked) {
       return (
-        '<div class="notice" role="status"><p>I couldn’t check the portal’s data collections. ' +
-        'Reload the page; if this keeps happening, create them by hand using docs/collections.md.</p></div>'
+        '<div class="notice" role="status"><p>Couldn’t check the portal’s data storage. ' +
+        'Reload the page. If that keeps happening, the storage needs setting up by hand (see docs/collections.md).</p></div>'
       );
     }
     const missingList = setup.missing.length
       ? '<p>Missing: ' + setup.missing.map(esc).join(', ') + '.</p>'
-      : '<p>All collections exist. The Settings record still needs creating.</p>';
+      : '<p>Storage is set up. The settings still need creating.</p>';
     return (
-      '<div class="notice" id="setup"><p>Before anything else, the portal’s data collections need creating. ' +
+      '<div class="notice" id="setup"><p>Before anything else, the portal needs its data storage set up. ' +
       'This runs once and is safe to repeat.</p>' + missingList +
       '<div id="setup-status" aria-live="polite"></div>' +
       '<div class="actions"><button class="btn btn-primary" type="button" id="setup-run">' +
-      (setup.missing.length ? 'Create collections' : 'Create settings') +
+      (setup.missing.length ? 'Set up storage' : 'Create settings') +
       '</button></div></div>'
     );
   }
@@ -96,7 +96,7 @@ class KleInstructorDashboard extends PortalElement {
     button.addEventListener('click', async () => {
       button.disabled = true;
       const status = this.$('#setup-status');
-      status.innerHTML = '<p class="muted">Working.</p>';
+      status.innerHTML = '<p class="muted">Working…</p>';
       const action = setup.missing.length ? 'createCollections' : 'ensureSettings';
       const result = await this.call(action);
       if (!result.ok) {
@@ -112,14 +112,14 @@ class KleInstructorDashboard extends PortalElement {
 
   setupSummary(action, data) {
     if (action === 'ensureSettings') {
-      return '<p>' + (data.created ? 'Settings created with defaults.' : 'Settings already existed.') + '</p>';
+      return '<p>' + (data.created ? 'Settings created.' : 'Settings were already there.') + '</p>';
     }
     const lines = [];
     if (data.created.length) lines.push('Created: ' + data.created.map(esc).join(', ') + '.');
     if (data.skipped.length) lines.push('Already there: ' + data.skipped.map(esc).join(', ') + '.');
-    if (data.settingsCreated) lines.push('Settings created with defaults.');
+    if (data.settingsCreated) lines.push('Settings created.');
     if (data.failed.length) {
-      lines.push('Could not create: ' + data.failed.map((f) => esc(f.id) + ' (' + esc(f.error) + ')').join('; ') + '.');
+      lines.push('Couldn’t create ' + data.failed.map((f) => esc(f.id) + ' (' + esc(f.error) + ')').join(', ') + '.');
     }
     return '<p>' + lines.join(' ') + '</p>';
   }

@@ -16,7 +16,7 @@ class KlePupils extends PortalElement {
   }
 
   onSession() {
-    this.setMain('<p class="muted">Loading pupils.</p>');
+    this.setMain('<p class="muted">Loading…</p>');
     this.load(true);
   }
 
@@ -70,7 +70,7 @@ class KlePupils extends PortalElement {
           '<td data-label="Postcode">' + esc(p.postcode || '') + '</td>' +
           '<td data-label="Status"><span class="pill pill-' + esc(p.status) + '">' + esc(p.status) + '</span></td></tr>'
         ).join('') + '</tbody></table>'
-      : this.empty(this.search ? 'No pupils match that.' : 'Pupils appear here when you convert an enquiry.');
+      : this.empty(this.search ? 'No pupils match that search.' : 'No pupils yet. Make someone a pupil from their enquiry and they’ll show here.');
   }
 }
 

@@ -44,7 +44,7 @@ class KleLogin extends PortalElement {
 
   renderForm() {
     this.setMain(
-      '<h1>Your lessons, your progress</h1>' +
+      '<h1>Log in to see your lessons</h1>' +
       '<form id="form" novalidate>' +
       '<div id="f-email"><label for="email">Email</label>' +
       '<input id="email" name="email" type="email" autocomplete="username" inputmode="email" required></div>' +
@@ -57,7 +57,7 @@ class KleLogin extends PortalElement {
       '</div>' +
       '</form>' +
       '<hr class="road">' +
-      '<p>Not a pupil yet? <a href="' + ENQUIRE_PATH + '">Enquire</a></p>'
+      '<p>Not a pupil yet? <a href="' + ENQUIRE_PATH + '">Send me an enquiry</a></p>'
     );
     this.$('#form').addEventListener('submit', (event) => {
       event.preventDefault();
@@ -68,8 +68,8 @@ class KleLogin extends PortalElement {
 
   renderNotLinked() {
     this.setMain(
-      '<h1>Your lessons, your progress</h1>' +
-      '<p>You are logged in, but this account isn’t linked to a pupil yet. Message me and I’ll sort it.</p>' +
+      '<h1>Nearly there</h1>' +
+      '<p>You’re logged in, but I haven’t linked this login to a pupil yet. Message me and I’ll sort it.</p>' +
       '<div class="actions"><button class="btn btn-text" type="button" id="logout">Log out</button></div>'
     );
     this.$('#logout').addEventListener('click', async () => {
@@ -146,7 +146,7 @@ class KleLogin extends PortalElement {
     }
     this.setStatus(
       '<div class="notice" role="status">If ' + esc(email.value) +
-      ' belongs to a pupil, an email with a link is on its way. Check your spam folder if it hasn’t arrived in a few minutes.</div>'
+      ' is one of my pupils, I’ve emailed a login link there. Check your spam folder if it hasn’t arrived in a few minutes.</div>'
     );
   }
 }

@@ -38,7 +38,7 @@ export async function getProgress(pupilId) {
   return run(async () => {
     await requireInstructor();
     const pupil = await getPupilById(pupilId);
-    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    if (!pupil) throw new PortalError('I can’t find that pupil.', 'not-found');
     return payload(pupil, await loadProgress(pupil._id));
   });
 }
@@ -49,7 +49,7 @@ export async function setSkill(pupilId, skillKey, level, note) {
   return run(async () => {
     await requireInstructor();
     const pupil = await getPupilById(pupilId);
-    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    if (!pupil) throw new PortalError('I can’t find that pupil.', 'not-found');
     const checked = validateSkill(skillKey, level, note, pupil.transmission);
     if (!checked.ok) throw new PortalError(checked.errors.skillKey || checked.errors.level);
 

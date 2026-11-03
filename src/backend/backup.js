@@ -86,8 +86,8 @@ export async function runBackup() {
   }
 
   const summary = error
-    ? 'Backup failed on ' + date + ': ' + error
-    : files.length + ' files, ' + items + ' items, ' + date;
+    ? 'Backup failed on ' + date + '. ' + error
+    : files.length + ' files, ' + items + ' records, ' + date;
   try {
     await notify(settings, summary);
   } catch (err) {

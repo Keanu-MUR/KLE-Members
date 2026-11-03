@@ -148,7 +148,7 @@ function builtInActions(config, reroute) {
       try {
         await authentication.login(String(payload.email || ''), String(payload.password || ''));
       } catch (error) {
-        return { ok: false, error: 'That email and password don’t match.' };
+        return { ok: false, error: 'That email and password don’t match. Try again, or use Email me a login link.' };
       }
       const stayed = await reroute();
       return { ok: true, data: { redirected: !stayed } };

@@ -46,7 +46,7 @@ export async function getLesson(id) {
     const pupils = await activePupils();
     if (!id || id === 'new') return { lesson: null, pupils };
     const item = await getLessonById(id);
-    if (!item) throw new PortalError('That lesson was not found.', 'not-found');
+    if (!item) throw new PortalError('I can’t find that lesson.', 'not-found');
     const names = await pupilNames([item.pupilId]);
     return {
       lesson: Object.assign(shapeLesson(item), { pupilName: fullName(names[item.pupilId]) }),
@@ -59,7 +59,7 @@ async function checkedLesson(fields, excludeId) {
   const checked = validateLesson(fields);
   if (!checked.ok) return { errors: checked.errors };
   const pupil = await getPupilById(checked.data.pupilId);
-  if (!pupil) return { errors: { pupilId: 'That pupil record was not found.' } };
+  if (!pupil) return { errors: { pupilId: 'I can’t find that pupil.' } };
   if (checked.data.status === LESSON_STATUS.PLANNED) {
     const clash = await findClash(checked.data, excludeId);
     if (clash) {
@@ -85,7 +85,7 @@ export async function updateLesson(id, fields) {
   return run(async () => {
     await requireInstructor();
     const item = await getLessonById(id);
-    if (!item) throw new PortalError('That lesson was not found.', 'not-found');
+    if (!item) throw new PortalError('I can’t find that lesson.', 'not-found');
     const result = await checkedLesson(Object.assign({}, shapeLesson(item), fields || {}), item._id);
     if (result.errors) return { saved: false, errors: result.errors };
     const updated = await wixData.update('Lessons', Object.assign({}, item, result.data), { suppressAuth: true });

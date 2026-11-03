@@ -16,7 +16,7 @@ class KleProgressEditor extends PortalElement {
       this.setMain('<h1>Progress</h1>' + this.empty('Open a pupil from the Pupils list and choose Edit progress.'));
       return;
     }
-    this.setMain('<p class="muted">Loading the driver’s record.</p>');
+    this.setMain('<p class="muted">Loading…</p>');
     this.load(id);
   }
 
@@ -34,9 +34,9 @@ class KleProgressEditor extends PortalElement {
     const s = this.state;
     const pupil = s.pupil;
     this.setMain(
-      '<p><a href="/pupil-record?id=' + esc(pupil._id) + '">Back to the record</a></p>' +
+      '<p><a href="/pupil-record?id=' + esc(pupil._id) + '">Back to pupil</a></p>' +
       '<h1>' + esc(pupil.firstName + ' ' + pupil.lastName) + '</h1>' +
-      '<p class="muted">' + esc(pupil.transmission === 'automatic' ? 'Automatic. ' : 'Manual. ') + 'Tap a block to set the level; it saves straight away.</p>' +
+      '<p class="muted">' + esc(pupil.transmission === 'automatic' ? 'Automatic. ' : 'Manual. ') + 'Tap a square to set the level. It saves straight away.</p>' +
       '<p class="record-summary" id="summary">' + esc(s.summary || 'Nothing set yet.') + '</p>' +
       '<div class="save-status" id="save-status" aria-live="polite"></div>' +
       renderLegend(s.levels) +
@@ -88,7 +88,7 @@ class KleProgressEditor extends PortalElement {
 
   async saveSkill(skillKey, level, note) {
     const status = this.$('#save-status');
-    status.textContent = 'Saving.';
+    status.textContent = 'Saving…';
     const result = await this.call('setSkill', { id: this.state.pupil._id, skillKey, level, note });
     if (!result.ok) {
       status.innerHTML = this.failure(result);

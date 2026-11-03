@@ -14,7 +14,7 @@ class KleMyLessons extends PortalElement {
   }
 
   onSession() {
-    this.setMain('<p class="muted">Loading your lessons.</p>');
+    this.setMain('<p class="muted">Loading…</p>');
     this.load();
   }
 
@@ -43,20 +43,20 @@ class KleMyLessons extends PortalElement {
       '<h2>Upcoming</h2>' +
       (data.upcoming.length
         ? data.upcoming.map((l) => renderLessonRow(l, { showDate: true })).join('')
-        : this.empty('Your next lesson will show here once it’s booked.')) +
+        : this.empty('No lessons booked yet. Message me to book one.')) +
       (guardian ? '' :
-        '<div class="actions"><button class="btn btn-text" type="button" id="change">Request a change</button></div>' +
+        '<div class="actions"><button class="btn btn-text" type="button" id="change">Ask to change a lesson</button></div>' +
         '<form id="change-form" novalidate hidden>' +
-        this.textarea({ id: 'body', label: 'What needs to change?', rows: 4, maxlength: 2000, hint: 'Lesson times, pick-up, or anything else. I read these between lessons.' }) +
+        this.textarea({ id: 'body', label: 'What needs to change?', rows: 4, maxlength: 2000, hint: 'Times, pick-up, or anything else. I read these between lessons.' }) +
         '<div id="change-status" aria-live="polite"></div>' +
-        '<div class="actions"><button class="btn btn-primary" type="submit">Send</button><button class="btn btn-text" type="button" id="change-cancel">Cancel</button></div>' +
+        '<div class="actions"><button class="btn btn-primary" type="submit">Send message</button><button class="btn btn-text" type="button" id="change-cancel">Cancel</button></div>' +
         '</form>') +
       '<h2>Past</h2>' +
       (data.past.length
         ? data.past.map((l) => renderLessonRow(l, { showDate: true, withYear: true, summary: true })).join('')
-        : this.empty('Past lessons and my notes on them will appear here.')) +
+        : this.empty('No past lessons yet. After each one you’ll see my notes here.')) +
       historyLines +
-      (guardian ? '' : '<h2>Messages</h2><div id="messages"><p class="muted">Loading.</p></div>')
+      (guardian ? '' : '<h2>Messages</h2><div id="messages"><p class="muted">Loading…</p></div>')
     );
     if (guardian) return;
     this.loadMessages();
@@ -91,7 +91,7 @@ class KleMyLessons extends PortalElement {
       this.$('#change-status').innerHTML = this.failure(result);
       return;
     }
-    form.innerHTML = '<div class="notice" role="status">Sent. My reply will show here.</div>';
+    form.innerHTML = '<div class="notice" role="status">Sent. I’ll reply here.</div>';
     this.loadMessages();
   }
 
@@ -113,7 +113,7 @@ class KleMyLessons extends PortalElement {
           : '<p class="muted">No reply yet.</p>') +
         '</div>'
       ).join('')
-      : this.empty('Messages you send me, and my replies, will show here.');
+      : this.empty('No messages yet. Anything you send me, and my replies, will show here.');
   }
 }
 

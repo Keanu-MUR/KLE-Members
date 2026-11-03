@@ -117,7 +117,7 @@ export async function notifyEnquiry(enquiry, data) {
 export async function handleEnquiry(body, ip) {
   const now = new Date();
   const checked = validateEnquiry(body);
-  if (!checked.ok) return { ok: false, error: 'Please check the highlighted fields.', errors: checked.errors };
+  if (!checked.ok) return { ok: false, error: 'Check the highlighted fields.', errors: checked.errors };
   if (checked.bot) return { ok: true, data: { firstName: '', preferredContact: '', outsideArea: false } };
 
   const limit = await checkRateLimit(ip || 'unknown', now);

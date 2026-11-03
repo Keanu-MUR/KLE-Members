@@ -202,14 +202,14 @@ export const COLLECTIONS = [
 // it here means re-approval.
 export const TEMPLATES = {
   lessonReminder:
-    'Hi {firstName}, reminder: your {transmission} driving lesson is tomorrow, {dateWords}, {slotTime}. Pick-up: {pickup}. Reply here if anything has changed.',
+    'Hi {firstName}, your {transmission} lesson is tomorrow, {dateWords}, {slotTime}. Pick-up: {pickup}. Reply if anything has changed.',
   newEnquiry:
     'New enquiry from {name}, {postcode}, {transmission}, prefers {preferredContact}. Reply from the portal.',
   enquiryConfirmation:
     'Thanks {firstName}. I have your enquiry and will be in touch by {preferredContact} within a day.' + (FEATURES.whatsApp ? ' If you need me sooner, message me on WhatsApp.' : ''),
   enquiryReplyDefault:
     'Hi {firstName},\n\nThanks for getting in touch about {transmission} lessons. PLACEHOLDER: the instructor’s standard first-lesson paragraph goes here (what to bring, where we meet, the taster lesson and price).\n\nReply to this email' + (FEATURES.whatsApp ? ' or message me on WhatsApp' : '') + ' to book a first lesson.',
-  enquiryRateLimited: 'That’s enough for now; I’ll be in touch about the ones you’ve sent.',
+  enquiryRateLimited: 'That’s enough for now. I’ll be in touch about the ones you’ve sent.',
   whatsAppTemplateNames: { lessonReminder: 'lesson_reminder', newEnquiry: 'new_enquiry' }
 };
 

@@ -38,7 +38,7 @@ select { appearance: auto; }
   // ---- list -------------------------------------------------------------
 
   async openList(pupilId) {
-    this.setMain('<p class="muted">Loading lessons.</p>');
+    this.setMain('<p class="muted">Loading…</p>');
     const result = await this.call('listLessons', pupilId ? { pupilId } : {});
     if (!result.ok) {
       this.setMain(this.failure(result));
@@ -50,10 +50,10 @@ select { appearance: auto; }
     if (pupilId) {
       const name = items[0] ? items[0].pupilName : '';
       body =
-        '<p><a href="/pupil-record?id=' + esc(pupilId) + '">Back to the record</a></p>' +
+        '<p><a href="/pupil-record?id=' + esc(pupilId) + '">Back to pupil</a></p>' +
         '<h1>' + esc(name ? name + '’s lessons' : 'Lessons') + '</h1>' +
         '<div class="actions"><a class="btn btn-primary" href="/lessons?new=1&pupil=' + esc(pupilId) + '">Add lesson</a></div>' +
-        (items.length ? renderDays(items, row) : this.empty('No lessons for this pupil yet.'));
+        (items.length ? renderDays(items, row) : this.empty('No lessons for this pupil yet. Add one above.'));
     } else {
       const thisWeek = items.filter((l) => l.date <= ranges.thisWeek.to);
       const nextWeek = items.filter((l) => l.date > ranges.thisWeek.to);
@@ -71,7 +71,7 @@ select { appearance: auto; }
   // ---- form -------------------------------------------------------------
 
   async openForm(id, presetPupilId) {
-    this.setMain('<p class="muted">Loading.</p>');
+    this.setMain('<p class="muted">Loading…</p>');
     const result = await this.call('getLesson', { id });
     if (!result.ok) {
       this.setMain('<p><a href="/lessons">All lessons</a></p>' + this.failure(result));
@@ -85,7 +85,7 @@ select { appearance: auto; }
     const l = lesson || { pupilId: presetPupilId || '', date: '', slot: '', startTime: '', durationMins: '', pickupLocation: '', status: 'planned', pupilSummary: '', instructorNotes: '' };
     const custom = l.slot === 'custom';
     const back = presetPupilId
-      ? '<p><a href="/pupil-record?id=' + esc(presetPupilId) + '">Back to the record</a></p>'
+      ? '<p><a href="/pupil-record?id=' + esc(presetPupilId) + '">Back to pupil</a></p>'
       : '<p><a href="/lessons">All lessons</a></p>';
     const heading = isNew ? 'Add lesson' : esc(l.pupilName || 'Lesson') + ', ' + esc(dayWords(l.date));
     this.setMain(
@@ -101,14 +101,14 @@ select { appearance: auto; }
       this.radios({ name: 'slot', legend: 'Time', value: l.slot, options: SLOTS.map((s) => ({ value: s.key, label: s.times })).concat([{ value: 'custom', label: 'Another time' }]) }) +
       '<div class="custom-time" id="custom-time"' + (custom ? '' : ' hidden') + '>' +
       this.field({ id: 'startTime', label: 'Start', type: 'time', value: custom ? l.startTime : '' }) +
-      this.field({ id: 'durationMins', label: 'Minutes', type: 'number', inputmode: 'numeric', value: custom ? l.durationMins : '120' }) +
+      this.field({ id: 'durationMins', label: 'Length (minutes)', type: 'number', inputmode: 'numeric', value: custom ? l.durationMins : '120' }) +
       '</div>' +
-      this.field({ id: 'pickupLocation', label: 'Pick-up', value: l.pickupLocation, required: true, maxlength: 160, hint: 'Filled from the pupil’s address when you choose them; change it if you are meeting elsewhere.' }) +
+      this.field({ id: 'pickupLocation', label: 'Pick-up', value: l.pickupLocation, required: true, maxlength: 160, hint: 'Filled in from the pupil’s address. Change it if you’re meeting somewhere else.' }) +
       (isNew ? '' : this.radios({ name: 'status', legend: 'Status', value: l.status, options: STATUSES })) +
-      this.textarea({ id: 'pupilSummary', label: isNew ? 'Note for the pupil' : 'Summary for the pupil', rows: 4, maxlength: 2000, value: l.pupilSummary, hint: 'They see this on their lessons page. For a completed lesson, add a line about what you covered.' }) +
+      this.textarea({ id: 'pupilSummary', label: isNew ? 'Note for the pupil' : 'Summary for the pupil', rows: 4, maxlength: 2000, value: l.pupilSummary, hint: 'The pupil sees this in their lessons. After the lesson, add a line on what you covered.' }) +
       this.textarea({ id: 'instructorNotes', label: 'Private notes', rows: 3, maxlength: 4000, value: l.instructorNotes, hint: 'Only you see these.' }) +
       '<div id="status" aria-live="polite"></div>' +
-      '<div class="actions"><button class="btn btn-primary" type="submit">' + (isNew ? 'Add lesson' : 'Save') + '</button>' +
+      '<div class="actions"><button class="btn btn-primary" type="submit">' + (isNew ? 'Add lesson' : 'Save changes') + '</button>' +
       (isNew || !l.pupilId ? '' : '<a class="btn btn-text" href="/progress?id=' + esc(l.pupilId) + '">Update progress</a>') +
       '</div></form>'
     );
@@ -154,7 +154,7 @@ select { appearance: auto; }
       this.replaceUrl('/lessons?id=' + saved._id);
       this.renderForm(saved, [], presetPupilId);
       this.$('#pupilId').innerHTML = '<option value="' + esc(saved.pupilId) + '" selected>' + esc(saved.pupilName) + '</option>';
-      this.$('#status').innerHTML = '<div class="notice" role="status">Added. ' + esc(saved.pupilName) + ' will see it on their lessons page. <a href="/lessons?new=1">Add another</a></div>';
+      this.$('#status').innerHTML = '<div class="notice" role="status">Added. ' + esc(saved.pupilName) + ' will see it in their lessons. <a href="/lessons?new=1">Add another lesson</a></div>';
       return;
     }
     Object.assign(lesson, saved);

@@ -103,7 +103,7 @@ export async function getPupil(id) {
   return run(async () => {
     await requireInstructor();
     const pupil = await getPupilById(id);
-    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    if (!pupil) throw new PortalError('I can’t find that pupil.', 'not-found');
     const out = { _id: pupil._id, memberId: pupil.memberId || '', transmission: pupil.transmission || TRANSMISSION.MANUAL, status: pupil.status || PUPIL_STATUS.ACTIVE, hourlyRatePence: pupil.hourlyRatePence || null };
     Object.keys(TEXT_FIELDS).forEach((key) => { out[key] = pupil[key] || ''; });
     BOOL_FIELDS.forEach((key) => { out[key] = Boolean(pupil[key]); });
@@ -116,7 +116,7 @@ export async function updatePupil(id, fields) {
   return run(async () => {
     await requireInstructor();
     const pupil = await getPupilById(id);
-    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    if (!pupil) throw new PortalError('I can’t find that pupil.', 'not-found');
     const input = fields || {};
     const errors = {};
     const changes = {};
@@ -155,7 +155,7 @@ export async function updatePupil(id, fields) {
       }
     });
     ['dateOfBirth', 'theoryPassDate', 'practicalTestDate'].forEach((key) => {
-      if (changes[key] && !isValidIsoDate(changes[key])) errors[key] = 'Use the date picker, or YYYY-MM-DD.';
+      if (changes[key] && !isValidIsoDate(changes[key])) errors[key] = 'Pick a date from the calendar.';
     });
     if (changes.postcode) {
       changes.postcode = changes.postcode.toUpperCase().replace(/\s+/g, ' ');
@@ -176,7 +176,7 @@ export async function setPupilStatus(id, status) {
     await requireInstructor();
     if (!STATUSES.includes(status)) throw new PortalError('Choose active, passed or inactive.');
     const pupil = await getPupilById(id);
-    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    if (!pupil) throw new PortalError('I can’t find that pupil.', 'not-found');
     await wixData.update('Pupils', Object.assign({}, pupil, { status }), { suppressAuth: true });
     return { status };
   });
@@ -188,7 +188,7 @@ export async function sendLoginLink(id) {
   return run(async () => {
     await requireInstructor();
     const pupil = await getPupilById(id);
-    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    if (!pupil) throw new PortalError('I can’t find that pupil.', 'not-found');
     if (!isValidEmail(pupil.email)) throw new PortalError('Add a valid email address to the record first.');
     let memberId = pupil.memberId || '';
     if (!memberId) {
@@ -198,7 +198,7 @@ export async function sendLoginLink(id) {
         await wixData.update('Pupils', Object.assign({}, pupil, { memberId }), { suppressAuth: true });
       }
     }
-    if (!memberId) throw new PortalError('There is no member account for that email yet. Convert the enquiry, or create the member first.');
+    if (!memberId) throw new PortalError('There’s no login for that email yet. Make them a pupil from their enquiry first.');
     await authentication.sendSetPasswordEmail(pupil.email);
     return { sent: true, memberId };
   });
@@ -218,21 +218,21 @@ export async function linkGuardian(id, email) {
   return run(async () => {
     await requireInstructor();
     const pupil = await getPupilById(id);
-    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    if (!pupil) throw new PortalError('I can’t find that pupil.', 'not-found');
     const address = String(email || '').trim().toLowerCase();
     if (!isValidEmail(address)) throw new PortalError("That email address doesn't look right.");
     if (address === String(pupil.email || '').toLowerCase()) throw new PortalError("That is the pupil's own address; a guardian needs their own.");
     const other = await pupilByEmail(address);
-    if (other) throw new PortalError('That address belongs to a pupil, so it cannot be a guardian login.');
+    if (other) throw new PortalError('That email belongs to a pupil, so it can’t be a guardian login.');
     let member = await lookupMemberByEmail(address);
     let created = false;
     if (member && (await guardianOfAnotherPupil(member.memberId, pupil._id))) {
-      throw new PortalError('That login already watches another pupil; a guardian login can only watch one.');
+      throw new PortalError('That login is already a guardian for another pupil. A guardian login can only see one pupil.');
     }
     let memberId = member ? member.memberId : '';
     if (!memberId) {
       memberId = await registerMember(address, { firstName: pupil.guardianName || 'Guardian', lastName: '' });
-      if (!memberId) throw new PortalError('Could not create the guardian login. Try again in a moment.');
+      if (!memberId) throw new PortalError('Couldn’t create the guardian login. Try again in a moment.');
       created = true;
     }
     await wixData.update('Pupils', Object.assign({}, pupil, { guardianMemberId: memberId, guardianEmail: address }), { suppressAuth: true });
@@ -252,7 +252,7 @@ export async function unlinkGuardian(id) {
   return run(async () => {
     await requireInstructor();
     const pupil = await getPupilById(id);
-    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    if (!pupil) throw new PortalError('I can’t find that pupil.', 'not-found');
     await wixData.update('Pupils', Object.assign({}, pupil, { guardianMemberId: '' }), { suppressAuth: true });
     return { linked: false };
   });
@@ -262,7 +262,7 @@ export async function sendGuardianLoginLink(id) {
   return run(async () => {
     await requireInstructor();
     const pupil = await getPupilById(id);
-    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    if (!pupil) throw new PortalError('I can’t find that pupil.', 'not-found');
     if (!pupil.guardianMemberId || !isValidEmail(pupil.guardianEmail)) throw new PortalError('Link a guardian login first.');
     await authentication.sendSetPasswordEmail(pupil.guardianEmail);
     return { sent: true, email: pupil.guardianEmail };
@@ -276,7 +276,7 @@ export async function exportPupil(id) {
   return run(async () => {
     await requireInstructor();
     const pupil = await getPupilById(id);
-    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    if (!pupil) throw new PortalError('I can’t find that pupil.', 'not-found');
     const csv = await pupilCsv(pupil);
     return { name: [pupil.firstName, pupil.lastName].filter(Boolean).join('-') || 'pupil', csv };
   });
@@ -327,7 +327,7 @@ export async function deletePupil(id, confirmName) {
   return run(async () => {
     await requireInstructor();
     const pupil = await getPupilById(id);
-    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    if (!pupil) throw new PortalError('I can’t find that pupil.', 'not-found');
     const fullName = [pupil.firstName, pupil.lastName].filter(Boolean).join(' ');
     if (String(confirmName || '').trim().toLowerCase() !== fullName.toLowerCase()) {
       throw new PortalError('Type the pupil’s full name exactly, ' + fullName + ', to confirm.');

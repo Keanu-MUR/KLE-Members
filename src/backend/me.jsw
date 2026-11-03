@@ -51,7 +51,7 @@ export async function updateMyDetails(fields) {
         await authentication.changeLoginEmail(caller.memberId, changes.email);
       } catch (error) {
         console.error('[portal] changeLoginEmail', error && error.message ? error.message : error);
-        throw new PortalError('I couldn’t change your login email just now. The rest was not saved; try again in a moment.');
+        throw new PortalError('I couldn’t change your login email just now, so nothing was saved. Try again in a moment.');
       }
     }
 

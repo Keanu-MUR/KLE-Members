@@ -11,9 +11,9 @@ const EXPORT_MAX_AGE_MS = 8 * 24 * 60 * 60 * 1000;
 
 export function compactionAllowed(settings, now) {
   const at = Date.parse(settings.lastExportAt || '');
-  if (!at) return 'No backup has run yet, so nothing is compacted.';
-  if (settings.lastExportStatus !== 'ok') return 'The last backup did not succeed, so nothing is compacted.';
-  if ((now || Date.now()) - at > EXPORT_MAX_AGE_MS) return 'The last backup is more than 8 days old, so nothing is compacted.';
+  if (!at) return 'No backup has run yet, so old lessons are kept as they are.';
+  if (settings.lastExportStatus !== 'ok') return 'The last backup failed, so old lessons are kept as they are.';
+  if ((now || Date.now()) - at > EXPORT_MAX_AGE_MS) return 'The last backup is more than 8 days old, so old lessons are kept as they are.';
   return '';
 }
 

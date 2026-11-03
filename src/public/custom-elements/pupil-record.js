@@ -6,6 +6,9 @@ import { PortalElement, esc, FEATURES } from './portal-base.js';
 import { LESSON_STYLE, renderLessonRow, dayWords } from './lesson-list.js';
 import { MOCK_STYLE, renderMockTest } from './my-mock-tests.js';
 
+// What the delete reports, in plain words.
+const REMOVED_WORDS = { Pupils: 'pupil record', Lessons: 'lessons', Progress: 'progress record', MockTests: 'mock tests', Messages: 'messages', SendLog: 'sent reminders', Enquiries: 'enquiry', members: 'logins', contacts: 'contacts' };
+
 const RECORD_STYLE = `
 .message { padding: 10px 0; }
 .message + .message { border-top: 1px solid #e3ded6; }
@@ -32,7 +35,7 @@ class KlePupilRecord extends PortalElement {
       this.setMain('<h1>Pupil record</h1>' + this.empty('Open a pupil from the Pupils list.'));
       return;
     }
-    this.setMain('<p class="muted">Loading the record.</p>');
+    this.setMain('<p class="muted">Loading…</p>');
     this.load(id);
   }
 
@@ -55,12 +58,12 @@ class KlePupilRecord extends PortalElement {
       this.radios({ name: 'status', legend: 'Status', value: p.status, options: [{ value: 'active', label: 'Active' }, { value: 'passed', label: 'Passed' }, { value: 'inactive', label: 'Inactive' }] }) +
       '<h2>Contact</h2>' +
       f('firstName', 'First name', { required: true }) + f('lastName', 'Last name', { required: true }) +
-      f('email', 'Email', { type: 'email', hint: 'Also the login email once they have an account.' }) +
+      f('email', 'Email', { type: 'email', hint: 'They log in with this address.' }) +
       f('phone', 'Phone', { type: 'tel' }) + f('dateOfBirth', 'Date of birth (optional)', { type: 'date' }) +
       '<h2>Address</h2>' +
       f('addressLine1', 'Address line 1') + f('addressLine2', 'Address line 2') + f('postcode', 'Postcode') +
       '<h2>Lessons and tests</h2>' +
-      this.radios({ name: 'transmission', legend: 'Transmission', value: p.transmission, options: [{ value: 'manual', label: 'Manual' }, { value: 'automatic', label: 'Automatic' }] }) +
+      this.radios({ name: 'transmission', legend: 'Manual or automatic', value: p.transmission, options: [{ value: 'manual', label: 'Manual' }, { value: 'automatic', label: 'Automatic' }] }) +
       this.field({ id: 'hourlyRatePounds', label: 'Hourly rate (£)', type: 'number', value: p.hourlyRatePence != null ? (p.hourlyRatePence / 100).toFixed(2) : '', inputmode: 'decimal' }) +
       f('licenceNumber', 'Licence number (optional)') +
       this.checkbox({ id: 'theoryPassed', label: 'Theory test passed', checked: p.theoryPassed }) +
@@ -76,17 +79,17 @@ class KlePupilRecord extends PortalElement {
       '<h2>My notes</h2>' +
       this.textarea({ id: 'instructorNotes', label: 'Private notes', rows: 5, maxlength: 4000, value: p.instructorNotes, hint: 'Only you see these.' }) +
       '<div id="status" aria-live="polite"></div>' +
-      '<div class="actions"><button class="btn btn-primary" type="submit">Save</button>' +
+      '<div class="actions"><button class="btn btn-primary" type="submit">Save changes</button>' +
       '<button class="btn btn-text" type="button" id="login-link">Send login link</button></div>' +
       '</form>' +
       '<hr class="road">' +
-      '<h2>Lessons</h2><div id="lessons"><p class="muted">Loading.</p></div>' +
-      '<h2>Progress</h2><div id="progress"><p class="muted">Loading.</p></div>' +
-      '<h2>Mock tests</h2><div id="mock-tests"><p class="muted">Loading.</p></div>' +
-      '<h2>Messages</h2><div id="messages"><p class="muted">Loading.</p></div>' +
+      '<h2>Lessons</h2><div id="lessons"><p class="muted">Loading…</p></div>' +
+      '<h2>Progress</h2><div id="progress"><p class="muted">Loading…</p></div>' +
+      '<h2>Mock tests</h2><div id="mock-tests"><p class="muted">Loading…</p></div>' +
+      '<h2>Messages</h2><div id="messages"><p class="muted">Loading…</p></div>' +
       '<hr class="road">' +
-      '<h2>This record</h2>' +
-      '<div class="actions"><button class="btn btn-text" type="button" id="export-pupil">Export this pupil (CSV)</button><button class="btn btn-text" type="button" id="delete-pupil">Delete pupil (GDPR)</button></div>' +
+      '<h2>Download or delete</h2>' +
+      '<div class="actions"><button class="btn btn-text" type="button" id="export-pupil">Download this pupil’s data</button><button class="btn btn-text" type="button" id="delete-pupil">Delete this pupil</button></div>' +
       '<div id="danger"></div>'
     );
     this.loadLessons(p);
@@ -118,7 +121,7 @@ class KlePupilRecord extends PortalElement {
       (all.length > 5 ? '<a class="btn btn-text" href="/lessons?pupil=' + esc(p._id) + '">All ' + all.length + ' lessons</a>' : '') + '</div>' +
       (items.length
         ? items.map((l) => renderLessonRow(l, { href: '/lessons?id=' + l._id, showDate: true, withYear: true })).join('')
-        : this.empty('Lessons appear here once you add them.'));
+        : this.empty('No lessons yet. Add one above.'));
   }
 
   async loadProgress(p) {
@@ -132,7 +135,7 @@ class KlePupilRecord extends PortalElement {
     box.innerHTML =
       (s.summary
         ? '<p>' + esc(s.summary) + (s.updatedAt ? ', last updated ' + esc(dayWords(s.updatedAt.slice(0, 10))) : '') + '.</p>'
-        : this.empty('Nothing set on the driver’s record yet.')) +
+        : this.empty('Nothing on the driver’s record yet.')) +
       '<div class="actions section-actions"><a class="btn btn-text" href="/progress?id=' + esc(p._id) + '">' + (s.summary ? 'Edit progress' : 'Start the driver’s record') + '</a></div>';
   }
 
@@ -157,7 +160,7 @@ class KlePupilRecord extends PortalElement {
       '<div id="mt-form"></div>' +
       (this.mockTests.length
         ? this.mockTests.map((t) => renderMockTest(t)).join('')
-        : this.empty('Mock tests appear here once recorded.'));
+        : this.empty('No mock tests yet.'));
     // Edit buttons go after each test block.
     this.mockTests.forEach((t) => {
       const block = box.querySelector('#mt-' + t._id);
@@ -176,7 +179,7 @@ class KlePupilRecord extends PortalElement {
     const f = fault || { category: '', note: '' };
     return '<div class="fault-row"><select name="fault-cat" aria-label="Fault category"><option value="">Category</option>' +
       this.categories.map((c) => '<option value="' + esc(c.key) + '"' + (c.key === f.category ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') +
-      '</select><input name="fault-note" type="text" maxlength="200" placeholder="What happened" aria-label="Fault note" value="' + esc(f.note) + '"></div>';
+      '</select><input name="fault-note" type="text" maxlength="200" placeholder="What went wrong" aria-label="Fault note" value="' + esc(f.note) + '"></div>';
   }
 
   mockTestForm(p, test) {
@@ -197,7 +200,7 @@ class KlePupilRecord extends PortalElement {
       '<button class="btn btn-text" type="button" id="fault-add">Add another fault</button></div>' +
       this.textarea({ id: 'mt-feedback', name: 'feedback', label: 'Feedback for the pupil', rows: 4, maxlength: 2000, value: t.feedback }) +
       '<div id="mt-status" aria-live="polite"></div>' +
-      '<div class="actions"><button class="btn btn-primary" type="submit">Save</button>' +
+      '<div class="actions"><button class="btn btn-primary" type="submit">Save mock test</button>' +
       '<button class="btn btn-text" type="button" id="mt-cancel">Cancel</button>' +
       (test ? '<button class="btn btn-text" type="button" id="mt-delete">Delete</button>' : '') +
       '</div></form>';
@@ -251,7 +254,7 @@ class KlePupilRecord extends PortalElement {
     this.mockTests = (test ? this.mockTests.map((t) => (t._id === saved._id ? saved : t)) : [saved].concat(this.mockTests))
       .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
     this.renderMockTests(p);
-    this.$('#mt-form').innerHTML = '<div class="notice" role="status">Saved. ' + esc(p.firstName) + ' will see it on their mock tests page.</div>';
+    this.$('#mt-form').innerHTML = '<div class="notice" role="status">Saved. ' + esc(p.firstName) + ' will see it in their mock tests.</div>';
   }
 
   async deleteMockTest(p, test, button) {
@@ -302,7 +305,7 @@ class KlePupilRecord extends PortalElement {
     const box = this.$('#messages');
     box.innerHTML = this.messages.length
       ? this.messages.map((m) => this.renderMessage(m)).join('')
-      : this.empty('Messages from ' + p.firstName + ' appear here.');
+      : this.empty('No messages from ' + p.firstName + ' yet.');
     box.querySelectorAll('[data-read]').forEach((button) => button.addEventListener('click', async () => {
       button.disabled = true;
       const r = await this.call('markMessageRead', { id: button.getAttribute('data-read') });
@@ -323,7 +326,7 @@ class KlePupilRecord extends PortalElement {
     if (!m || !wrap) return;
     wrap.innerHTML =
       '<form class="mt-form" novalidate>' +
-      this.textarea({ id: 'reply-' + id, name: 'reply', label: 'Reply to ' + p.firstName, rows: 3, maxlength: 2000, value: m.reply, hint: 'They see this on their lessons page.' }) +
+      this.textarea({ id: 'reply-' + id, name: 'reply', label: 'Reply to ' + p.firstName, rows: 3, maxlength: 2000, value: m.reply, hint: p.firstName + ' sees this in their lessons.' }) +
       '<div class="reply-status" aria-live="polite"></div>' +
       '<div class="actions"><button class="btn btn-primary" type="submit">Send reply</button><button class="btn btn-text" type="button" data-cancel>Cancel</button></div></form>';
     const form = wrap.querySelector('form');
@@ -380,9 +383,9 @@ class KlePupilRecord extends PortalElement {
 
   guardianWords(p) {
     const words = p.guardianLinked
-      ? '<p class="muted">Guardian login: ' + esc(p.guardianEmail) + ', read only.</p>' +
+      ? '<p class="muted">Guardian login for ' + esc(p.guardianEmail) + ' (read only).</p>' +
         '<div class="actions"><button class="btn btn-text" type="button" id="guardian-resend">Send guardian login link</button><button class="btn btn-text" type="button" id="guardian-unlink">Remove guardian login</button></div>'
-      : '<p class="muted">No guardian login yet. Save the guardian email above, then link it: the guardian gets a set-password email and sees the pupil’s pages, read only.</p>' +
+      : '<p class="muted">No guardian login yet. Save the guardian’s email above, then link it. They get an email to set a password and can see this pupil’s pages, read only.</p>' +
         '<div class="actions"><button class="btn btn-text" type="button" id="guardian-link">Link guardian login</button></div>';
     return words + '<div id="guardian-status" aria-live="polite"></div>';
   }
@@ -403,7 +406,7 @@ class KlePupilRecord extends PortalElement {
       p.guardianEmail = result.data.email;
       box.innerHTML = this.guardianWords(p);
       this.bindGuardian(p, form);
-      this.$('#guardian-status').innerHTML = '<div class="notice" role="status">Linked. ' + (result.data.sent ? 'A set-password email went to ' + esc(result.data.email) + '.' : 'The set-password email did not send; use "Send guardian login link".') + '</div>';
+      this.$('#guardian-status').innerHTML = '<div class="notice" role="status">Linked. ' + (result.data.sent ? 'I’ve emailed ' + esc(result.data.email) + ' a link to set a password.' : 'The password email didn’t send. Try Send guardian login link.') + '</div>';
     });
     if (resend) resend.addEventListener('click', async () => {
       resend.disabled = true;
@@ -443,10 +446,10 @@ class KlePupilRecord extends PortalElement {
   confirmDelete(p) {
     const fullName = [p.firstName, p.lastName].filter(Boolean).join(' ');
     this.$('#danger').innerHTML =
-      '<form id="delete-form" novalidate><p>This removes the record, lessons, progress, mock tests, messages, send log rows, the enquiry and the login. There is no undo. Export first if you need a copy.</p>' +
+      '<form id="delete-form" novalidate><p>This deletes everything I hold on this pupil. Their record, lessons, progress, mock tests, messages, sent reminders, enquiry and login. There is no undo. Download their data first if you need a copy.</p>' +
       this.field({ id: 'confirmName', label: 'Type the pupil’s full name to confirm', value: '', autocomplete: 'off', hint: fullName }) +
       '<div id="delete-status" aria-live="polite"></div>' +
-      '<div class="actions"><button class="btn btn-primary" type="submit">Delete everything</button><button class="btn btn-text" type="button" id="delete-cancel">Keep the record</button></div></form>';
+      '<div class="actions"><button class="btn btn-primary" type="submit">Delete everything</button><button class="btn btn-text" type="button" id="delete-cancel">Cancel</button></div></form>';
     const form = this.$('#delete-form');
     this.$('#delete-cancel').addEventListener('click', () => { this.$('#danger').innerHTML = ''; });
     form.addEventListener('submit', async (event) => {
@@ -456,9 +459,9 @@ class KlePupilRecord extends PortalElement {
       this.setBusy(form, false);
       if (!result.ok) { this.$('#delete-status').innerHTML = this.failure(result); return; }
       const left = result.data.left || [];
-      this.setMain('<h1>Deleted</h1><p>' + esc(result.data.name) + ' is gone: ' +
-        esc(Object.keys(result.data.removed).map((k) => result.data.removed[k] + ' ' + k).join(', ')) + '.</p>' +
-        (left.length ? '<p class="error">Still to do by hand in the Wix dashboard:</p><ul class="plain">' + left.map((l) => '<li>' + esc(l) + '</li>').join('') + '</ul>' : '') +
+      this.setMain('<h1>Deleted</h1><p>' + esc(result.data.name) + ' has been deleted. Removed ' +
+        esc(Object.keys(result.data.removed).map((k) => result.data.removed[k] + ' ' + (REMOVED_WORDS[k] || k.toLowerCase())).join(', ')) + '.</p>' +
+        (left.length ? '<p class="error">Still to remove by hand in the Wix dashboard</p><ul class="plain">' + left.map((l) => '<li>' + esc(l) + '</li>').join('') + '</ul>' : '') +
         '<p><a href="/pupils">All pupils</a></p>');
     });
     this.$('#confirmName').focus();

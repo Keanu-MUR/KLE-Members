@@ -18,7 +18,7 @@ class KleEnquiries extends PortalElement {
   }
 
   onSession() {
-    this.setMain('<p class="muted">Loading enquiries.</p>');
+    this.setMain('<p class="muted">Loading…</p>');
     this.loadList();
   }
 
@@ -46,7 +46,7 @@ class KleEnquiries extends PortalElement {
           '<td data-label="Prefers">' + esc(CONTACT[e.preferredContact] || e.preferredContact) + '</td>' +
           '<td data-label="Received">' + esc(this.dateWords(e.createdAt)) + '</td></tr>'
         ).join('') + '</tbody></table>'
-      : this.empty(this.filter === 'new' ? 'No new enquiries. New ones arrive here the moment someone sends the form.' : 'Nothing here.');
+      : this.empty(this.filter === 'new' ? 'No new enquiries. They show up here as soon as someone sends the form.' : 'No enquiries here.');
 
     this.setMain('<h1>Enquiries</h1><div class="filters">' + filters + '</div>' + rows);
     this.main.querySelectorAll('[data-filter]').forEach((b) => b.addEventListener('click', () => {
@@ -60,7 +60,7 @@ class KleEnquiries extends PortalElement {
   }
 
   async open(id) {
-    this.setMain('<p class="muted">Loading.</p>');
+    this.setMain('<p class="muted">Loading…</p>');
     const result = await this.call('getEnquiry', { id });
     if (!result.ok) {
       this.setMain(this.failure(result));
@@ -82,13 +82,13 @@ class KleEnquiries extends PortalElement {
       '<p class="muted">Received ' + esc(this.dateWords(e.createdAt, true)) + (e.repliedAt ? '. Replied ' + esc(this.dateWords(e.repliedAt, true)) : '') + '</p>' +
       '<hr class="road">' +
       (converted
-        ? '<p>Converted to a pupil. <a href="/pupil-record?id=' + esc(e.convertedPupilId) + '">Open the pupil record</a>.</p>'
+        ? '<p>Now a pupil. <a href="/pupil-record?id=' + esc(e.convertedPupilId) + '">Open their record</a>.</p>'
         : '<form id="reply" novalidate>' +
-          this.textarea({ id: 'body', label: 'Reply by email', rows: 9, maxlength: 4000, value: replyDefault, hint: 'Sent from the school’s address with your standard first-lesson details. Edit it before sending if you like.' }) +
+          this.textarea({ id: 'body', label: 'Reply by email', rows: 9, maxlength: 4000, value: replyDefault, hint: 'Goes from the school’s email address. Edit it before you send if you want.' }) +
           '<div id="status" aria-live="polite"></div>' +
           '<div class="actions"><button class="btn btn-primary" type="submit">Send reply</button>' +
-          '<button class="btn btn-text" type="button" id="convert">Convert to pupil</button>' +
-          (e.status !== 'closed' ? '<button class="btn btn-text" type="button" id="close">Close</button>' : '') +
+          '<button class="btn btn-text" type="button" id="convert">Make them a pupil</button>' +
+          (e.status !== 'closed' ? '<button class="btn btn-text" type="button" id="close">Close enquiry</button>' : '') +
           '</div></form>')
     );
     this.$('#back').addEventListener('click', () => this.loadList());
@@ -112,12 +112,12 @@ class KleEnquiries extends PortalElement {
       this.$('#status').innerHTML = this.failure(result);
       return;
     }
-    this.$('#status').innerHTML = '<div class="notice" role="status">Sent to ' + esc(e.email) + '. ' + esc(e.name.split(' ')[0]) + ' will see it in their inbox.</div>';
+    this.$('#status').innerHTML = '<div class="notice" role="status">Sent to ' + esc(e.email) + '.</div>';
   }
 
   async convert(e, form) {
     this.setBusy(form, true);
-    this.$('#status').innerHTML = '<p class="muted">Creating the pupil and their login.</p>';
+    this.$('#status').innerHTML = '<p class="muted">Creating the pupil and their login…</p>';
     const result = await this.call('convertEnquiry', { id: e._id });
     this.setBusy(form, false);
     if (!result.ok) {
@@ -127,9 +127,9 @@ class KleEnquiries extends PortalElement {
     const d = result.data;
     this.$('#status').innerHTML =
       '<div class="notice" role="status">' +
-      (d.memberCreated ? 'Login created and ' : 'Existing login linked and ') +
-      (d.loginEmailSent ? 'a set-password email sent to ' + esc(e.email) + '. ' : 'but the set-password email did not send; use Send login link on the record. ') +
-      '<a href="/pupil-record?id=' + esc(d.pupilId) + '">Open the pupil record</a>.</div>';
+      (d.memberCreated ? 'Login created' : 'Linked to their existing login') +
+      (d.loginEmailSent ? '. I’ve emailed ' + esc(e.email) + ' a link to set a password. ' : ', but the password email didn’t send. Use Send login link on their record. ') +
+      '<a href="/pupil-record?id=' + esc(d.pupilId) + '">Open their record</a>.</div>';
   }
 
   async close(e, form) {

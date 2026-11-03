@@ -97,7 +97,7 @@ const RESEND_BODIES = {
     subject: 'Your lesson tomorrow, ' + v.dateWords,
     lines: [
       'Hi ' + v.firstName + ',',
-      'A reminder that your ' + v.transmission + ' driving lesson is tomorrow, ' + v.dateWords + ', ' + v.slotTime + '.',
+      'Your ' + v.transmission + ' lesson is tomorrow, ' + v.dateWords + ', ' + v.slotTime + '.',
       'Pick-up: ' + v.pickup + '.',
       'Reply to this email' + (FEATURES.whatsApp ? ' or message me on WhatsApp' : '') + ' if anything has changed.',
       'Your lessons: ' + v.link

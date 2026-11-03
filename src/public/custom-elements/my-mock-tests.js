@@ -34,7 +34,7 @@ class KleMyMockTests extends PortalElement {
   }
 
   onSession() {
-    this.setMain('<p class="muted">Loading your mock tests.</p>');
+    this.setMain('<p class="muted">Loading…</p>');
     this.load();
   }
 
@@ -49,7 +49,7 @@ class KleMyMockTests extends PortalElement {
     this.setMain(
       '<h1>' + (guardian ? esc(data.pupil.firstName) + '’s mock tests' : 'My mock tests') + '</h1>' +
       (guardian ? '<p class="viewer">Viewing as guardian, read only</p>' : '') +
-      (data.items.length ? data.items.map(renderMockTest).join('') : this.empty('Mock tests will show here after your first one.'))
+      (data.items.length ? data.items.map(renderMockTest).join('') : this.empty('No mock tests yet. We’ll do one when you’re ready for it.'))
     );
   }
 }

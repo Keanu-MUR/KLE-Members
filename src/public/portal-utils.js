@@ -369,7 +369,7 @@ export function validateLesson(input) {
   if (!timing) {
     errors.slot = src.slot === CUSTOM_SLOT
       ? 'A custom lesson needs a start time (like 11:15) and a length between 30 minutes and 8 hours.'
-      : 'Choose a slot.';
+      : 'Choose a time.';
   }
   const pickupLocation = trimTo(src.pickupLocation, 160);
   if (!pickupLocation) errors.pickupLocation = 'Where are you picking them up?';
@@ -453,7 +453,7 @@ export function validateMockTest(input) {
   const counts = {};
   [['minors', 'minor'], ['serious', 'serious'], ['dangerous', 'dangerous']].forEach(([key, word]) => {
     const n = countField(src[key]);
-    if (n === null) errors[key] = 'A whole number from 0 to 99 of ' + word + ' faults.';
+    if (n === null) errors[key] = 'Enter a number from 0 to 99 for ' + word + ' faults.';
     else counts[key] = n;
   });
   const faults = [];
@@ -508,13 +508,13 @@ export function reminderDecision(settings, pupil, lesson, sentToday) {
   const reasons = {};
   let email = 'send';
   if (!s.emailRemindersOn) { email = 'skip'; reasons.email = 'Email reminders are switched off'; }
-  else if (!p.reminderEmail) { email = 'skip'; reasons.email = 'Pupil has email reminders off'; }
+  else if (!p.reminderEmail) { email = 'skip'; reasons.email = 'Pupil has turned email reminders off'; }
   else if (!isValidEmail(p.email || '')) { email = 'skip'; reasons.email = 'No valid email on the record'; }
   else if (sent.email) { email = 'skip'; reasons.email = 'Already sent today'; }
 
   let whatsapp = 'send';
   if (!s.whatsAppRemindersOn) { whatsapp = 'skip'; reasons.whatsapp = 'WhatsApp reminders are switched off'; }
-  else if (!p.reminderWhatsApp) { whatsapp = 'skip'; reasons.whatsapp = 'Pupil has WhatsApp reminders off'; }
+  else if (!p.reminderWhatsApp) { whatsapp = 'skip'; reasons.whatsapp = 'Pupil has turned WhatsApp reminders off'; }
   else if (!p.whatsAppConsentAt) { whatsapp = 'skip'; reasons.whatsapp = 'No WhatsApp consent recorded'; }
   else if (!p.phone) { whatsapp = 'skip'; reasons.whatsapp = 'No phone number on the record'; }
   else if (sent.whatsapp) { whatsapp = 'skip'; reasons.whatsapp = 'Already sent today'; }

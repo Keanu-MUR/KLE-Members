@@ -95,7 +95,7 @@ export async function getCaller() {
 
 export async function requireInstructor() {
   const caller = await getCaller();
-  if (!caller.memberId) throw new PortalError('Please log in.', 'auth');
+  if (!caller.memberId) throw new PortalError('Log in first.', 'auth');
   if (caller.role !== ROLES.INSTRUCTOR) throw new PortalError('Only the instructor can do that.', 'forbidden');
   return caller;
 }
@@ -104,11 +104,11 @@ export async function requireInstructor() {
 export async function requirePupilAccess(pupilId, options) {
   const write = Boolean(options && options.write);
   const caller = await getCaller();
-  if (!caller.memberId) throw new PortalError('Please log in.', 'auth');
+  if (!caller.memberId) throw new PortalError('Log in first.', 'auth');
 
   if (caller.role === ROLES.INSTRUCTOR) {
     const pupil = await getPupilById(pupilId);
-    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    if (!pupil) throw new PortalError('I can’t find that pupil.', 'not-found');
     return { caller, pupil };
   }
 
@@ -116,7 +116,7 @@ export async function requirePupilAccess(pupilId, options) {
     throw new PortalError('You can only see your own record.', 'forbidden');
   }
   if (write && caller.role !== ROLES.PUPIL) {
-    throw new PortalError('Guardians can look but not change anything.', 'forbidden');
+    throw new PortalError('Guardians can see everything but can’t change anything.', 'forbidden');
   }
   return { caller, pupil: caller.pupil };
 }
@@ -124,10 +124,10 @@ export async function requirePupilAccess(pupilId, options) {
 // For pupil pages, which never send an id: resolve the caller's own pupil.
 export async function requireOwnPupil(options) {
   const caller = await getCaller();
-  if (!caller.memberId) throw new PortalError('Please log in.', 'auth');
-  if (!caller.pupil) throw new PortalError('This account is not linked to a pupil yet.', 'forbidden');
+  if (!caller.memberId) throw new PortalError('Log in first.', 'auth');
+  if (!caller.pupil) throw new PortalError('This login isn’t linked to a pupil yet. Message me and I’ll sort it.', 'forbidden');
   if (options && options.write && caller.role !== ROLES.PUPIL) {
-    throw new PortalError('Guardians can look but not change anything.', 'forbidden');
+    throw new PortalError('Guardians can see everything but can’t change anything.', 'forbidden');
   }
   return { caller, pupil: caller.pupil };
 }

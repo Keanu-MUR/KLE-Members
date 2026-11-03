@@ -22,9 +22,9 @@ export async function resendReminder(lessonId, channel) {
   return run(async () => {
     await requireInstructor();
     const lesson = await getLessonById(lessonId);
-    if (!lesson) throw new PortalError('That lesson was not found.', 'not-found');
+    if (!lesson) throw new PortalError('I can’t find that lesson.', 'not-found');
     const pupil = await getPupilById(lesson.pupilId);
-    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    if (!pupil) throw new PortalError('I can’t find that pupil.', 'not-found');
     const { settings } = await loadSettings();
     const channels = { email: channel === 'email', whatsapp: channel === 'whatsapp', guardian: false };
     const results = await sendLessonReminder(lesson, pupil, settings, channels, null);
@@ -58,9 +58,9 @@ export async function testReminder(lessonId, email, phone) {
     const number = phone ? toE164(phone) : '';
     if (phone && !number) throw new PortalError("That phone number doesn't look right.");
     const lesson = await getLessonById(lessonId);
-    if (!lesson) throw new PortalError('Choose a lesson to send the test for.');
+    if (!lesson) throw new PortalError('Choose a lesson to test with.');
     const pupil = await getPupilById(lesson.pupilId);
-    if (!pupil) throw new PortalError('That pupil record was not found.', 'not-found');
+    if (!pupil) throw new PortalError('I can’t find that pupil.', 'not-found');
     const { settings } = await loadSettings();
     const results = await sendLessonReminder(lesson, pupil, settings, { email: true, whatsapp: Boolean(number), guardian: false }, { email: address, phone: number });
     return { results };

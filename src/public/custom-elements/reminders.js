@@ -26,7 +26,7 @@ class KleReminders extends PortalElement {
   }
 
   onSession() {
-    this.setMain('<p class="muted">Loading tomorrow.</p>');
+    this.setMain('<p class="muted">Loading…</p>');
     this.load();
   }
 
@@ -53,7 +53,7 @@ class KleReminders extends PortalElement {
       word = 'off';
       why = item.wouldSend.reasons[channel] || '';
     } else {
-      word = would === 'send' ? 'due' : 'will skip';
+      word = would === 'send' ? 'due' : 'will be skipped';
       why = item.wouldSend.reasons[channel] || '';
     }
     return (
@@ -68,8 +68,8 @@ class KleReminders extends PortalElement {
     const items = data.items;
     this.setMain(
       '<h1>Tomorrow’s reminders</h1>' +
-      '<p class="muted">' + esc(dayWords(data.tomorrow, true)) + '. The job sends at ' + String(data.settings.reminderSendHour).padStart(2, '0') + ':00' +
-      (data.settings.emailRemindersOn ? '' : '; email reminders are off') + (data.settings.whatsAppRemindersOn || !FEATURES.whatsApp ? '' : '; WhatsApp reminders are off') + '.</p>' +
+      '<p class="muted">' + esc(dayWords(data.tomorrow, true)) + '. Reminders go out at ' + String(data.settings.reminderSendHour).padStart(2, '0') + ':00.' +
+      (data.settings.emailRemindersOn ? '' : ' Email reminders are off.') + (data.settings.whatsAppRemindersOn || !FEATURES.whatsApp ? '' : ' WhatsApp reminders are off.') + '</p>' +
       '<div id="status" aria-live="polite"></div>' +
       (items.length ? items.map((item) =>
         '<div class="item" id="r-' + esc(item._id) + '">' +
@@ -91,7 +91,7 @@ class KleReminders extends PortalElement {
         return;
       }
       const r = result.data.results[button.getAttribute('data-channel')] || {};
-      this.$('#status').innerHTML = '<div class="notice" role="status">' + (r.ok ? 'Sent.' : r.skipped ? 'Skipped: ' + esc(r.error) : 'Failed: ' + esc(r.error)) + '</div>';
+      this.$('#status').innerHTML = '<div class="notice" role="status">' + (r.ok ? 'Sent.' : r.skipped ? 'Skipped. ' + esc(r.error) : 'Didn’t send. ' + esc(r.error)) + '</div>';
       this.load();
     }));
   }

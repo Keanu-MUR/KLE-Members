@@ -16,10 +16,10 @@ export async function post_enquire(request) {
   let body;
   try {
     const text = await request.body.text();
-    if (!text || text.length > MAX_BODY_BYTES) return json({ ok: false, error: 'Please check the form and try again.' });
+    if (!text || text.length > MAX_BODY_BYTES) return json({ ok: false, error: 'Check the form and try again.' });
     body = JSON.parse(text);
   } catch (error) {
-    return json({ ok: false, error: 'Please check the form and try again.' });
+    return json({ ok: false, error: 'Check the form and try again.' });
   }
   try {
     const ip = request.ip || (request.headers && request.headers['x-forwarded-for']) || 'unknown';

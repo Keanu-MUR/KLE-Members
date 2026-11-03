@@ -4,7 +4,7 @@ import { PortalElement, esc, FEATURES } from './portal-base.js';
 
 class KleMyDetails extends PortalElement {
   onSession() {
-    this.setMain('<p class="muted">Loading your details.</p>');
+    this.setMain('<p class="muted">Loading…</p>');
     this.load();
   }
 
@@ -40,7 +40,7 @@ class KleMyDetails extends PortalElement {
       this.field({ id: 'licenceNumber', label: 'Licence number (optional)', value: d.licenceNumber, readOnly: true, hint: 'Ask me if this needs changing.' }) +
       this.field({ id: 'dateOfBirth', label: 'Date of birth (optional)', value: d.dateOfBirth, readOnly: true }) +
       '<div id="status" aria-live="polite"></div>' +
-      (readOnly ? '' : '<div class="actions"><button class="btn btn-primary" type="submit">Save</button></div>') +
+      (readOnly ? '' : '<div class="actions"><button class="btn btn-primary" type="submit">Save changes</button></div>') +
       '</form>'
     );
     const form = this.$('#form');

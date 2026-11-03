@@ -9,7 +9,7 @@ class KleMyProgress extends PortalElement {
   }
 
   onSession() {
-    this.setMain('<p class="muted">Loading your driver’s record.</p>');
+    this.setMain('<p class="muted">Loading…</p>');
     this.load();
   }
 
@@ -27,7 +27,7 @@ class KleMyProgress extends PortalElement {
     const guardian = s.viewerRole === 'guardian';
     const theory = pupil.theoryPassed
       ? 'Theory test passed' + (pupil.theoryPassDate ? ' ' + this.longDate(pupil.theoryPassDate) : '') + '.'
-      : 'Theory test not passed yet.';
+      : 'Theory test still to do.';
     const practical = pupil.practicalTestDate
       ? 'Practical test ' + this.dateWords(pupil.practicalTestDate, true) + '.'
       : 'Practical test not booked yet.';
@@ -40,7 +40,7 @@ class KleMyProgress extends PortalElement {
       (hasData
         ? renderLegend(s.levels) + renderGrid({ skills: s.skills, groups: s.groups, levels: s.levels, data: s.data, transmission: pupil.transmission, editable: false }) +
           (s.updatedAt ? '<p class="skill-updated">' + esc(updatedWords(s.updatedAt)) + '</p>' : '')
-        : this.empty('Your driver’s record will appear here after your first lesson.'))
+        : this.empty('I’ll start your driver’s record after your first lesson.'))
     );
   }
 }

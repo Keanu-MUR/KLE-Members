@@ -69,7 +69,7 @@ export async function markMessageRead(id) {
   return run(async () => {
     await requireInstructor();
     const item = await wixData.get('Messages', id, { suppressAuth: true });
-    if (!item) throw new PortalError('That message was not found.', 'not-found');
+    if (!item) throw new PortalError('I can’t find that message.', 'not-found');
     const readAt = new Date().toISOString();
     await wixData.update('Messages', Object.assign({}, item, { readAt }), { suppressAuth: true });
     return { readAt };
@@ -83,7 +83,7 @@ export async function replyToMessage(id, reply) {
     const checked = validateReply(reply);
     if (!checked.ok) throw new PortalError(checked.error);
     const item = await wixData.get('Messages', id, { suppressAuth: true });
-    if (!item) throw new PortalError('That message was not found.', 'not-found');
+    if (!item) throw new PortalError('I can’t find that message.', 'not-found');
     const now = new Date().toISOString();
     const updated = await wixData.update('Messages', Object.assign({}, item, {
       reply: checked.reply,

@@ -31,7 +31,7 @@ class KleSendLog extends PortalElement {
   }
 
   onSession() {
-    this.setMain('<h1>Send log</h1><div class="filters" id="f-channel"></div><div class="filters" id="f-status"></div><div class="filters" id="f-days"></div><div id="rows"><p class="muted">Loading.</p></div>');
+    this.setMain('<h1>Sent reminders</h1><div class="filters" id="f-channel"></div><div class="filters" id="f-status"></div><div class="filters" id="f-days"></div><div id="rows"><p class="muted">Loading…</p></div>');
     this.renderFilters();
     this.load();
   }
@@ -65,7 +65,7 @@ class KleSendLog extends PortalElement {
         '<div class="muted">' + esc(when(r.createdAt)) + (r.lessonId && !r.lessonId.startsWith('probe:') ? ' · <a href="/lessons?id=' + esc(r.lessonId) + '">lesson</a>' : '') + '</div>' +
         (r.error ? '<p class="why">' + esc(r.error) + '</p>' : '') + '</div>'
       ).join('')
-      : this.empty('No send attempts in the last ' + result.data.days + ' days match.');
+      : this.empty('Nothing sent in the last ' + result.data.days + ' days matches those filters.');
   }
 }
 

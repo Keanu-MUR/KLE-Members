@@ -33,7 +33,7 @@ function shape(item) {
 async function loadEnquiry(id) {
   if (!id || typeof id !== 'string') throw new PortalError('Which enquiry?');
   const item = await wixData.get('Enquiries', id, { suppressAuth: true });
-  if (!item) throw new PortalError('That enquiry was not found.', 'not-found');
+  if (!item) throw new PortalError('I can’t find that enquiry.', 'not-found');
   return item;
 }
 
@@ -87,7 +87,7 @@ export async function replyToEnquiry(id, body) {
       lastName: (item.name || '').split(/\s+/).slice(1).join(' '),
       phone: item.phone
     }, vars, { pupilId: item.convertedPupilId || '', lessonId: '' });
-    if (!sent.ok) throw new PortalError('The email did not send. Try again in a moment; the attempt is in the send log.');
+    if (!sent.ok) throw new PortalError('The email didn’t send. Try again in a moment. The attempt is under Sent reminders.');
     const updated = await wixData.update('Enquiries', Object.assign({}, item, {
       status: item.status === ENQUIRY_STATUS.NEW ? ENQUIRY_STATUS.REPLIED : item.status,
       repliedAt: new Date().toISOString()
@@ -103,7 +103,7 @@ export async function convertEnquiry(id, overrides) {
     await requireInstructor();
     const item = await loadEnquiry(id);
     if (item.status === ENQUIRY_STATUS.CONVERTED && item.convertedPupilId) {
-      throw new PortalError('This enquiry has already been converted.');
+      throw new PortalError('This enquiry is already a pupil.');
     }
     const email = String(item.email || '').toLowerCase();
     if (await pupilByEmail(email)) throw new PortalError('There is already a pupil with that email address.');
@@ -127,7 +127,7 @@ export async function convertEnquiry(id, overrides) {
       memberId = await registerMember(email, fields);
       created = true;
     }
-    if (!memberId) throw new PortalError('Wix did not create the member account. Try again in a moment.');
+    if (!memberId) throw new PortalError('The login didn’t get created. Try again in a moment.');
 
     let loginEmailSent = true;
     try {

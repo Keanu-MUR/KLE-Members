@@ -66,7 +66,7 @@ export async function updateSettings(fields) {
     const checked = validateSettings(fields);
     if (!checked.ok) return { saved: false, errors: checked.errors };
     const { item } = await loadSettings();
-    if (!item) throw new PortalError('The Settings record is missing; open the dashboard once to create it.');
+    if (!item) throw new PortalError('The settings haven’t been created yet. Open Today once to create them.');
     const updated = await wixData.update('Settings', Object.assign({}, item, checked.data), { suppressAuth: true });
     return { saved: true, errors: {}, settings: visible(Object.assign({}, item, updated)) };
   });
@@ -93,7 +93,7 @@ export async function runExport() {
 export async function exportCollection(name) {
   return run(async () => {
     await requireInstructor();
-    if (!isCollection(String(name || ''))) throw new PortalError('That is not one of the collections.');
+    if (!isCollection(String(name || ''))) throw new PortalError('There’s no record type with that name.');
     return collectionCsv(String(name));
   });
 }

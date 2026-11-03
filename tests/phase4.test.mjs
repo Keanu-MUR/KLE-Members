@@ -27,7 +27,7 @@ test('reminderDecision sends both channels and the guardian for an under-18', ()
 
 test('reminderDecision skips with a reason for each rule', () => {
   assert.equal(reminderDecision({ emailRemindersOn: false, whatsAppRemindersOn: true }, pupil, lesson, {}).reasons.email, 'Email reminders are switched off');
-  assert.equal(reminderDecision(settingsOn, Object.assign({}, pupil, { reminderWhatsApp: false }), lesson, {}).reasons.whatsapp, 'Pupil has WhatsApp reminders off');
+  assert.equal(reminderDecision(settingsOn, Object.assign({}, pupil, { reminderWhatsApp: false }), lesson, {}).reasons.whatsapp, 'Pupil has turned WhatsApp reminders off');
   assert.equal(reminderDecision(settingsOn, Object.assign({}, pupil, { whatsAppConsentAt: '' }), lesson, {}).reasons.whatsapp, 'No WhatsApp consent recorded');
   assert.equal(reminderDecision(settingsOn, Object.assign({}, pupil, { phone: '' }), lesson, {}).reasons.whatsapp, 'No phone number on the record');
   assert.equal(reminderDecision(settingsOn, pupil, lesson, { email: true }).reasons.email, 'Already sent today');
@@ -39,7 +39,7 @@ test('reminderVars and reminderText fill the agreed wording', () => {
   const vars = reminderVars(lesson, pupil);
   assert.equal(vars.dateWords, 'Tuesday 3 November');
   assert.equal(vars.slotTime, '10:00–12:00');
-  assert.equal(reminderText(lesson, pupil), 'Hi Jamie, reminder: your manual driving lesson is tomorrow, Tuesday 3 November, 10:00–12:00. Pick-up: 12 Rye Lane. Reply here if anything has changed.');
+  assert.equal(reminderText(lesson, pupil), 'Hi Jamie, your manual lesson is tomorrow, Tuesday 3 November, 10:00–12:00. Pick-up: 12 Rye Lane. Reply if anything has changed.');
 });
 
 test('waMeLink strips the plus and encodes the text', () => {

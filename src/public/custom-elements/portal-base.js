@@ -414,8 +414,8 @@ export class PortalElement extends HTMLElement {
   // A section inside the one-page portal (see portal-shell.js) has the
   // brand and nav drawn by the shell, so it renders only its main.
   shell() {
-    if (this.hasAttribute('embedded')) return '<div class="portal embedded"><main id="main"><p class="muted">Loading.</p></main></div>';
-    return '<div class="portal"><header>' + WORDMARK + '<nav class="portal-nav" id="nav" aria-label="Portal"></nav></header><main id="main"><p class="muted">Loading.</p></main></div>';
+    if (this.hasAttribute('embedded')) return '<div class="portal embedded"><main id="main"><p class="muted">Loading…</p></main></div>';
+    return '<div class="portal"><header>' + WORDMARK + '<nav class="portal-nav" id="nav" aria-label="Portal"></nav></header><main id="main"><p class="muted">Loading…</p></main></div>';
   }
 
   // Text links for the current role, with the current page marked.
