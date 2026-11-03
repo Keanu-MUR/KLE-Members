@@ -6,6 +6,7 @@ import wixData from 'wix-data';
 import { loadSettings } from 'backend/settings';
 import { runBackup } from 'backend/backup';
 import { runCompaction } from 'backend/compaction';
+import { prunePendingEnquiries } from 'backend/enquiry-pipeline';
 import { remindersFor, PROBE_LESSON_ID } from 'backend/reminder-core';
 import { sendEmail } from 'backend/messaging';
 import { lookupMemberByEmail } from 'backend/pupil-store';
@@ -43,6 +44,11 @@ export async function pruneLogs() {
       removed[collection] += result.items.length;
       if (result.items.length < 100) break;
     }
+  }
+  try {
+    removed.pendingEnquiries = await prunePendingEnquiries(new Date());
+  } catch (error) {
+    console.error('[portal] pending enquiry clean-up failed', error && error.message ? error.message : error);
   }
   console.log('[portal] pruned', JSON.stringify(removed));
   // Old lessons become yearly totals, but only after a recent backup.

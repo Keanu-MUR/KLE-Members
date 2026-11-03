@@ -42,6 +42,7 @@ class KleEnquire extends PortalElement {
         : '<p class="notice">' + esc(CONTACT_NOTE) + '</p>') +
       this.textarea({ id: 'message', label: 'Anything else?', rows: 4, maxlength: 1000, hint: 'Optional. Days and times that suit you, or where you are with your theory.' }) +
       '<div class="hp" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off"></div>' +
+      '<p class="hint">Tick the “I’m not a robot” box under the form before you send.</p>' +
       '<div id="status" aria-live="polite"></div>' +
       '<div class="actions"><button class="btn btn-primary" type="submit" id="submit">Send enquiry</button></div>' +
       '</form>'
@@ -85,6 +86,14 @@ class KleEnquire extends PortalElement {
     const errors = this.clientErrors(values);
     this.setErrors(form, errors);
     if (Object.keys(errors).length) return;
+    // The page tells the element whether the reCAPTCHA box is ticked.
+    const captcha = this.getAttribute('captcha');
+    if (captcha === 'needed' || captcha === 'error') {
+      this.$('#status').innerHTML = '<p class="error" role="alert">' + (captcha === 'error'
+        ? 'The “I’m not a robot” check couldn’t load. Reload the page and try again.'
+        : 'Tick the “I’m not a robot” box under the form, then press Send enquiry.') + '</p>';
+      return;
+    }
 
     this.$('#status').innerHTML = '';
     this.setBusy(form, true);
@@ -109,6 +118,12 @@ class KleEnquire extends PortalElement {
     let confirmationSent = false;
     if (result.data.enquiryId) {
       const sent = await this.call('notifyEnquiry', { enquiryId: result.data.enquiryId, token: result.data.token });
+      if (!sent.ok && sent.captcha) {
+        // The reCAPTCHA didn't pass, so nothing was kept. Let them try again.
+        this.setBusy(form, false);
+        this.$('#status').innerHTML = this.failure(sent);
+        return;
+      }
       confirmationSent = Boolean(sent.ok && sent.data && sent.data.confirmationSent);
     }
     this.setBusy(form, false);

@@ -1,13 +1,14 @@
 // The one public web method of the enquiry flow. Anyone may call it (see
 // permissions.json); it only ever sends the notifications for an enquiry
 // whose single-use token the caller holds, which the HTTP function hands
-// out when it stores the enquiry. See backend/enquiry-pipeline.js.
+// out when it stores the enquiry, and only once the reCAPTCHA token checks
+// out. See backend/enquiry-pipeline.js.
 
 import { sendEnquiryNotifications } from 'backend/enquiry-pipeline';
 
-export async function notifyEnquiry(enquiryId, token) {
+export async function notifyEnquiry(enquiryId, token, captchaToken) {
   try {
-    return await sendEnquiryNotifications(enquiryId, token);
+    return await sendEnquiryNotifications(enquiryId, token, captchaToken);
   } catch (error) {
     console.error('[portal] notifyEnquiry', error && error.message ? error.message : error);
     return { ok: false, error: 'The confirmation email did not send.' };

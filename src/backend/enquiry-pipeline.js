@@ -7,13 +7,22 @@
 // sendEnquiryNotifications() through the web module in enquire.jsw, which
 // runs with the visitor's identity. The token is cleared on first use, so
 // the emails for an enquiry go out once at most.
+//
+// reCAPTCHA (3 Nov 2026): Wix's authorize() also needs a visitor identity,
+// so the check happens in that second step too. The HTTP function stores
+// the enquiry as 'pending', invisible to the instructor; the web method
+// checks the reCAPTCHA token, and only then marks it 'new' and sends the
+// emails. A failed check deletes the pending enquiry, and the nightly
+// clean-up deletes any left pending for over an hour (a bot posting to
+// the endpoint directly never reaches the second step).
 
 import wixData from 'wix-data';
+import wixCaptchaBackend from 'wix-captcha-backend';
 import { loadSettings } from 'backend/settings';
 import { sendEmail, sendWhatsApp } from 'backend/messaging';
 import { lookupMemberByEmail } from 'backend/pupil-store';
 import { validateEnquiry, hashKey, rateLimitDecision, fillTemplate, isTaughtPostcode } from 'public/portal-utils';
-import { ENQUIRY_STATUS, ENQUIRY_LIMIT, TEMPLATES, PORTAL_PATHS, SCHOOL } from 'public/portal-constants';
+import { ENQUIRY_STATUS, ENQUIRY_PENDING, ENQUIRY_LIMIT, TEMPLATES, PORTAL_PATHS, SCHOOL } from 'public/portal-constants';
 
 // The salt only stops the hash being a bare lookup of the IP; it is not a
 // secret in the Secrets Manager sense.
@@ -41,6 +50,31 @@ function notifyToken() {
   return token;
 }
 
+const CAPTCHA_FAILED = 'Tick the “I’m not a robot” box below the form, then press Send enquiry again.';
+
+// True when Wix accepts the reCAPTCHA token (single use, valid for two
+// minutes after the box is ticked).
+async function captchaPassed(captchaToken) {
+  if (!captchaToken || typeof captchaToken !== 'string') return false;
+  try {
+    await wixCaptchaBackend.authorize(captchaToken);
+    return true;
+  } catch (error) {
+    console.warn('[portal] reCAPTCHA refused', error && error.message ? error.message : error);
+    return false;
+  }
+}
+
+// Deletes enquiries left pending (reCAPTCHA never checked) for over an
+// hour. Called from the nightly clean-up.
+export async function prunePendingEnquiries(now) {
+  const cutoff = new Date((now || new Date()).getTime() - 60 * 60 * 1000);
+  const result = await wixData.query('Enquiries').eq('status', ENQUIRY_PENDING).lt('_createdDate', cutoff).limit(100).find({ suppressAuth: true });
+  if (!result.items.length) return 0;
+  await wixData.bulkRemove('Enquiries', result.items.map((i) => i._id), { suppressAuth: true });
+  return result.items.length;
+}
+
 export async function recordEnquiry(data) {
   return wixData.insert('Enquiries', {
     notifyToken: notifyToken(),
@@ -53,7 +87,7 @@ export async function recordEnquiry(data) {
     transmission: data.transmission,
     message: data.message,
     preferredContact: data.preferredContact,
-    status: ENQUIRY_STATUS.NEW,
+    status: ENQUIRY_PENDING,
     repliedAt: '',
     convertedPupilId: ''
   }, { suppressAuth: true });
@@ -138,15 +172,26 @@ export async function handleEnquiry(body, ip) {
 // Second half of the pipeline, called from the page once the HTTP function
 // has stored the enquiry. The token is single use; a wrong or spent token
 // is answered with a plain failure and sends nothing.
-export async function sendEnquiryNotifications(enquiryId, token) {
+export async function sendEnquiryNotifications(enquiryId, token, captchaToken) {
   if (!enquiryId || !token || typeof enquiryId !== 'string' || typeof token !== 'string') {
     return { ok: false, error: 'Nothing to send.' };
   }
   const item = await wixData.get('Enquiries', enquiryId, { suppressAuth: true });
   if (!item || !item.notifyToken || item.notifyToken !== token) return { ok: false, error: 'Nothing to send.' };
+
+  if (!(await captchaPassed(captchaToken))) {
+    try {
+      await wixData.remove('Enquiries', item._id, { suppressAuth: true });
+    } catch (error) {
+      console.error('[portal] could not remove a failed enquiry', error && error.message ? error.message : error);
+    }
+    return { ok: false, captcha: true, error: CAPTCHA_FAILED };
+  }
+
   await wixData.update('Enquiries', Object.assign({}, item, {
     notifyToken: '',
-    notifiedAt: new Date().toISOString()
+    notifiedAt: new Date().toISOString(),
+    status: item.status === ENQUIRY_PENDING ? ENQUIRY_STATUS.NEW : item.status
   }), { suppressAuth: true });
 
   const parts = String(item.name || '').split(/\s+/).filter(Boolean);

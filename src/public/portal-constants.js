@@ -174,6 +174,11 @@ export const PAYMENT_METHOD = {
   PACKAGE: 'package'
 };
 export const ENQUIRY_STATUS = { NEW: 'new', REPLIED: 'replied', CONVERTED: 'converted', CLOSED: 'closed' };
+// An enquiry the form has stored but whose reCAPTCHA has not been checked
+// yet. Kept out of ENQUIRY_STATUS so no list or count ever shows it; it
+// becomes 'new' once the check passes and is deleted if it fails or is
+// abandoned (3 Nov 2026).
+export const ENQUIRY_PENDING = 'pending';
 export const PREFERRED_CONTACT = { PHONE: 'phone', EMAIL: 'email', WHATSAPP: 'whatsapp' };
 export const CHANNEL = { EMAIL: 'email', WHATSAPP: 'whatsapp' };
 

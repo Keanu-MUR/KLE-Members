@@ -13,6 +13,7 @@ Every Wix API and feature the portal uses, with what it needs. None requires the
 | Wix CRM: `wix-crm-backend` contacts.deleteContact; triggered emails via `wix-crm-backend` emailContact / emailMember | `backend/pupils.jsw`, `backend/messaging.js` | Free and up; triggered emails are limited by the plan's monthly email quota, not the feature |
 | Triggered Emails (three templates in the dashboard) | `EMAIL_TEMPLATES` | Free and up (one sender on Light) |
 | Secrets Manager (`wix-secrets-backend`) | `backend/messaging.js` | Free and up |
+| reCAPTCHA: the `$w` reCAPTCHA element on the Enquire page and `wix-captcha-backend` authorize() | `public/portal-pages/enquire.js`, `backend/enquiry-pipeline.js` | Free and up; Wix supplies the Google keys, so no Google account or charge |
 | `wix-fetch` to Resend and the Meta WhatsApp Cloud API | `backend/messaging.js` | Free and up (external services, dormant until their secrets exist) |
 | Scheduled jobs (`backend/jobs.config`: hourly reminders, nightly prune and compaction, weekly backup) | `backend/jobs.js` | Free and up (up to 20 jobs; the site uses 3) |
 | HTTP functions (`backend/http-functions.js`, the public enquiry endpoint) | `backend/http-functions.js` | Free and up |
