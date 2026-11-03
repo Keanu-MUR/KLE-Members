@@ -57,12 +57,12 @@ Ten collections (RateLimit added 1 Nov 2026), designed to stay under 1,200 items
 
 | Collection | One item per | Key fields | Who can read | Who can write |
 |---|---|---|---|---|
-| Pupils | pupil | memberId, firstName, lastName, dateOfBirth, email, phone (E.164), addressLine1, addressLine2, town, postcode, transmission (manual/automatic), licenceNumber, emergencyContactName, emergencyContactPhone, status (active/passed/inactive), theoryPassed, theoryPassDate, practicalTestDate, hourlyRatePence, reminderEmail, reminderWhatsApp, whatsAppConsentAt, guardianMemberId, guardianName, guardianEmail, instructorNotes (private), lessonHistory (JSON yearly totals) | Own item: pupil and linked guardian; all: instructor | Instructor. Pupil may update only contact fields and reminder preferences, via a backend function with a field whitelist |
+| Pupils | pupil | memberId, firstName, lastName, email, phone (E.164), addressLine1, addressLine2, town, postcode, transmission (manual/automatic), licenceNumber, emergencyContactName, emergencyContactPhone, status (active/passed/inactive), theoryPassed, theoryPassDate, practicalTestDate, hourlyRatePence, reminderEmail, reminderWhatsApp, whatsAppConsentAt, guardianMemberId, guardianName, guardianEmail, instructorNotes (private), lessonHistory (JSON yearly totals) | Own item: pupil and linked guardian; all: instructor | Instructor. Pupil may update only contact fields and reminder preferences, via a backend function with a field whitelist |
 | Lessons | lesson | pupilId, date, slot (early-morning / late-morning / early-afternoon / late-afternoon / custom), startTime, durationMins, pickupLocation, status (planned/completed/cancelled/no-show), pupilSummary (visible), instructorNotes (private) | Own lessons: pupil and guardian; all: instructor | Instructor only |
 | Progress | pupil | pupilId, skills (JSON: { skillKey: { level, updatedAt, note } }), updatedAt | Own: pupil and guardian; all: instructor | Instructor only |
 | MockTests | mock test | pupilId, date, result (pass/fail), minors, serious, dangerous, faults (JSON list of { category, note }), feedback (visible) | Own: pupil and guardian; all: instructor | Instructor only |
 | Payments | payment received | pupilId, date, amountPence, method (bank transfer / cash / card link / package), reference, note | Own: pupil and guardian; all: instructor | Instructor only |
-| Enquiries | enquiry | name, email, phone, dateOfBirth, addressLine1, postcode, transmission, message, preferredContact, status (new/replied/converted/closed), repliedAt, convertedPupilId, notifyToken (single use, cleared once the emails are sent), notifiedAt | Instructor | Insert: anyone via backend; update: instructor |
+| Enquiries | enquiry | name, email, phone, addressLine1, postcode, transmission, message, preferredContact, status (new/replied/converted/closed), repliedAt, convertedPupilId, notifyToken (single use, cleared once the emails are sent), notifiedAt | Instructor | Insert: anyone via backend; update: instructor |
 | Messages | pupil-to-instructor note | pupilId, body, createdAt, readAt, reply | Own: pupil; all: instructor | Insert: pupil; reply: instructor |
 | Settings | the school (exactly one item) | emailRemindersOn, whatsAppRemindersOn, emailProvider (wix/resend), instructorEmail, instructorWhatsApp, enquiryAlertEmailOn, enquiryAlertWhatsAppOn, reminderSendHour, defaultHourlyRatePence (stripePaymentLinkUrl and bankDetailsText removed 2 Nov 2026 with payments), lastExportAt, lastExportStatus, lessonRetentionDays (default 120), sendLogRetentionDays (default 30), paymentRetentionDays (default 400) | Instructor | Instructor only |
 | SendLog | send attempt | pupilId, lessonId, channel (email/whatsapp), status (sent/failed/skipped), providerMessageId, error, createdAt | Instructor | Backend only |
@@ -86,7 +86,7 @@ Portal pages are top-level pages on the existing site (Wix Editor page slugs can
 
 | Page | What it does |
 |---|---|
-| Enquire (/enquire) | Form: full name, email, phone, date of birth, address line 1, postcode, manual or automatic, preferred contact (phone / email / WhatsApp; since 3 Nov 2026 the question is replaced by a notice that the reply and lesson reminders come by email, and preferredContact is stored as email), message. Postcode is checked against the taught areas (SE1, SE4, SE8, SE10, SE14, SE15, SE16) and a soft note shown if outside. Submits to the backend, which writes Enquiries and alerts the instructor by email and WhatsApp at once. Confirmation on screen; confirmation email to the enquirer. Honeypot field and a simple rate limit against spam |
+| Enquire (/enquire) | Form: full name, email, phone, address line 1, postcode, manual or automatic, preferred contact (phone / email / WhatsApp; since 3 Nov 2026 the question is replaced by a notice that the reply and lesson reminders come by email, and preferredContact is stored as email), message. Postcode is checked against the taught areas (SE1, SE4, SE8, SE10, SE14, SE15, SE16) and a soft note shown if outside. Submits to the backend, which writes Enquiries and alerts the instructor by email and WhatsApp at once. Confirmation on screen; confirmation email to the enquirer. Honeypot field and a simple rate limit against spam |
 | Login (/pupil-login) | Own-styled form calling Wix Members login; email + password, plus "email me a login link" (for now this sends Wix's set-password email, since Wix Members has no passwordless login; a true one-time link is a possible later upgrade). Redirects by role. "Not a pupil yet? Enquire" link |
 
 ### Pupil
@@ -98,7 +98,7 @@ Portal pages are top-level pages on the existing site (Wix Editor page slugs can
 | My progress | The skills grid: every skill with its level 1–5 as a filled track, the instructor's note per skill, and date last updated. Manual-only skills hidden for automatic pupils. Theory status and practical test date at the top |
 | Mock tests | Each mock test: date, result, minors/serious/dangerous counts, fault list, feedback |
 | Payments | Deferred (2 Nov 2026): not built. The earlier design was a running balance (hours taught × rate, minus payments received) with bank details and an optional card link |
-| My details | Edit contact details, address, emergency contact, reminder preferences (email on/off, WhatsApp on/off; the consent sentence under the box was dropped on 2 Nov 2026 at the owner's request, the timestamp is still recorded). Licence number and date of birth shown read-only |
+| My details | Edit contact details, address, emergency contact, reminder preferences (email on/off, WhatsApp on/off; the consent sentence under the box was dropped on 2 Nov 2026 at the owner's request, the timestamp is still recorded). Licence number shown read-only (date of birth removed 3 Nov 2026) |
 
 ### Guardian
 
@@ -131,7 +131,7 @@ Two channels, email and WhatsApp, each with a master switch the instructor contr
 - Email: sends the "lesson reminder" template with first name, date in words, slot time, pick-up location, transmission, and a link to the portal. Provider = Wix Triggered Emails, or Resend when Settings.emailProvider = "resend".
 - WhatsApp: sends the approved utility template lesson_reminder with the same variables via the Meta Cloud API, from the school's number.
 - Writes one SendLog row per channel per lesson: sent, failed (with the provider error), or skipped (with the reason).
-- Pupils under 18 on the lesson date (from Pupils.dateOfBirth) with guardianEmail set: the guardian's email also receives the reminder. Guardians never receive WhatsApp.
+- Pupils with guardianEmail set: the guardian's email also receives the reminder (date of birth, and with it the under-18 check, was removed from the portal on 3 Nov 2026 at the owner's request; the instructor adds or removes the guardian email to control the copy). Guardians never receive WhatsApp.
 
 Reminder wording (one template per channel, variables in braces): "Hi {firstName}, reminder: your {transmission} driving lesson is tomorrow, {dateWords}, {slotTime}. Pick-up: {pickup}. Reply here if anything has changed." The WhatsApp version must be submitted to Meta for template approval before Phase 4 and cannot change afterwards without re-approval.
 
@@ -410,6 +410,6 @@ Open questions for the instructor:
 - Does the enquiry alert need to go to a different email than kledrivingschool@gmail.com? Gmail addresses as the reply-to can land replies in spam; a @kledrivingschool.co.uk mailbox would be better if one exists.
 - Should the four fixed slots remain the only options, or are custom times common enough to need a free time picker? (The build supports both; the question is what the Add lesson form shows first.)
 - Default hourly rate for new pupils: £41 pay-as-you-go, or the package rate when a package is bought?
-- Should guardians receive the reminder email by default for pupils under 18, or only when the instructor switches it on per pupil?
+- Should guardians receive the reminder email by default for pupils under 18, or only when the instructor switches it on per pupil? (Settled 3 Nov 2026: date of birth is gone, so any guardian email on the record gets the copy.)
 - Are there any skills to add or remove from the DVSA-based list, for example motorway driving for pupils who have passed?
 - When the GoRoadie links are removed from the public site, should the taster lesson and package prices move onto the Enquire page?

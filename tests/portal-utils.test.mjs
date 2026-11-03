@@ -9,7 +9,6 @@ import {
   dateWords,
   londonDate,
   addDays,
-  ageOn,
   fillTemplate,
   poundsWords,
   isValidEmail
@@ -69,12 +68,6 @@ test('London calendar date and day arithmetic', () => {
   assert.equal(londonDate(new Date('2026-06-30T23:30:00Z')), '2026-07-01');
   assert.equal(addDays('2026-10-31', 1), '2026-11-01');
   assert.equal(addDays('2026-03-01', -1), '2026-02-28');
-});
-
-test('age on a date counts whole years', () => {
-  assert.equal(ageOn('2008-11-05', '2026-11-04'), 17);
-  assert.equal(ageOn('2008-11-05', '2026-11-05'), 18);
-  assert.equal(ageOn('', '2026-11-05'), null);
 });
 
 test('templates fill named variables and leave unknown ones visible', () => {

@@ -17,7 +17,6 @@ const STATUSES = Object.values(PUPIL_STATUS);
 const TEXT_FIELDS = {
   firstName: 60,
   lastName: 60,
-  dateOfBirth: 10,
   email: 254,
   phone: 30,
   addressLine1: 120,
@@ -154,7 +153,7 @@ export async function updatePupil(id, fields) {
         else changes[key] = e164;
       }
     });
-    ['dateOfBirth', 'theoryPassDate', 'practicalTestDate'].forEach((key) => {
+    ['theoryPassDate', 'practicalTestDate'].forEach((key) => {
       if (changes[key] && !isValidIsoDate(changes[key])) errors[key] = 'Pick a date from the calendar.';
     });
     if (changes.postcode) {

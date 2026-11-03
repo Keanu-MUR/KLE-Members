@@ -28,7 +28,7 @@ On the pupil's record: **Mock tests** to add a result with faults and feedback (
 
 ## Guardians
 
-On a pupil's record, fill in the guardian email and **Link guardian login**. The guardian gets a set-password email and sees the pupil's pages, read only. **Remove guardian login** takes it away. While a pupil is under 18 the guardian email also receives the lesson reminder.
+On a pupil's record, fill in the guardian email and **Link guardian login**. The guardian gets a set-password email and sees the pupil's pages, read only. **Remove guardian login** takes it away. The guardian email also gets a copy of every lesson reminder. Clear it if the pupil no longer wants that.
 
 ## Where the weekly backup is
 

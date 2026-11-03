@@ -15,15 +15,15 @@ const settingsOn = { emailRemindersOn: true, whatsAppRemindersOn: true };
 const pupil = {
   firstName: 'Jamie', email: 'jamie@example.com', phone: '+447700900123', transmission: 'manual',
   reminderEmail: true, reminderWhatsApp: true, whatsAppConsentAt: '2026-11-01T10:00:00Z',
-  dateOfBirth: '2009-11-20', guardianEmail: 'pat@example.com'
+  guardianEmail: 'pat@example.com'
 };
 const lesson = { date: '2026-11-03', slot: 'late-morning', startTime: '10:00', durationMins: 120, pickupLocation: '12 Rye Lane' };
 
-test('reminderDecision sends both channels and the guardian for an under-18', () => {
+test('reminderDecision sends both channels and the guardian copy', () => {
   const d = reminderDecision(settingsOn, pupil, lesson, {});
   assert.equal(d.email, 'send');
   assert.equal(d.whatsapp, 'send');
-  assert.equal(d.guardianEmail, 'send', 'turns 18 on 20 November, so still 17 on the lesson date');
+  assert.equal(d.guardianEmail, 'send', 'a guardian email on the record gets a copy');
 });
 
 test('reminderDecision skips with a reason for each rule', () => {
@@ -32,7 +32,7 @@ test('reminderDecision skips with a reason for each rule', () => {
   assert.equal(reminderDecision(settingsOn, Object.assign({}, pupil, { whatsAppConsentAt: '' }), lesson, {}).reasons.whatsapp, 'No WhatsApp consent recorded');
   assert.equal(reminderDecision(settingsOn, Object.assign({}, pupil, { phone: '' }), lesson, {}).reasons.whatsapp, 'No phone number on the record');
   assert.equal(reminderDecision(settingsOn, pupil, lesson, { email: true }).reasons.email, 'Already sent today');
-  assert.equal(reminderDecision(settingsOn, Object.assign({}, pupil, { dateOfBirth: '2000-01-01' }), lesson, {}).guardianEmail, 'skip', 'adults do not copy the guardian');
+  assert.equal(reminderDecision(settingsOn, Object.assign({}, pupil, { guardianEmail: '' }), lesson, {}).guardianEmail, 'skip', 'no guardian email, no copy');
   assert.equal(reminderDecision({ emailRemindersOn: false }, pupil, lesson, {}).guardianEmail, 'skip', 'no email, no guardian copy');
 });
 

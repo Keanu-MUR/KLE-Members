@@ -160,17 +160,6 @@ export function londonHour(instant) {
   return Number(hour) % 24;
 }
 
-// Whole years between a date of birth and a date, both YYYY-MM-DD.
-export function ageOn(dateOfBirth, onDate) {
-  if (!dateOfBirth || !onDate) return null;
-  const [by, bm, bd] = dateOfBirth.split('-').map(Number);
-  const [oy, om, od] = onDate.split('-').map(Number);
-  if (![by, bm, bd, oy, om, od].every(Number.isInteger)) return null;
-  let age = oy - by;
-  if (om < bm || (om === bm && od < bd)) age -= 1;
-  return age;
-}
-
 export function fillTemplate(template, vars) {
   return String(template).replace(/\{(\w+)\}/g, (match, key) =>
     Object.prototype.hasOwnProperty.call(vars, key) && vars[key] != null ? String(vars[key]) : match
@@ -209,14 +198,13 @@ function splitName(fullName) {
 // Server-side validation of the public enquiry form. Returns cleaned data
 // or per-field errors in plain English. A filled honeypot is reported as
 // `bot: true` so the caller can pretend success without storing anything.
-export function validateEnquiry(input, today) {
+export function validateEnquiry(input) {
   const data = input || {};
   const errors = {};
   const name = trimTo(data.name, 80);
   const email = trimTo(data.email, 254).toLowerCase();
   const phoneRaw = trimTo(data.phone, 30);
   const phone = phoneRaw ? toE164(phoneRaw) : null;
-  const dateOfBirth = trimTo(data.dateOfBirth, 10);
   const addressLine1 = trimTo(data.addressLine1, 120);
   const postcode = trimTo(data.postcode, 10).toUpperCase().replace(/\s+/g, ' ');
   const transmission = trimTo(data.transmission, 20);
@@ -230,10 +218,6 @@ export function validateEnquiry(input, today) {
   if (!isValidEmail(email)) errors.email = "That email address doesn't look right.";
   if (!phoneRaw) errors.phone = 'I need a phone number to arrange lessons.';
   else if (!phone) errors.phone = "That phone number doesn't look right.";
-  if (dateOfBirth) {
-    const age = isValidIsoDate(dateOfBirth) ? ageOn(dateOfBirth, today || londonDate()) : null;
-    if (age === null || age < 14 || age > 100) errors.dateOfBirth = "That date of birth doesn't look right.";
-  }
   if (addressLine1.length < 3) errors.addressLine1 = 'Add the first line of your address.';
   if (!isValidPostcode(postcode)) errors.postcode = "That postcode doesn't look right.";
   if (transmission !== TRANSMISSION.MANUAL && transmission !== TRANSMISSION.AUTOMATIC) {
@@ -253,7 +237,6 @@ export function validateEnquiry(input, today) {
       name,
       email,
       phone,
-      dateOfBirth,
       addressLine1,
       postcode,
       transmission,
@@ -527,13 +510,11 @@ export function reminderDecision(settings, pupil, lesson, sentToday) {
   else if (!p.phone) { whatsapp = 'skip'; reasons.whatsapp = 'No phone number on the record'; }
   else if (sent.whatsapp) { whatsapp = 'skip'; reasons.whatsapp = 'Already sent today'; }
 
-  // Under 18 on the lesson date with a guardian email: the guardian gets the
-  // email too. Guardians never receive WhatsApp.
+  // A guardian email on the record gets a copy of the email reminder
+  // (date of birth was removed on 3 Nov 2026, so there is no age check).
+  // Guardians never receive WhatsApp.
   let guardianEmail = 'skip';
-  if (email === 'send' && p.guardianEmail && isValidEmail(p.guardianEmail) && lesson && lesson.date) {
-    const age = ageOn(p.dateOfBirth, lesson.date);
-    if (age !== null && age < 18) guardianEmail = 'send';
-  }
+  if (email === 'send' && p.guardianEmail && isValidEmail(p.guardianEmail)) guardianEmail = 'send';
   return { email, whatsapp, guardianEmail, reasons };
 }
 

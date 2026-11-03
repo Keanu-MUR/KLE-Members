@@ -34,7 +34,6 @@ class KleEnquire extends PortalElement {
       this.field({ id: 'name', label: 'Full name', autocomplete: 'name', required: true, maxlength: 80 }) +
       this.field({ id: 'email', label: 'Email', type: 'email', autocomplete: 'email', inputmode: 'email', required: true }) +
       this.field({ id: 'phone', label: 'Phone', type: 'tel', autocomplete: 'tel', inputmode: 'tel', required: true }) +
-      this.field({ id: 'dateOfBirth', label: 'Date of birth', type: 'date', autocomplete: 'bday', hint: 'Optional. If you are under 18 I’ll ask for a parent or guardian’s details too.' }) +
       this.field({ id: 'addressLine1', label: 'Address line 1', autocomplete: 'address-line1', required: true, maxlength: 120 }) +
       this.field({ id: 'postcode', label: 'Postcode', autocomplete: 'postal-code', required: true, maxlength: 10 }) +
       this.radios({ name: 'transmission', legend: 'Manual or automatic?', options: [{ value: 'manual', label: 'Manual' }, { value: 'automatic', label: 'Automatic' }] }) +

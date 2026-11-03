@@ -38,7 +38,6 @@ export async function insertPupil(fields, memberId) {
     memberId: memberId || '',
     firstName: fields.firstName,
     lastName: fields.lastName,
-    dateOfBirth: trimTo(fields.dateOfBirth, 10),
     email: fields.email,
     phone: fields.phone || '',
     addressLine1: trimTo(fields.addressLine1, 120),

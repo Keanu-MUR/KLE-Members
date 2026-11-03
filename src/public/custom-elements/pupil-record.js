@@ -59,7 +59,7 @@ class KlePupilRecord extends PortalElement {
       '<h2>Contact</h2>' +
       f('firstName', 'First name', { required: true }) + f('lastName', 'Last name', { required: true }) +
       f('email', 'Email', { type: 'email', hint: 'They log in with this address.' }) +
-      f('phone', 'Phone', { type: 'tel' }) + f('dateOfBirth', 'Date of birth (optional)', { type: 'date' }) +
+      f('phone', 'Phone', { type: 'tel' }) +
       '<h2>Address</h2>' +
       f('addressLine1', 'Address line 1') + f('addressLine2', 'Address line 2') + f('postcode', 'Postcode') +
       '<h2>Lessons and tests</h2>' +
@@ -71,7 +71,7 @@ class KlePupilRecord extends PortalElement {
       '<h2>Emergency contact (optional)</h2>' +
       f('emergencyContactName', 'Name') + f('emergencyContactPhone', 'Phone', { type: 'tel' }) +
       '<h2>Guardian</h2>' +
-      f('guardianName', 'Guardian name') + f('guardianEmail', 'Guardian email', { type: 'email', hint: 'Gets the lesson reminder too while the pupil is under 18.' }) +
+      f('guardianName', 'Guardian name') + f('guardianEmail', 'Guardian email', { type: 'email', hint: 'Gets a copy of every lesson reminder.' }) +
       '<div id="guardian-login">' + this.guardianWords(p) + '</div>' +
       '<h2>Reminders</h2>' +
       this.checkbox({ id: 'reminderEmail', label: 'Email reminders', checked: p.reminderEmail }) +

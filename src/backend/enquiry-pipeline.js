@@ -48,7 +48,6 @@ export async function recordEnquiry(data) {
     name: data.name,
     email: data.email,
     phone: data.phone,
-    dateOfBirth: data.dateOfBirth,
     addressLine1: data.addressLine1,
     postcode: data.postcode,
     transmission: data.transmission,
@@ -89,7 +88,6 @@ export async function notifyEnquiry(enquiry, data) {
       'prefers ' + data.preferredContact,
       data.phone,
       data.email,
-      data.dateOfBirth ? 'born ' + data.dateOfBirth : '',
       data.message ? 'Message: ' + data.message : 'No message'
     ].filter(Boolean).join('. ');
     alert = await sendEmail('enquiryAlert', to, {
@@ -158,7 +156,6 @@ export async function sendEnquiryNotifications(enquiryId, token) {
     lastName: parts.slice(1).join(' '),
     email: item.email || '',
     phone: item.phone || '',
-    dateOfBirth: item.dateOfBirth || '',
     postcode: item.postcode || '',
     outsideArea: !isTaughtPostcode(item.postcode || ''),
     transmission: item.transmission || '',

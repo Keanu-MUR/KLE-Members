@@ -13,7 +13,6 @@ function shape(pupil, role) {
     firstName: pupil.firstName || '',
     lastName: pupil.lastName || '',
     licenceNumber: pupil.licenceNumber || '',
-    dateOfBirth: pupil.dateOfBirth || '',
     whatsAppConsentAt: pupil.whatsAppConsentAt || ''
   };
   MY_DETAILS_FIELDS.forEach((key) => {

@@ -38,7 +38,6 @@ class KleMyDetails extends PortalElement {
       (FEATURES.whatsApp ? this.checkbox({ id: 'reminderWhatsApp', label: 'WhatsApp me the day before each lesson', checked: d.reminderWhatsApp }) : '') +
       '<h2>Licence</h2>' +
       this.field({ id: 'licenceNumber', label: 'Licence number (optional)', value: d.licenceNumber, readOnly: true, hint: 'Ask me if this needs changing.' }) +
-      this.field({ id: 'dateOfBirth', label: 'Date of birth (optional)', value: d.dateOfBirth, readOnly: true }) +
       '<div id="status" aria-live="polite"></div>' +
       (readOnly ? '' : '<div class="actions"><button class="btn btn-primary" type="submit">Save changes</button></div>') +
       '</form>'
@@ -57,7 +56,6 @@ class KleMyDetails extends PortalElement {
   async save(d, form) {
     const values = this.readForm(form);
     delete values.licenceNumber;
-    delete values.dateOfBirth;
     this.setErrors(form, {});
     this.setBusy(form, true);
     const result = await this.call('updateMyDetails', values);

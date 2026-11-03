@@ -12,7 +12,6 @@ const good = {
   name: 'Jamie Okafor',
   email: 'Jamie@Example.com',
   phone: '07700 900123',
-  dateOfBirth: '2008-05-14',
   addressLine1: '12 Rye Lane',
   postcode: 'se15 4ab',
   transmission: 'manual',
@@ -39,7 +38,6 @@ test('each bad field gets its own plain-English error', () => {
       name: 'J',
       email: 'nope',
       phone: '12',
-      dateOfBirth: '2020-01-01',
       addressLine1: '',
       postcode: 'ZZZ',
       transmission: 'tractor',
@@ -50,7 +48,6 @@ test('each bad field gets its own plain-English error', () => {
   assert.equal(result.ok, false);
   assert.deepEqual(Object.keys(result.errors).sort(), [
     'addressLine1',
-    'dateOfBirth',
     'email',
     'name',
     'phone',
@@ -66,10 +63,10 @@ test('a postcode outside the area is allowed but flagged', () => {
   assert.equal(result.data.outsideArea, true);
 });
 
-test('date of birth is optional', () => {
-  const result = validateEnquiry(Object.assign({}, good, { dateOfBirth: '' }), '2026-11-02');
+test('date of birth is no longer collected', () => {
+  const result = validateEnquiry(Object.assign({}, good, { dateOfBirth: '2008-05-14' }), '2026-11-02');
   assert.equal(result.ok, true);
-  assert.equal(result.data.dateOfBirth, '');
+  assert.equal('dateOfBirth' in result.data, false);
 });
 
 test('a filled honeypot is reported as a bot and stores nothing', () => {

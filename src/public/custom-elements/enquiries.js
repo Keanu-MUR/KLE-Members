@@ -76,8 +76,7 @@ class KleEnquiries extends PortalElement {
       '<h1>' + esc(e.name) + '</h1>' +
       '<p><span class="pill pill-' + esc(e.status) + '">' + esc(e.status) + '</span></p>' +
       '<p>' + esc(e.email) + '<br>' + esc(e.phone) + '<br>' + esc(e.addressLine1) + ', ' + esc(e.postcode) + '</p>' +
-      '<p>' + esc(e.transmission) + ' lessons, prefers ' + esc(CONTACT[e.preferredContact] || e.preferredContact) +
-      (e.dateOfBirth ? ', born ' + esc(this.longDate(e.dateOfBirth)) : '') + '</p>' +
+      '<p>' + esc(e.transmission) + ' lessons, prefers ' + esc(CONTACT[e.preferredContact] || e.preferredContact) + '</p>' +
       (e.message ? '<p>' + esc(e.message).replace(/\n/g, '<br>') + '</p>' : this.empty('No message.')) +
       '<p class="muted">Received ' + esc(this.dateWords(e.createdAt, true)) + (e.repliedAt ? '. Replied ' + esc(this.dateWords(e.repliedAt, true)) : '') + '</p>' +
       '<hr class="road">' +

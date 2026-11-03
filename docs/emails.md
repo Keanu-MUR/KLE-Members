@@ -15,7 +15,7 @@ Sender: "KLE Driving School", reply-to mkledian@yahoo.com (the Light plan allows
 
 - Variables must be inserted with the editor's Add Variable dialog. Typing `{{name}}` into the text produces plain text, not a variable.
 - The reply email is plain text split into up to four paragraphs (p1 to p4) because triggered-email variables cannot carry line breaks. A fifth paragraph and beyond are joined onto p4.
-- The alert's `summary` is one line built in `backend/enquiry-pipeline.js` (postcode, transmission, preferred contact, phone, email, date of birth, message), so the template never needs editing when a field is added.
+- The alert's `summary` is one line built in `backend/enquiry-pipeline.js` (postcode, transmission, preferred contact, phone, email, message), so the template never needs editing when a field is added.
 - The reminder's `body` is the whole reminder sentence from `reminderText()` in `public/portal-utils.js` (`TEMPLATES.lessonReminder` filled in), for the same reason. The Resend provider gets the full variable set (firstName, transmission, dateWords, slotTime, pickup, link) and builds its own HTML.
 - The reply template's standard first-lesson paragraph is still a placeholder in `TEMPLATES.enquiryReplyDefault`; the instructor can also overwrite the text in the reply box before sending.
 

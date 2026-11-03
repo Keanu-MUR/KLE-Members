@@ -7,7 +7,7 @@ Create each collection in the dashboard under **CMS > Create Collection**, with 
 Field types: *Text* for every date (stored as an ISO-8601 string), *Number* for money in pence and counts, *Boolean* for toggles, *Object* for JSON.
 
 ## Pupils
-memberId, firstName, lastName, dateOfBirth, email, phone, addressLine1, addressLine2, town, postcode, transmission, licenceNumber, emergencyContactName, emergencyContactPhone, status, theoryPassed (Boolean), theoryPassDate, practicalTestDate, hourlyRatePence (Number), reminderEmail (Boolean), reminderWhatsApp (Boolean), whatsAppConsentAt, guardianMemberId, guardianName, guardianEmail, instructorNotes, lessonHistory (Object)
+memberId, firstName, lastName, email, phone, addressLine1, addressLine2, town, postcode, transmission, licenceNumber, emergencyContactName, emergencyContactPhone, status, theoryPassed (Boolean), theoryPassDate, practicalTestDate, hourlyRatePence (Number), reminderEmail (Boolean), reminderWhatsApp (Boolean), whatsAppConsentAt, guardianMemberId, guardianName, guardianEmail, instructorNotes, lessonHistory (Object)
 
 ## Lessons
 pupilId, date, slot, startTime, durationMins (Number), pickupLocation, status, pupilSummary, instructorNotes
@@ -22,7 +22,7 @@ pupilId, date, result, minors (Number), serious (Number), dangerous (Number), fa
 pupilId, date, amountPence (Number), method, reference, note
 
 ## Enquiries
-name, email, phone, dateOfBirth, addressLine1, postcode, transmission, message, preferredContact, status, repliedAt, convertedPupilId, notifyToken (single use; empty once the emails have gone), notifiedAt
+name, email, phone, addressLine1, postcode, transmission, message, preferredContact, status, repliedAt, convertedPupilId, notifyToken (single use; empty once the emails have gone), notifiedAt
 
 ## Messages
 pupilId, body, createdAt, readAt, reply
