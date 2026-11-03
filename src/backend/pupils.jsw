@@ -56,8 +56,9 @@ export async function findMemberByEmail(email) {
   });
 }
 
-// Creates a Pupils item. If memberId is not given, the member is looked up
-// by email so the pupil can log in straight away.
+// Creates a Pupils item from the Add pupil form. The login is linked if the
+// email already has one; otherwise, unless createLogin is false, a login is
+// made and Wix's set-password email goes out, as converting an enquiry does.
 export async function createPupil(input) {
   return run(async () => {
     await requireInstructor();
@@ -70,14 +71,37 @@ export async function createPupil(input) {
     const phone = data.phone ? toE164(data.phone) : '';
     if (data.phone && !phone) throw new PortalError("That phone number doesn't look right.");
     if (await pupilByEmail(email)) throw new PortalError('There is already a pupil with that email address.');
+    const postcode = trimTo(data.postcode, 10);
+    if (postcode && !isValidPostcode(postcode)) throw new PortalError("That postcode doesn't look right.");
+    const fields = {
+      firstName, lastName, email, phone,
+      addressLine1: trimTo(data.addressLine1, 120),
+      addressLine2: trimTo(data.addressLine2, 120),
+      postcode,
+      transmission: data.transmission === TRANSMISSION.AUTOMATIC ? TRANSMISSION.AUTOMATIC : TRANSMISSION.MANUAL
+    };
 
-    let memberId = trimTo(data.memberId, 64);
-    if (!memberId) {
-      const member = await lookupMemberByEmail(email);
-      memberId = member ? member.memberId : '';
+    let memberId = '';
+    let memberCreated = false;
+    let loginEmailSent = false;
+    const existing = await lookupMemberByEmail(email);
+    if (existing) {
+      memberId = existing.memberId;
+    } else if (data.createLogin !== false) {
+      memberId = (await registerMember(email, fields)) || '';
+      memberCreated = Boolean(memberId);
+      if (!memberId) throw new PortalError('The login didn’t get created. Try again in a moment.');
     }
-    const item = await insertPupil(Object.assign({}, data, { firstName, lastName, email, phone }), memberId);
-    return { pupilId: item._id, memberId, linked: Boolean(memberId) };
+    if (memberCreated) {
+      try {
+        await authentication.sendSetPasswordEmail(email);
+        loginEmailSent = true;
+      } catch (error) {
+        console.warn('[portal] set-password email did not send for a new pupil');
+      }
+    }
+    const item = await insertPupil(fields, memberId);
+    return { pupilId: item._id, memberId, linked: Boolean(memberId), memberCreated, loginEmailSent };
   });
 }
 

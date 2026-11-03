@@ -110,7 +110,7 @@ The same Home, Lessons, Progress and Mock tests pages as their pupil, read-only,
 |---|---|
 | Dashboard | Today's and tomorrow's lessons; unread enquiries and messages; reminder status for tomorrow (sent / failed counts); quick "Add lesson" |
 | Upcoming lessons | This week and next, grouped by day; each row opens the lesson to edit status, summary and private notes. Add lesson: pick pupil, date, slot or custom time, pick-up location |
-| Pupils | Searchable list with status filter. Pupil record: all fields, lessons, progress grid (editable in place), mock tests, payments, messages, guardian link, "Send login link", "Export this pupil", "Delete pupil (GDPR)" with confirmation |
+| Pupils | Searchable list with status filter, and an Add pupil form (name, email, phone, address, postcode, manual or automatic; makes their login and sends the set-password email unless unticked, added 3 Nov 2026). Pupil record: all fields, lessons, progress grid (editable in place), mock tests, payments, messages, guardian link, "Send login link", "Export this pupil", "Delete pupil (GDPR)" with confirmation |
 | Progress editor | The skills grid for one pupil, tap a level to set it, optional note per skill. Saves immediately; the pupil sees it on next load |
 | Enquiries | New / replied / converted / closed. Reply by email from the page (template with the instructor's standard first-lesson info). "Convert to pupil" creates the Pupils item from the enquiry and sends the signup link |
 | Tomorrow's reminders | List of tomorrow's lessons with per-pupil status for each channel; "Resend" per row; one-tap wa.me button per row as a manual fallback |

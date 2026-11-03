@@ -136,6 +136,8 @@ textarea { min-height: 120px; resize: vertical; }
 .notice { background: var(--paper); border: 2px solid var(--ink); border-left: 6px solid var(--accent); padding: 10px 14px; margin: 20px 0; }
 .hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
 /* Buttons */
+/* The hidden attribute must win over display rules such as .btn's. */
+[hidden] { display: none !important; }
 .btn { display: inline-flex; align-items: center; justify-content: center; font: inherit; font-weight: 600; min-height: 48px; padding: 10px 20px; border-radius: 0; border: 2px solid var(--ink); cursor: pointer; background: var(--paper); color: var(--ink); text-decoration: none; }
 .btn:hover { border-color: var(--accent); }
 .btn-primary { background: var(--accent); }

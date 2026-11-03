@@ -4,7 +4,7 @@ Everything below happens at **kledrivingschool.co.uk/instructor** after you log 
 
 ## Add a pupil
 
-Most pupils arrive as enquiries. **Enquiries** > open the enquiry > **Convert to pupil**: this creates their record and login and emails them a set-password link. For someone who did not enquire through the site: **Pupils** > **Add pupil**, fill in name, email, phone, postcode and manual or automatic, then **Send login link** on their record.
+Most pupils arrive as enquiries. **Enquiries** > open the enquiry > **Make them a pupil**: this creates their record and login and emails them a set-password link. For someone who did not enquire through the site: **Pupils** > **Add pupil**, fill in their name, email, phone, address, postcode and manual or automatic, and press **Add pupil**. Their login is made and the set-password email goes out straight away, unless you untick that box, in which case use **Send login link** on their record later.
 
 ## Add or change a lesson
 

@@ -33,10 +33,13 @@ class KlePupils extends PortalElement {
   renderFrame(counts) {
     this.setMain(
       '<h1>Pupils</h1>' +
+      '<div class="actions"><button class="btn btn-primary" type="button" id="add">Add pupil</button></div>' +
+      '<div id="add-box"></div>' +
       '<form id="search" novalidate>' + this.field({ id: 'q', label: 'Search by name or email', value: this.search, autocomplete: 'off' }) + '</form>' +
       '<div class="filters" id="filters"></div>' +
       '<div id="rows"></div>'
     );
+    this.$('#add').addEventListener('click', () => this.openAdd());
     const form = this.$('#search');
     let timer;
     form.addEventListener('submit', (event) => event.preventDefault());
@@ -50,6 +53,62 @@ class KlePupils extends PortalElement {
         this.load(false);
       }, 300);
     });
+  }
+
+  // The Add pupil form, opened above the list.
+  openAdd() {
+    const button = this.$('#add');
+    const box = this.$('#add-box');
+    button.hidden = true;
+    box.innerHTML =
+      '<form id="add-form" class="card" novalidate>' +
+      '<h2>Add pupil</h2>' +
+      this.field({ id: 'firstName', label: 'First name', autocomplete: 'off', required: true, maxlength: 60 }) +
+      this.field({ id: 'lastName', label: 'Last name', autocomplete: 'off', required: true, maxlength: 60 }) +
+      this.field({ id: 'email', label: 'Email', type: 'email', inputmode: 'email', autocomplete: 'off', required: true, hint: 'They log in with this address.' }) +
+      this.field({ id: 'phone', label: 'Phone', type: 'tel', inputmode: 'tel', autocomplete: 'off' }) +
+      this.field({ id: 'addressLine1', label: 'Address line 1', autocomplete: 'off', maxlength: 120 }) +
+      this.field({ id: 'postcode', label: 'Postcode', autocomplete: 'off', maxlength: 10 }) +
+      this.radios({ name: 'transmission', legend: 'Manual or automatic', value: 'manual', options: [{ value: 'manual', label: 'Manual' }, { value: 'automatic', label: 'Automatic' }] }) +
+      this.checkbox({ id: 'createLogin', label: 'Create their login and email them a link to set a password', checked: true }) +
+      '<div id="add-status" aria-live="polite"></div>' +
+      '<div class="actions"><button class="btn btn-primary" type="submit">Add pupil</button><button class="btn btn-text" type="button" id="add-cancel">Cancel</button></div>' +
+      '</form>';
+    const form = this.$('#add-form');
+    this.$('#add-cancel').addEventListener('click', () => {
+      box.innerHTML = '';
+      button.hidden = false;
+    });
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      this.saveAdd(form);
+    });
+    this.$('#firstName').focus();
+  }
+
+  async saveAdd(form) {
+    const values = this.readForm(form);
+    const errors = {};
+    if (!values.firstName) errors.firstName = 'Add their first name.';
+    if (!values.lastName) errors.lastName = 'Add their last name.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email || '')) errors.email = 'That email address doesn’t look right.';
+    this.setErrors(form, errors);
+    if (Object.keys(errors).length) return;
+    this.setBusy(form, true);
+    const result = await this.call('createPupil', values);
+    this.setBusy(form, false);
+    if (!result.ok) {
+      this.$('#add-status').innerHTML = this.failure(result);
+      return;
+    }
+    const d = result.data;
+    const name = values.firstName + ' ' + values.lastName;
+    const login = d.memberCreated
+      ? (d.loginEmailSent ? 'I’ve emailed ' + esc(values.email) + ' a link to set a password.' : 'Their login is made, but the password email didn’t send. Use Send login link on their record.')
+      : d.linked ? 'Linked to their existing login.' : 'No login yet. Use Send login link on their record when you’re ready.';
+    this.$('#add-box').innerHTML = '<div class="notice" role="status">' + esc(name) + ' added. ' + login + ' <a href="/pupil-record?id=' + esc(d.pupilId) + '">Open their record</a></div>';
+    this.$('#add').hidden = false;
+    this.load(false);
   }
 
   renderRows(data) {
@@ -70,7 +129,7 @@ class KlePupils extends PortalElement {
           '<td data-label="Postcode">' + esc(p.postcode || '') + '</td>' +
           '<td data-label="Status"><span class="pill pill-' + esc(p.status) + '">' + esc(p.status) + '</span></td></tr>'
         ).join('') + '</tbody></table>'
-      : this.empty(this.search ? 'No pupils match that search.' : 'No pupils yet. Make someone a pupil from their enquiry and they’ll show here.');
+      : this.empty(this.search ? 'No pupils match that search.' : 'No pupils yet. Add one above, or make someone a pupil from their enquiry.');
   }
 }
 
