@@ -21,11 +21,21 @@ const AREAS = [
   { pc: 'SE1', box: '#box16', name: '#text51' }
 ];
 let openArea = null;
+// The name and "+N more" texts sit inside the sign's box, so one tap on
+// them fires their click and the box's. Clicks this close together count
+// as one tap, or the panel would open and close again at once.
+let lastToggleAt = 0;
+const TAP_MS = 300;
 
 function setupAreas() {
   AREAS.forEach((a) => {
     a.tagHtml = $w(`#more${a.pc}`).html;
-    const toggle = () => toggleArea(a);
+    const toggle = () => {
+      const now = Date.now();
+      if (now - lastToggleAt < TAP_MS) return;
+      lastToggleAt = now;
+      toggleArea(a);
+    };
     [a.box, a.name, `#more${a.pc}`].forEach((id) => $w(id).onClick(toggle));
   });
 }
