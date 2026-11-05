@@ -4,7 +4,9 @@
 //   (three on mobile); they stay put once shown (rotation removed 5 Nov
 //   2026 at the owner's request).
 // - Locations: each street sign (#box10-#box16) opens its area's panel
-//   (#panelSE8 etc, hidden in the Editor) when tapped; one open at a time.
+//   (#panelSE8 etc) when tapped; one open at a time. The panels are set to
+//   Collapsed by default in the Editor and expand inline, pushing the page
+//   down rather than sitting over it.
 
 import { getPassPhotos } from 'backend/passPhotos';
 import wixWindowFrontend from 'wix-window-frontend';
@@ -31,7 +33,7 @@ function setupAreas() {
 function closeArea(a) {
   $w(a.box).style.backgroundColor = '#FFFFFF';
   $w(`#more${a.pc}`).html = a.tagHtml;
-  $w(`#panel${a.pc}`).hide('fade', { duration: 150 });
+  $w(`#panel${a.pc}`).collapse();
 }
 
 function toggleArea(a) {
@@ -42,7 +44,7 @@ function toggleArea(a) {
   openArea = a;
   $w(a.box).style.backgroundColor = '#F3C852';
   $w(`#more${a.pc}`).html = a.tagHtml.replace(/\+\d+ more/, 'Hide');
-  $w(`#panel${a.pc}`).show('fade', { duration: 150 });
+  $w(`#panel${a.pc}`).expand();
 }
 
 $w.onReady(async function () {
